@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Debrief Preview</title>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <!-- Developer page: a made-up call run through the real state engine, shown as a debrief.
+       No API calls. Not linked from the app. Add ?tip=2 to open the tooltip on point 2. -->
+  <main>
+    <h2>Debrief preview (sample call)</h2>
+    <div id="debrief-body"></div>
+    <h2>Past calls preview</h2>
+    <div id="past-body"></div>
+  </main>
+  <script type="module">
+    import { MOODS } from "../js/constants.js";
+    import { createCallState, addStudentTurn, addSilenceTurn, applyExecTurn, endByStudent } from "../js/callState.js";
+    import { analyzeCall, formatTranscriptText } from "../js/debrief.js";
+    import { renderDebrief, renderPastCalls } from "../js/debrief-view.js";
+
+    const [personas, offers, objections] = await Promise.all(["personas", "offers", "objections"].map((n) => fetch(`../data/${n}.json`).then((r) => r.json())));
+    const persona = personas.find((p) => p.id === "brasswell-freight");
+    const offer = offers.find((o) => o.id === "crewbeam");
+    const mood = MOODS.find((m) => m.id === "slammed");
+    const ctx = { persona, offer, mood, objections: objections.filter((o) => persona.objections.includes(o.id)) };
+    const r = (f) => ({ say: "", patienceDelta: 0, reason: "", revealPainId: null, raiseObjectionId: null, handledObjectionId: null, acceptsMeeting: false, studentMadeAsk: false, ...f });
+
+    const t0 = Date.now() - 120000;
+    let s = createCallState({ seed: 7, persona, offer, mood, pickupLine: "{first} speaking.", startedAt: t0 });
+    const turn = (text, reply, at, opts) => {
+      s = text === null ? addSilenceTurn(s, { at: t0 + at }) : addStudentTurn(s, { text, at: t0 + at });
+      s = applyExecTurn(s, r(reply), ctx, { at: t0 + at + 2500, ...opts });
+    };
+    turn("Hi Mike, how are you today?", { say: "Busy. What's this about?", patienceDelta: -6, reason: "Opened with small talk instead of a reason for the call." }, 3000);
+    turn("I'm Jordan with Lanternfield. We help trucking teams cover driver call-outs by text. How do you handle that now?", { say: "Honestly? Mondays are a mess. I'm on the phone for an hour.", patienceDelta: 9, reason: "Gave a clear reason and asked about his actual process.", revealPainId: "monday-callouts" }, 12000);
+    turn("So let me tell you a little about Crewbeam. We were founded in 2019 and we've grown to over two hundred customers across the Southeast and...", { say: "Look, I've got a board meeting. Just send me an email.", patienceDelta: -22, reason: "Started a company history after he'd said he was busy.", raiseObjectionId: "send-email" }, 24000);
+    turn(null, { say: "Hello? You still there?" }, 36000, { silence: true });
+    turn("Sorry. Quick question before I send it: what happens to overtime when those Mondays go sideways?", { say: "It blows up. We're over budget three quarters running.", patienceDelta: 8, reason: "Answered the objection with one sharp question.", revealPainId: "overtime-creep", handledObjectionId: "send-email" }, 52000);
+    s = endByStudent(s, t0 + 71000);
+
+    const a = analyzeCall(s, ctx);
+    renderDebrief(document.getElementById("debrief-body"), a, {
+      onCallAgain: () => alert("Call again"), onCopy: async () => true,
+      transcriptText: formatTranscriptText(a, { dateText: "preview" }),
+    });
+    const shifted = (outcome, ms) => ({ state: { ...s, outcome, startedAt: s.startedAt - ms, endedAt: s.endedAt - ms }, ctx });
+    const booked = shifted("meetingBooked", 86400000);
+    const hung = shifted("hungUp", 3600000);
+    renderPastCalls(document.getElementById("past-body"), [{ state: s, ctx }, hung, booked], {
+      onOpen: () => {}, formatDate: (ms) => new Date(ms).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }),
+    });
+    const tip = new URLSearchParams(location.search).get("tip");
+    if (tip) document.querySelectorAll(".chart-hit")[Number(tip) - 1]?.dispatchEvent(new Event("pointerenter"));
+  </script>
+</body>
+</html>

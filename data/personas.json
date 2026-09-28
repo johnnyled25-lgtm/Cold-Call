@@ -1,0 +1,255 @@
+[
+  {
+    "id": "brasswell-freight",
+    "name": "Mike Brooks",
+    "title": "VP of Operations",
+    "company": "Brasswell Freight",
+    "industry": "Regional trucking and logistics",
+    "companySize": "140 employees, 85 drivers, 3 terminals",
+    "currentSetup": "A dispatch system for loads. Driver schedules live in a spreadsheet, and call-outs get covered by phone and group text.",
+    "personality": "Blunt and fast. Former dispatcher who came up through the terminals. Respects people who get to the point and hates being sold to. Says 'Go ahead' when he means 'You have ten seconds.'",
+    "appearance": { "skinTone": "dark", "hair": "buzz", "hairColor": "gray", "attire": "polo", "glasses": false },
+    "voice": { "type": "male", "rate": 1.1, "pitch": 0.9 },
+    "painPoints": [
+      {
+        "id": "monday-callouts",
+        "text": "Monday mornings are a mess. When drivers call out, he or a terminal manager spends an hour on the phone finding cover.",
+        "earnedBy": "asks what happens when a driver calls out, or how they cover last-minute absences",
+        "addressedBy": [
+          "crewbeam"
+        ]
+      },
+      {
+        "id": "overtime-creep",
+        "text": "Overtime is over budget three quarters running, and he only finds out after payroll closes.",
+        "earnedBy": "asks about overtime, labor costs, or how he tracks hours across terminals",
+        "addressedBy": [
+          "crewbeam"
+        ]
+      },
+      {
+        "id": "slow-shippers",
+        "text": "Two big shippers pay at 60 days or later, and it squeezes cash for fuel and repairs.",
+        "earnedBy": "asks about getting paid, invoicing, or cash flow",
+        "addressedBy": [
+          "duebird"
+        ]
+      }
+    ],
+    "objections": [
+      "no-time",
+      "have-something",
+      "send-email",
+      "how-got-number",
+      "tried-before"
+    ],
+    "moods": [
+      "slammed",
+      "between-meetings",
+      "normal-day"
+    ]
+  },
+  {
+    "id": "kettle-creek-dental",
+    "name": "Anna Reyes",
+    "title": "Director of Operations",
+    "company": "Kettle Creek Dental Group",
+    "industry": "Multi-location dental practice",
+    "companySize": "6 offices, about 90 staff",
+    "currentSetup": "Practice-management software at every office. Patient balances get paper statements and phone calls. New-patient forms are a PDF patients print or email back.",
+    "personality": "Friendly but busy. Warm on the phone and polite, but she answers while doing three other things. She'll let a caller down gently rather than hang up, unless they waste her time.",
+    "appearance": { "skinTone": "medium", "hair": "long", "hairColor": "black", "attire": "cardigan", "glasses": true },
+    "voice": { "type": "female", "rate": 1.05, "pitch": 1.05 },
+    "painPoints": [
+      {
+        "id": "aging-balances",
+        "text": "Patient balances over 90 days keep growing, and the front desk hates making collection calls.",
+        "earnedBy": "asks what happens with patient balances after the visit, or how they collect what patients owe",
+        "addressedBy": [
+          "duebird"
+        ]
+      },
+      {
+        "id": "incomplete-intake",
+        "text": "New patients show up with forms missing or half filled in, so check-in runs late and the whole schedule slips.",
+        "earnedBy": "asks about new-patient intake, paperwork, or what slows down check-in",
+        "addressedBy": [
+          "paperlight"
+        ]
+      },
+      {
+        "id": "front-desk-phone-time",
+        "text": "The front desk spends hours a week calling patients for insurance cards and unpaid balances, when they should be helping the people in the lobby.",
+        "earnedBy": "asks how the front-desk staff spend their time, or what keeps them off the phones",
+        "addressedBy": [
+          "duebird",
+          "paperlight"
+        ]
+      }
+    ],
+    "objections": [
+      "send-email",
+      "not-my-call",
+      "have-something",
+      "no-budget",
+      "no-time"
+    ],
+    "moods": [
+      "slammed",
+      "between-meetings",
+      "normal-day",
+      "slow-friday"
+    ]
+  },
+  {
+    "id": "cedar-hollow-bank",
+    "name": "Nina Shah",
+    "title": "SVP, Commercial Lending",
+    "company": "Cedar Hollow Community Bank",
+    "industry": "Community banking",
+    "companySize": "7 branches, about 110 employees",
+    "currentSetup": "A core banking system plus a loan-origination system. Borrowers send financial documents by email or drop off paper at a branch.",
+    "personality": "Analytical and careful. Asks precise questions, is wary of anything that touches customer data, and won't commit without a reason. Polite, never warm. Quiet pauses are her way of making you keep talking.",
+    "appearance": { "skinTone": "medium-dark", "hair": "bun", "hairColor": "black", "attire": "blazer", "glasses": true },
+    "voice": { "type": "female", "rate": 0.95, "pitch": 1.0 },
+    "painPoints": [
+      {
+        "id": "email-attachments",
+        "text": "Borrowers email tax returns and bank statements as attachments, and the last exam flagged it as a data-security risk.",
+        "earnedBy": "asks how borrowers get documents to the bank, or about security or compliance around customer documents",
+        "addressedBy": [
+          "paperlight"
+        ]
+      },
+      {
+        "id": "stalled-loan-files",
+        "text": "Commercial loan files sit for weeks waiting on one missing document, and her lenders spend their time chasing paper.",
+        "earnedBy": "asks what slows a loan from application to closing, or how her lenders spend their week",
+        "addressedBy": [
+          "paperlight"
+        ]
+      },
+      {
+        "id": "teller-coverage",
+        "text": "Branch teller coverage is a constant scramble when someone is out, but that's retail's problem, not hers.",
+        "earnedBy": "asks about staffing across the branches",
+        "addressedBy": [
+          "crewbeam"
+        ]
+      }
+    ],
+    "objections": [
+      "how-got-number",
+      "not-my-call",
+      "no-budget",
+      "send-email",
+      "have-something"
+    ],
+    "moods": [
+      "slammed",
+      "between-meetings",
+      "normal-day"
+    ]
+  },
+  {
+    "id": "oxbow-precision",
+    "name": "Beth Olson",
+    "title": "Plant Manager",
+    "company": "Oxbow Precision Components",
+    "industry": "Mid-size manufacturing (machined parts)",
+    "companySize": "One plant, 230 employees, two shifts",
+    "currentSetup": "An ERP system for production. Shift schedules are built in a spreadsheet and posted on the break-room board. Call-outs go to the shift supervisor's cell phone.",
+    "personality": "Analytical and dry. A mechanical engineer by training. Wants numbers, not adjectives. Isn't rude, but goes silent and flat when bored, and the word 'solution' makes her wince.",
+    "appearance": { "skinTone": "light", "hair": "short", "hairColor": "blonde", "attire": "button-down", "glasses": true },
+    "voice": { "type": "female", "rate": 0.95, "pitch": 0.95 },
+    "painPoints": [
+      {
+        "id": "second-shift-coverage",
+        "text": "When a machinist calls out on second shift, the supervisor loses the first hour of the shift finding cover, and a line sits idle.",
+        "earnedBy": "asks what happens when someone calls out, especially on second shift or nights",
+        "addressedBy": [
+          "crewbeam"
+        ]
+      },
+      {
+        "id": "overtime-spend",
+        "text": "Overtime runs about 14% of labor cost, and corporate wants it under 8%.",
+        "earnedBy": "asks about overtime, labor cost targets, or what corporate is pressuring her on",
+        "addressedBy": [
+          "crewbeam"
+        ]
+      },
+      {
+        "id": "supplier-certs",
+        "text": "Chasing material certs from suppliers before audits eats days of her quality engineer's time.",
+        "earnedBy": "asks about audits, quality paperwork, or supplier documentation",
+        "addressedBy": [
+          "paperlight"
+        ]
+      }
+    ],
+    "objections": [
+      "tried-before",
+      "no-budget",
+      "have-something",
+      "not-interested",
+      "no-time"
+    ],
+    "moods": [
+      "slammed",
+      "between-meetings",
+      "normal-day",
+      "slow-friday"
+    ]
+  },
+  {
+    "id": "northpaw-creative",
+    "name": "Marcus Hill",
+    "title": "Founder and Managing Director",
+    "company": "Northpaw Creative",
+    "industry": "Marketing and design agency",
+    "companySize": "22 people, about 40 active clients",
+    "currentSetup": "Invoices go out from the accounting software. The founder follows up on late payments himself, by email and the occasional uncomfortable phone call.",
+    "personality": "Friendly and fast-talking, easily distracted, likes a good idea. Will chat for a moment, then remember he's busy. Sniffs out a script right away and gets bored if the caller sounds like one.",
+    "appearance": { "skinTone": "dark", "hair": "curly", "hairColor": "black", "attire": "sweater", "glasses": false },
+    "voice": { "type": "male", "rate": 1.12, "pitch": 1.0 },
+    "painPoints": [
+      {
+        "id": "late-client-payments",
+        "text": "About a third of clients pay 45 or more days late, and some months payroll gets tight.",
+        "earnedBy": "asks about getting paid, invoice timing, or cash flow",
+        "addressedBy": [
+          "duebird"
+        ]
+      },
+      {
+        "id": "awkward-money-calls",
+        "text": "He's the one who calls clients about late invoices, and he hates it. He thinks it hurts the relationship.",
+        "earnedBy": "asks who follows up on late invoices, or how those conversations go",
+        "addressedBy": [
+          "duebird"
+        ]
+      },
+      {
+        "id": "lost-approvals",
+        "text": "Signed statements of work and client approvals get lost in email threads, and scope arguments follow.",
+        "earnedBy": "asks how clients approve work or sign off on scope",
+        "addressedBy": [
+          "paperlight"
+        ]
+      }
+    ],
+    "objections": [
+      "send-email",
+      "not-interested",
+      "no-budget",
+      "tried-before",
+      "how-got-number"
+    ],
+    "moods": [
+      "between-meetings",
+      "normal-day",
+      "slow-friday"
+    ]
+  }
+]

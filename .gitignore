@@ -1,0 +1,15 @@
+# Never commit keys or local environment files.
+.env
+.env.*
+*.key
+
+# Local clutter
+node_modules/
+.DS_Store
+Thumbs.db
+.vscode/
+.vercel
+
+# The original build brief stays local: it names GCSU and a colleague, and the app
+# carries no GCSU name anywhere.
+docs/

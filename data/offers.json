@@ -1,0 +1,44 @@
+[
+  {
+    "id": "crewbeam",
+    "company": "Lanternfield Software",
+    "product": "Crewbeam",
+    "oneLiner": "Shift scheduling by text message for teams that work in shifts across more than one site. When someone calls out, it finds a qualified replacement for you.",
+    "valuePoints": [
+      "When someone calls out, Crewbeam texts qualified, available people in order until the shift is covered. No phone tree.",
+      "Flags overtime before it happens, while there is still time to move a shift.",
+      "Works by text message, so crews don't need to install an app.",
+      "Managers see open shifts across every site on one screen."
+    ],
+    "priceHint": "About $6 per scheduled employee per month. No setup fee.",
+    "fitsPersonaIds": ["brasswell-freight", "oxbow-precision"]
+  },
+  {
+    "id": "duebird",
+    "company": "Northgrove Labs",
+    "product": "Duebird",
+    "oneLiner": "Automatic invoice and balance reminders with pay-by-text, so money comes in sooner and nobody has to make the awkward call.",
+    "valuePoints": [
+      "Sends polite, scheduled reminders by text and email until a balance is paid.",
+      "Customers pay from a link in the text, by card or bank transfer.",
+      "Payments post back to your accounting or practice software automatically.",
+      "Shows you who owes what and how old each balance is, on one screen."
+    ],
+    "priceHint": "Starts at $249 per month plus standard card processing fees.",
+    "fitsPersonaIds": ["kettle-creek-dental", "northpaw-creative"]
+  },
+  {
+    "id": "paperlight",
+    "company": "Ashdown Digital",
+    "product": "Paperlight",
+    "oneLiner": "A secure portal for collecting and signing documents, so paperwork arrives complete and doesn't travel as email attachments.",
+    "valuePoints": [
+      "Clients upload documents to an encrypted portal, not email.",
+      "Checklists show what is still missing and send reminders until it arrives.",
+      "E-signatures, with a full audit trail of who opened, uploaded, and signed what.",
+      "Branded with your logo, so clients trust the link."
+    ],
+    "priceHint": "About $40 per staff user per month. Clients never pay.",
+    "fitsPersonaIds": ["kettle-creek-dental", "cedar-hollow-bank"]
+  }
+]

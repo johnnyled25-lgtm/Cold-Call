@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Provider Check</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; color: #1F2933; background: #F5F7FA; }
+    label { display: block; margin-top: 14px; font-weight: 600; }
+    input, select, button { font: inherit; padding: 8px; width: 100%; margin-top: 4px; }
+    button { width: auto; margin-top: 18px; cursor: pointer; }
+    pre { background: #fff; border: 1px solid #D9E2EC; padding: 12px; white-space: pre-wrap; font-family: Consolas, Menlo, monospace; }
+  </style>
+</head>
+<body>
+  <!-- Phase 0 developer page: a one-word test straight from the browser to each provider.
+       The key is read from the box only when you click Send. It is not saved anywhere. -->
+  <h1>Provider check</h1>
+  <p>Sends one short prompt from this browser straight to the provider, then reports what came back.
+     The key isn't saved. Close the tab when you're done.</p>
+
+  <label for="provider">Provider</label>
+  <select id="provider">
+    <option value="anthropic">Anthropic</option>
+    <option value="openai">OpenAI</option>
+  </select>
+
+  <label for="model">Model name</label>
+  <input id="model" autocomplete="off">
+
+  <label for="key">API key</label>
+  <input id="key" type="password" autocomplete="off">
+
+  <label><input id="temp" type="checkbox" style="width:auto"> Also send temperature 0.8 (checks whether this model accepts it)</label>
+
+  <button id="send" type="button">Send one-word test</button>
+  <pre id="out">Nothing sent yet.</pre>
+
+  <script type="module">
+    import { DEFAULT_MODELS, ANTHROPIC_API_VERSION } from "../js/constants.js";
+
+    const $ = (id) => document.getElementById(id);
+    const setModel = () => { $("model").value = DEFAULT_MODELS[$("provider").value]; };
+    $("provider").addEventListener("change", setModel);
+    setModel();
+
+    $("send").addEventListener("click", async () => {
+      const provider = $("provider").value;
+      const model = $("model").value.trim();
+      const key = $("key").value.trim();
+      const withTemp = $("temp").checked;
+      if (!key) { $("out").textContent = "Enter a key first."; return; }
+
+      const prompt = "Reply with exactly one word: hello";
+      let url, headers, body;
+      if (provider === "anthropic") {
+        url = "https://api.anthropic.com/v1/messages";
+        headers = {
+          "content-type": "application/json",
+          "x-api-key": key,
+          "anthropic-version": ANTHROPIC_API_VERSION,
+          "anthropic-dangerous-direct-browser-access": "true",
+        };
+        body = { model, max_tokens: 20, messages: [{ role: "user", content: prompt }] };
+      } else {
+        url = "https://api.openai.com/v1/chat/completions";
+        headers = { "content-type": "application/json", "authorization": `Bearer ${key}` };
+        body = { model, messages: [{ role: "user", content: prompt }] };
+      }
+      if (withTemp) body.temperature = 0.8;
+
+      $("out").textContent = "Sending…";
+      const started = performance.now();
+      try {
+        const res = await fetch(url, { method: "POST", headers, body: JSON.stringify(body) });
+        const ms = Math.round(performance.now() - started);
+        const data = await res.json().catch(() => null);
+        const text = provider === "anthropic"
+          ? data?.content?.find((b) => b.type === "text")?.text
+          : data?.choices?.[0]?.message?.content;
+        $("out").textContent = res.ok
+          ? `OK (HTTP ${res.status}) in ${ms} ms\nModel: ${model}\nReply: ${text}`
+          : `Failed: HTTP ${res.status} in ${ms} ms\n${data?.error?.message ?? "(no message)"}`;
+      } catch (err) {
+        // A CORS block or network failure lands here; the browser hides the details.
+        $("out").textContent = "Failed before a response came back. The browser blocked it (CORS) or the network is down. Check the browser console.";
+      }
+    });
+  </script>
+</body>
+</html>

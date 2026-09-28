@@ -1,0 +1,42 @@
+[
+  {
+    "id": "send-email",
+    "line": "Just send me an email.",
+    "whatHandlesIt": "Agrees to send it, then asks one short question so the email can be about something the exec actually cares about. That question earns another 30 seconds."
+  },
+  {
+    "id": "no-time",
+    "line": "I'm about to walk into a meeting.",
+    "whatHandlesIt": "Respects the time. Either names one sentence of reason for the call, or offers a specific time to call back. Does not rush into the pitch."
+  },
+  {
+    "id": "not-interested",
+    "line": "We're not interested.",
+    "whatHandlesIt": "Doesn't argue or repeat the pitch. Asks how they handle the problem today, which gives the exec a real reason to keep talking."
+  },
+  {
+    "id": "have-something",
+    "line": "We already have something for that.",
+    "whatHandlesIt": "Doesn't criticize the current tool. Asks what they like about it and what they'd change if they could."
+  },
+  {
+    "id": "no-budget",
+    "line": "There's no budget for this right now.",
+    "whatHandlesIt": "Accepts it. Explains the meeting is only to see whether it's worth budgeting for, and ties that to a cost the exec has already mentioned."
+  },
+  {
+    "id": "how-got-number",
+    "line": "How did you get this number?",
+    "whatHandlesIt": "Answers honestly in one sentence, then gives the reason for the call in one more. Doesn't dodge the question."
+  },
+  {
+    "id": "not-my-call",
+    "line": "That's not really my decision.",
+    "whatHandlesIt": "Asks who makes the call and whether the exec would want to be in that conversation. Doesn't just ask to be transferred."
+  },
+  {
+    "id": "tried-before",
+    "line": "We tried something like that. Nobody used it.",
+    "whatHandlesIt": "Asks what went wrong, and shows they heard the answer before explaining what's different."
+  }
+]

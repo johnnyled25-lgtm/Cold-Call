@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cold Call Lab</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <h1 class="app-name" data-copy="appName"></h1>
+    <nav class="app-nav" aria-label="App">
+      <button type="button" class="link-button" id="open-past" data-copy="pastCalls.navLink"></button>
+      <button type="button" class="link-button" id="open-settings" data-copy="settings.heading"></button>
+    </nav>
+  </header>
+
+  <main>
+    <p id="app-message" class="app-message" role="alert" hidden></p>
+
+    <!-- Screen 1: the briefing the student reads before calling -->
+    <section id="screen-briefing" class="screen" aria-labelledby="briefing-heading">
+      <h2 id="briefing-heading" data-copy="briefing.heading"></h2>
+      <details class="explainer">
+        <summary data-copy="explainers.toggle"></summary>
+        <h3 class="explainer-label" data-copy="explainers.whatLabel"></h3>
+        <p data-copy="explainers.briefing.what"></p>
+        <h3 class="explainer-label" data-copy="explainers.whyLabel"></h3>
+        <p data-copy="explainers.briefing.why"></p>
+      </details>
+      <div class="card briefing-card" id="briefing-card"></div>
+      <div class="actions">
+        <button type="button" class="btn btn-primary" id="btn-call" data-copy="briefing.callButton"></button>
+        <button type="button" class="btn" id="btn-random" data-copy="briefing.randomButton"></button>
+      </div>
+    </section>
+
+    <!-- Screen 2: the call -->
+    <section id="screen-call" class="screen" aria-labelledby="call-heading" hidden>
+      <h2 id="call-heading" class="visually-hidden" data-copy="call.heading"></h2>
+      <details class="explainer">
+        <summary data-copy="explainers.toggle"></summary>
+        <h3 class="explainer-label" data-copy="explainers.whatLabel"></h3>
+        <p data-copy="explainers.call.what"></p>
+        <h3 class="explainer-label" data-copy="explainers.whyLabel"></h3>
+        <p data-copy="explainers.call.why"></p>
+      </details>
+      <div class="call-layout">
+        <div class="call-left">
+          <div class="exec-stage" id="exec-stage"></div>
+          <details class="card call-brief" id="call-brief" open>
+            <summary data-copy="call.briefingToggle"></summary>
+            <div id="call-brief-body" class="briefing-card"></div>
+          </details>
+        </div>
+        <div class="phone">
+          <div class="phone-header">
+            <div class="phone-name" id="phone-name"></div>
+            <div class="phone-sub" id="phone-sub"></div>
+            <div class="phone-timer"><span class="live-dot" aria-hidden="true">●</span> <span id="phone-timer">0:00</span></div>
+          </div>
+          <ol class="transcript" id="transcript" aria-live="polite"></ol>
+          <div class="call-status" id="call-status" aria-live="polite"></div>
+        </div>
+      </div>
+      <p id="call-note" class="call-note" role="status" hidden></p>
+      <form class="call-controls" id="typed-form">
+        <button type="button" class="btn btn-primary btn-talk" id="btn-talk" data-copy="call.talkButton" hidden></button>
+        <label for="typed-input" class="visually-hidden" data-copy="call.typePlaceholder"></label>
+        <input type="text" id="typed-input" class="typed-input" autocomplete="off">
+        <button type="submit" class="btn" id="btn-send" data-copy="call.send"></button>
+        <button type="button" class="btn btn-danger" id="btn-end" data-copy="call.endCall"></button>
+      </form>
+    </section>
+
+    <!-- Screen 3: the debrief — the hidden state, revealed -->
+    <section id="screen-debrief" class="screen" aria-labelledby="debrief-heading" hidden>
+      <h2 id="debrief-heading" data-copy="debrief.heading"></h2>
+      <details class="explainer">
+        <summary data-copy="explainers.toggle"></summary>
+        <h3 class="explainer-label" data-copy="explainers.whatLabel"></h3>
+        <p data-copy="explainers.debrief.what"></p>
+        <h3 class="explainer-label" data-copy="explainers.whyLabel"></h3>
+        <p data-copy="explainers.debrief.why"></p>
+      </details>
+      <div id="debrief-body"></div>
+      <div class="actions">
+        <button type="button" class="btn btn-primary" id="btn-call-again" data-copy="debrief.callAgain"></button>
+        <button type="button" class="btn" id="btn-new-exec" data-copy="debrief.newExec"></button>
+      </div>
+    </section>
+
+    <!-- Screen 4: past calls and the Record -->
+    <section id="screen-past" class="screen" aria-labelledby="past-heading" hidden>
+      <h2 id="past-heading" data-copy="pastCalls.heading"></h2>
+      <div id="past-body"></div>
+      <div class="actions">
+        <button type="button" class="btn" id="btn-past-back" data-copy="pastCalls.back"></button>
+      </div>
+    </section>
+
+    <!-- Developer panel, shown only with ?debug=1 in the address -->
+    <section id="debug-panel" class="debug-panel" hidden></section>
+  </main>
+
+  <!-- One-time note about browser speech recognition (brief lesson e) -->
+  <dialog id="privacy-dialog" class="small-dialog" aria-labelledby="privacy-heading">
+    <form method="dialog">
+      <h2 id="privacy-heading" data-copy="voice.privacyTitle"></h2>
+      <p data-copy="voice.privacyBody"></p>
+      <div class="actions">
+        <button type="submit" class="btn btn-primary" value="ok" data-copy="voice.privacyOk"></button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Settings drawer -->
+  <dialog id="settings-drawer" class="drawer" aria-labelledby="settings-heading">
+    <form id="settings-form" method="dialog">
+      <div class="drawer-head">
+        <h2 id="settings-heading" data-copy="settings.heading"></h2>
+        <button type="button" class="link-button" id="btn-close-settings" data-copy="settings.close"></button>
+      </div>
+      <p id="settings-alert" class="app-message" role="alert" hidden></p>
+
+      <fieldset class="provider-choice">
+        <legend data-copy="settings.provider"></legend>
+        <label class="radio"><input type="radio" name="provider" value="anthropic"> <span data-copy="settings.providerNames.anthropic"></span></label>
+        <label class="radio"><input type="radio" name="provider" value="openai"> <span data-copy="settings.providerNames.openai"></span></label>
+      </fieldset>
+
+      <div class="key-help">
+        <p data-copy="settings.keyWhat"></p>
+        <p data-copy="settings.keyNotSubscription"></p>
+        <p><span data-copy="settings.keyWhere"></span> <a id="key-link" target="_blank" rel="noopener noreferrer"></a></p>
+        <p data-copy="settings.keyPrivacy"></p>
+      </div>
+
+      <label for="set-key" data-copy="settings.apiKey"></label>
+      <div class="key-row">
+        <input type="password" id="set-key" autocomplete="off" spellcheck="false">
+        <button type="button" class="btn" id="btn-show-key" aria-controls="set-key" data-copy="settings.showKey"></button>
+      </div>
+
+      <label for="set-model" data-copy="settings.model"></label>
+      <input type="text" id="set-model" autocomplete="off" spellcheck="false">
+      <p class="muted small" data-copy="settings.modelNote"></p>
+      <button type="button" class="link-button small" id="btn-model-reset"></button>
+
+      <label for="set-temp"><span data-copy="settings.temperature"></span>: <output id="temp-value" for="set-temp"></output></label>
+      <input type="range" id="set-temp" min="0" max="1" step="0.1" aria-describedby="temp-note">
+      <p class="muted small" id="temp-note"></p>
+
+      <div class="actions">
+        <button type="button" class="btn" id="btn-test" data-copy="settings.test"></button>
+      </div>
+      <p id="test-result" class="test-result" role="status" aria-live="polite"></p>
+
+      <div class="actions">
+        <button type="submit" class="btn btn-primary" value="save" data-copy="settings.save"></button>
+        <button type="submit" class="btn" value="cancel" data-copy="settings.cancel"></button>
+      </div>
+
+      <h3 class="drawer-subhead" data-copy="voice.testHeading"></h3>
+      <div class="actions">
+        <button type="button" class="btn" id="btn-mic-test" data-copy="voice.test"></button>
+      </div>
+      <p id="mic-test-result" class="test-result" role="status" aria-live="polite"></p>
+
+      <hr>
+      <button type="button" class="btn btn-danger" id="btn-clear" data-copy="settings.clearEverything"></button>
+      <p class="muted small" data-copy="settings.clearNote"></p>
+    </form>
+  </dialog>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

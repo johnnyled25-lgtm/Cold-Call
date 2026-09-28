@@ -1,0 +1,393 @@
+/* Cold Call Lab styles.
+   To re-brand, edit only the :root block below. Every color in the app comes from it. */
+
+:root {
+  --ink: #1F2933;          /* main text */
+  --muted: #52606D;        /* secondary text */
+  --surface: #F5F7FA;      /* page background */
+  --card: #FFFFFF;         /* cards and panels */
+  --border: #D9E2EC;       /* lines and outlines */
+  --accent: #2F6FEB;       /* buttons, links, focus */
+  --accent-ink: #FFFFFF;   /* text on accent */
+  --outcome-booked: #1B7F4B;  /* Meeting booked — 5.0:1 on white */
+  --outcome-hungup: #B42318;  /* Hung up — 6.5:1 on white */
+  --focus-ring: #2F6FEB;
+
+  /* The drawn exec (appearance values from personas.json map to these) */
+  --skin-light: #F3D2B8;
+  --skin-medium-light: #E1B08A;
+  --skin-medium: #C68A62;
+  --skin-medium-dark: #9C6644;
+  --skin-dark: #6B4430;
+  --hair-black: #231F20;
+  --hair-brown: #5B3A29;
+  --hair-blonde: #D9B26A;
+  --hair-red: #A5442A;
+  --hair-gray: #A7A9AC;
+  --attire-blazer: #2E3A59;
+  --attire-button-down: #6C8EBF;
+  --attire-polo: #3F7D5A;
+  --attire-sweater: #8E5A7C;
+  --attire-cardigan: #B7894A;
+  --shirt: #F4F6F9;
+  --stage-wall: #E4E9F0;
+  --stage-window: #CFE0F5;
+  --stage-desk: #B98B5E;
+  --stage-desk-front: #9C7249;
+  --stage-monitor: #2B3440;
+  --stage-screen: #DDE6F2;
+  --stage-phone: #3A4350;
+  --stage-notepad: #FFF8DC;
+  --face-ink: #1F2933;
+
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: Consolas, Menlo, monospace;  /* debug panel only */
+
+  --radius: 10px;
+  --gap: 16px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+.app-name { font-size: 1.15rem; margin: 0; }
+
+main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+}
+
+.actions { display: flex; gap: 12px; margin-top: var(--gap); }
+
+.btn {
+  font: inherit;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+}
+.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn-danger { border-color: var(--outcome-hungup); color: var(--outcome-hungup); }
+.link-button { font: inherit; background: none; border: none; color: var(--accent); cursor: pointer; }
+
+:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+
+/* Call screen */
+.call-layout { display: grid; grid-template-columns: 2fr 1fr; gap: var(--gap); min-height: 420px; }
+.exec-stage { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); }
+.phone { display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); }
+.phone-header { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.transcript { list-style: none; margin: 0; padding: 12px 16px; overflow-y: auto; flex: 1; }
+.call-controls { display: flex; gap: 12px; margin-top: var(--gap); }
+.typed-input { flex: 1; font: inherit; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; }
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+@media (max-width: 800px) {
+  .call-layout { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+/* Messages and small text */
+.muted { color: var(--muted); }
+.app-message {
+  background: var(--card); border: 1px solid var(--outcome-hungup); color: var(--ink);
+  border-radius: var(--radius); padding: 10px 14px; margin: 0 0 var(--gap);
+}
+.briefing-card h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin: 18px 0 4px; }
+.briefing-card h3:first-child { margin-top: 0; }
+
+/* Phone */
+.phone-name { font-weight: 600; }
+.phone-sub { color: var(--muted); font-size: 0.9rem; }
+.phone-timer { font-variant-numeric: tabular-nums; margin-top: 4px; }
+.live-dot { color: var(--outcome-booked); }
+.line { margin: 0 0 10px; }
+.line-who { font-weight: 600; }
+.line-student .line-who { color: var(--accent); }
+.call-status { padding: 6px 16px 12px; color: var(--muted); min-height: 2em; }
+
+/* Debrief preview */
+.outcome { font-size: 1.25rem; font-weight: 600; }
+.outcome-icon { display: inline-block; width: 1.2em; }
+.outcome-meetingBooked { color: var(--outcome-booked); }
+.outcome-hungUp { color: var(--outcome-hungup); }
+.table-wrap { overflow-x: auto; }
+.turns { width: 100%; border-collapse: collapse; background: var(--card); }
+.turns th, .turns td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+.turns th { font-size: 0.85rem; color: var(--muted); }
+.turns .num { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.row-drop .num { color: var(--outcome-hungup); }
+
+/* Settings drawer (slides in from the right) */
+.drawer {
+  margin: 0 0 0 auto; height: 100%; max-height: 100%; width: min(460px, 100%);
+  border: none; border-left: 1px solid var(--border); border-radius: 0; padding: 20px 24px;
+  background: var(--card); color: var(--ink); overflow-y: auto;
+}
+.drawer::backdrop { background: rgba(31, 41, 51, 0.35); }
+.drawer-head { display: flex; align-items: center; justify-content: space-between; }
+.drawer-head h2 { margin: 0; }
+.drawer label { display: block; font-weight: 600; margin-top: 16px; }
+.drawer label.radio { font-weight: normal; margin-top: 6px; }
+.drawer input[type="text"], .drawer input[type="password"] {
+  width: 100%; font: inherit; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; margin-top: 4px;
+}
+.drawer input[type="range"] { width: 100%; margin-top: 6px; }
+.provider-choice { border: 1px solid var(--border); border-radius: 8px; margin: 16px 0 0; padding: 8px 14px 12px; }
+.provider-choice legend { font-weight: 600; padding: 0 4px; }
+.key-help { font-size: 0.92rem; color: var(--muted); }
+.key-help p { margin: 10px 0; }
+.key-help a { color: var(--accent); }
+.key-row { display: flex; gap: 8px; align-items: stretch; }
+.key-row input { flex: 1; }
+.key-row .btn { margin-top: 4px; }
+.small { font-size: 0.85rem; }
+.drawer p.small { margin: 4px 0; }
+.test-result { min-height: 1.5em; margin: 8px 0 0; }
+.debug-detail { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); }
+.drawer hr { border: none; border-top: 1px solid var(--border); margin: 20px 0 16px; }
+
+/* Debug panel (?debug=1) */
+.debug-panel { margin-top: 24px; }
+.debug-panel pre { font-family: var(--font-mono); font-size: 0.8rem; background: var(--card); border: 1px dashed var(--border); padding: 12px; white-space: pre-wrap; }
+
+button:disabled, input:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Voice */
+.btn-talk { min-width: 11em; touch-action: none; user-select: none; -webkit-user-select: none; }
+.btn-talk.is-recording { background: var(--outcome-hungup); border-color: var(--outcome-hungup); }
+.call-note { margin: var(--gap) 0 0; padding: 8px 12px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; color: var(--muted); }
+.mic { font-size: 0.85em; }
+.small-dialog { border: 1px solid var(--border); border-radius: var(--radius); max-width: 480px; width: calc(100% - 32px); background: var(--card); color: var(--ink); padding: 20px 24px; }
+.small-dialog::backdrop { background: rgba(31, 41, 51, 0.35); }
+.small-dialog h2 { margin-top: 0; font-size: 1.2rem; }
+.drawer-subhead { font-size: 1rem; margin: 20px 0 0; }
+
+/* ---------------------------------------------------------------------------
+   The drawn exec (js/exec-drawing.js). Poses are classes on the <svg>:
+   pose-ringing | pose-on-call | pose-hung-up | pose-booked,
+   mood-engaged | mood-neutral | mood-impatient, is-skeptical, is-talking.
+   --------------------------------------------------------------------------- */
+.exec-stage { display: flex; align-items: flex-end; justify-content: center; overflow: hidden; background: linear-gradient(to bottom, var(--stage-wall) 78%, var(--stage-desk-front) 78%); }
+.exec { width: 100%; height: auto; display: block; }
+
+/* Colors from the appearance classes */
+.exec.skin-light { --exec-skin: var(--skin-light); }
+.exec.skin-medium-light { --exec-skin: var(--skin-medium-light); }
+.exec.skin-medium { --exec-skin: var(--skin-medium); }
+.exec.skin-medium-dark { --exec-skin: var(--skin-medium-dark); }
+.exec.skin-dark { --exec-skin: var(--skin-dark); }
+.exec.hair-black { --exec-hair: var(--hair-black); }
+.exec.hair-brown { --exec-hair: var(--hair-brown); }
+.exec.hair-blonde { --exec-hair: var(--hair-blonde); }
+.exec.hair-red { --exec-hair: var(--hair-red); }
+.exec.hair-gray { --exec-hair: var(--hair-gray); }
+.exec.attire-blazer { --exec-attire: var(--attire-blazer); }
+.exec.attire-button-down { --exec-attire: var(--attire-button-down); }
+.exec.attire-polo { --exec-attire: var(--attire-polo); }
+.exec.attire-sweater { --exec-attire: var(--attire-sweater); }
+.exec.attire-cardigan { --exec-attire: var(--attire-cardigan); }
+
+.exec .wall { fill: var(--stage-wall); }
+.exec .window-glass { fill: var(--stage-window); }
+.exec .window-frame { stroke: var(--card); stroke-width: 4; fill: none; }
+.exec .monitor-body { fill: var(--stage-monitor); }
+.exec .monitor-screen { fill: var(--stage-screen); }
+.exec .monitor-lines { stroke: var(--muted); stroke-width: 3; stroke-linecap: round; opacity: 0.5; }
+.exec .skin { fill: var(--exec-skin); }
+.exec .hair { fill: var(--exec-hair); }
+.exec .hair-thin { opacity: 0.85; }
+.exec .shine { stroke: var(--card); stroke-width: 3; fill: none; opacity: 0.35; stroke-linecap: round; }
+.exec .attire { fill: var(--exec-attire); }
+.exec .sleeve { stroke: var(--exec-attire); stroke-width: 26; stroke-linecap: round; fill: none; }
+.exec .shirt { fill: var(--shirt); }
+.exec .shade { fill: var(--face-ink); opacity: 0.22; }
+.exec .light { fill: var(--card); opacity: 0.3; }
+.exec .seam { stroke: var(--face-ink); opacity: 0.2; stroke-width: 1.5; }
+.exec .button { fill: var(--card); opacity: 0.7; }
+.exec .band { stroke: var(--face-ink); opacity: 0.22; stroke-width: 6; fill: none; stroke-linecap: round; }
+.exec .band-thin { stroke-width: 4; }
+.exec .pupil { fill: var(--face-ink); }
+.exec .brow, .exec .nose, .exec .mouth-line { stroke: var(--face-ink); stroke-width: 3; fill: none; stroke-linecap: round; }
+.exec .nose { stroke-width: 2; opacity: 0.5; }
+.exec .mouth-open { fill: var(--face-ink); opacity: 0; }
+.exec .glasses rect, .exec .glasses path { fill: none; stroke: var(--face-ink); stroke-width: 2.5; }
+.exec .desk-top { fill: var(--stage-desk); }
+.exec .desk-front { fill: var(--stage-desk-front); }
+.exec .phone { fill: var(--stage-phone); }
+.exec .phone-keys { stroke: var(--card); stroke-width: 3; stroke-linecap: round; opacity: 0.5; }
+.exec .ring-waves path { stroke: var(--accent); stroke-width: 3; fill: none; stroke-linecap: round; opacity: 0; }
+.exec .notepad { fill: var(--stage-notepad); }
+.exec .notepad-lines { stroke: var(--muted); stroke-width: 1.5; opacity: 0.5; }
+.exec .pen { stroke: var(--face-ink); stroke-width: 3.5; stroke-linecap: round; opacity: 0; }
+
+/* Moving parts turn around sensible points */
+.exec .body { transform-origin: 240px 300px; transition: transform 0.5s ease; }
+.exec .head { transform-origin: 240px 205px; transition: transform 0.4s ease; }
+.exec .eyes { transition: transform 0.3s ease; }
+.exec .brow-right { transform-origin: 257px 132px; transition: transform 0.25s ease; }
+.exec .arm, .exec .handset-cradle { transition: opacity 0.35s ease; }
+.exec .mouth-line { transition: opacity 0.2s ease; }
+
+/* Phone in hand, or on the desk */
+.exec .arm-up { opacity: 0; }
+.exec.pose-on-call .arm-up, .exec.pose-booked .arm-up { opacity: 1; }
+.exec.pose-on-call .arm-down-left, .exec.pose-booked .arm-down-left,
+.exec.pose-on-call .handset-cradle, .exec.pose-booked .handset-cradle { opacity: 0; }
+
+/* Ringing: phone buzzing, exec looking at the screen */
+.exec.pose-ringing .eyes { transform: translate(6px, -1px); }
+.exec.pose-ringing .head { transform: translateX(3px) rotate(2deg); }
+.exec.pose-ringing .desk-phone { animation: buzz 1.2s infinite; transform-origin: 86px 270px; }
+.exec.pose-ringing .ring-waves path { animation: ring 1.2s infinite; }
+
+/* Mouth follows the mood: neutral by default */
+.exec .mouth-engaged, .exec .mouth-impatient { opacity: 0; }
+.exec.mood-engaged .mouth-neutral, .exec.mood-impatient .mouth-neutral { opacity: 0; }
+.exec.mood-engaged .mouth-engaged, .exec.mood-impatient .mouth-impatient { opacity: 1; }
+
+/* Engaged (patience at or above the upper band): leans in, nods */
+.exec.pose-on-call.mood-engaged .body, .exec.pose-booked .body { transform: translateY(10px) scale(1.07); }
+.exec .brow { transition: transform 0.25s ease; }
+.exec.pose-on-call.mood-engaged .brow-left, .exec.pose-booked .brow-left { transform: translateY(-3px); }
+.exec.pose-on-call.mood-engaged .brow-right { transform: translateY(-3px); }
+.exec.pose-on-call.mood-engaged .head { animation: nod 3.2s ease-in-out infinite; }
+
+/* Impatient (below the lower band): looks away at the screen, sits back */
+.exec.pose-on-call.mood-impatient .eyes { transform: translate(7px, -2px); animation: glance 5s ease-in-out infinite; }
+.exec.pose-on-call.mood-impatient .head { transform: translateX(3px) rotate(4deg); }
+.exec.pose-on-call.mood-impatient .body { transform: translateY(-2px) scale(0.99); }
+
+/* Skeptical: one eyebrow up when an objection is raised */
+.exec.is-skeptical .brow-right { transform: translateY(-6px) rotate(-10deg); }
+
+/* Talking: a simple loop, or following the words where the browser reports them */
+.exec.talking-loop .mouth-open { animation: talk 0.26s ease-in-out infinite alternate; }
+.exec.mouth-is-open .mouth-open { opacity: 1; }
+
+/* Hung up: phone back on the desk, eyes down */
+.exec.pose-hung-up .eyes { transform: translate(4px, 4px); }
+
+/* Meeting booked: writes a note */
+.exec.pose-booked .pen { opacity: 1; }
+.exec.pose-booked .writing-hand { animation: write 0.9s ease-in-out infinite; transform-origin: 296px 296px; }
+.exec.pose-booked .eyes { transform: translate(5px, 5px); }
+
+@keyframes buzz {
+  0%, 40%, 100% { transform: none; }
+  5%, 15%, 25%, 35% { transform: translateX(-2px) rotate(-1.5deg); }
+  10%, 20%, 30% { transform: translateX(2px) rotate(1.5deg); }
+}
+@keyframes ring { 0%, 45% { opacity: 0.9; } 60%, 100% { opacity: 0; } }
+@keyframes nod { 0%, 70%, 100% { transform: rotate(0); } 78% { transform: rotate(3deg) translateY(2px); } 86% { transform: rotate(-1deg); } }
+@keyframes glance { 0%, 60%, 100% { transform: translate(7px, -2px); } 70%, 85% { transform: translate(-3px, 4px); } }
+@keyframes talk { from { opacity: 0; } to { opacity: 1; } }
+@keyframes write { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(-4px, 1px); } 50% { transform: translate(-8px, 0); } 75% { transform: translate(-4px, -1px); } }
+
+/* Reduced motion: no animation, just still poses. Talking shows a still open mouth. */
+@media (prefers-reduced-motion: reduce) {
+  .exec.is-talking .mouth-open { opacity: 0.8; }
+  .exec.pose-ringing .ring-waves path { opacity: 0.9; }
+}
+
+/* ---------------------------------------------------------------------------
+   Call screen: the drawing with "Your briefing" underneath
+   --------------------------------------------------------------------------- */
+.call-left { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+.call-brief { padding: 12px 18px; }
+.call-brief summary { cursor: pointer; font-weight: 600; }
+.call-brief .briefing-card { font-size: 0.92rem; }
+.call-brief .briefing-card h3 { margin-top: 12px; }
+.call-brief .briefing-card p, .call-brief .briefing-card ul { margin: 4px 0; }
+.app-nav { display: flex; gap: 16px; }
+
+/* ---------------------------------------------------------------------------
+   Debrief
+   --------------------------------------------------------------------------- */
+#debrief-body { display: flex; flex-direction: column; gap: var(--gap); }
+.debrief-section h3 { margin: 0 0 8px; font-size: 1.05rem; }
+.outcome-block .outcome { margin: 0 0 4px; }
+.outcome-block p:last-child { margin: 0; }
+.outcome-block.outcome-meetingBooked { border-left: 6px solid var(--outcome-booked); }
+.outcome-block.outcome-hungUp { border-left: 6px solid var(--outcome-hungup); }
+.outcome-badge { font-weight: 600; }
+.outcome-badge.outcome-meetingBooked { color: var(--outcome-booked); }
+.outcome-badge.outcome-hungUp { color: var(--outcome-hungup); }
+.plain-list { margin: 0; padding-left: 20px; }
+.plain-list li { margin: 6px 0; }
+.debrief-section blockquote { margin: 0 0 8px; padding: 8px 14px; border-left: 3px solid var(--border); background: var(--surface); }
+.turn-move { font-weight: 600; font-variant-numeric: tabular-nums; }
+.judgment-row { display: flex; gap: var(--gap); align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.judgment-row p { flex: 1 1 320px; margin: 8px 0 0; }
+.debrief-transcript { list-style: none; padding: 0; margin: 12px 0 0; }
+.plain-text pre { white-space: pre-wrap; font-family: var(--font-sans); font-size: 0.85rem; background: var(--surface); padding: 12px; border-radius: 8px; }
+.copy-status { align-self: center; }
+.record-table { max-width: 520px; }
+
+/* The patience chart: one line, recessive grid, text in ink colors */
+.chart-wrap { position: relative; margin: 8px 0; }
+.patience-chart { width: 100%; height: auto; display: block; overflow: visible; }
+.chart-grid { stroke: var(--border); stroke-width: 1; }
+.chart-axis { fill: var(--muted); font-size: 11px; font-family: var(--font-sans); }
+.chart-label { fill: var(--ink); font-size: 12px; font-weight: 600; font-family: var(--font-sans); }
+.chart-threshold { stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.chart-crosshair { stroke: var(--muted); stroke-width: 1; opacity: 0.5; }
+.chart-line { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.marker { stroke: var(--card); stroke-width: 2; }
+.marker-start { fill: var(--accent); }
+.marker-gain { fill: var(--outcome-booked); }
+.marker-drop { fill: var(--outcome-hungup); }
+.marker-flat { fill: var(--muted); }
+.marker-retry { fill: var(--card); stroke: var(--muted); stroke-width: 2; }
+.chart-hit { fill: transparent; cursor: pointer; outline: none; }
+.chart-hit:focus-visible { stroke: var(--focus-ring); stroke-width: 2; }
+.chart-tip {
+  position: absolute; transform: translate(-50%, calc(-100% - 12px)); max-width: 320px; width: max-content;
+  background: var(--card); color: var(--ink); border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 12px; font-size: 0.85rem; box-shadow: 0 4px 14px rgba(31, 41, 51, 0.12); pointer-events: none; z-index: 2;
+}
+.chart-tip.tip-below { transform: translate(-50%, 16px); }
+.chart-tip div + div { margin-top: 3px; }
+.chart-tip .tip-strong { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Keep the whole call on one screen: drawing, briefing, transcript, and the typing box. */
+.exec-stage .exec { width: auto; max-width: 100%; max-height: 38vh; margin: 0 auto; }
+.call-brief { max-height: 30vh; overflow-y: auto; }
+.call-layout { min-height: 0; }
+.phone { max-height: calc(38vh + 30vh + var(--gap)); }
+
+/* "What is happening here" panels */
+.explainer { margin: 0 0 var(--gap); background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 16px; }
+.explainer summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+.explainer .explainer-label { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin: 12px 0 2px; }
+.explainer p { margin: 0 0 4px; max-width: 70ch; }
+#screen-call .explainer { margin-bottom: 12px; padding: 6px 14px; }
