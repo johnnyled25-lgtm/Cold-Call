@@ -1,5 +1,12 @@
 # Status
 
+## Deployed (2026-09-28)
+- **Live:** https://coldcall-lab.vercel.app (public; Vercel Authentication turned off).
+- **Repo:** https://github.com/johnnyled25-lgtm/Cold-Call, branch `main`. Vercel redeploys on every push.
+- Checked as a logged-out visitor: every file loads, the live files match the repo, and the briefing renders in Chrome with no console errors. A full call on the live site still needs a real key (Johnny).
+- `docs/` (the build brief copy) is kept out of the repo because it names GCSU; it stays on the development computer.
+- Anyone can open the site, but each visitor needs their own API key to call. The key-hiding proxy (brief §9) is the step before students use it.
+
 ## Phase 6 — Polish (done; build complete, awaiting final review)
 
 ### Done
@@ -41,7 +48,6 @@
 - OpenAI with a real key.
 - Safari check (needs a Mac).
 - Before students use it: the key-hiding proxy (brief §9), so students don't need their own keys.
-- The folder isn't a git repository yet; `git init` and a first commit are ready to do whenever you want.
 
 ## Phase 5 — The debrief and past calls (done, awaiting review)
 

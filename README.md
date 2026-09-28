@@ -4,6 +4,8 @@ A practice lab where a student cold-calls an AI executive, drawn on screen, who 
 
 It's a static website: plain HTML, CSS, and JavaScript. No build step, no server, no accounts, no analytics.
 
+**Live:** https://coldcall-lab.vercel.app (deployed on Vercel from the `main` branch of https://github.com/johnnyled25-lgtm/Cold-Call; every push to `main` redeploys it).
+
 ---
 
 ## Run it on your computer
