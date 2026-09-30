@@ -1,5 +1,22 @@
 # Status
 
+## Fixes from Johnny's Chrome test (2026-09-30; done, not yet pushed)
+
+Johnny approved items 1–6 of his test list. #7 (default model → `claude-haiku-4-5`) is **on hold**: Haiku 4.5 may be retired as soon as Oct 15, 2026, so the default stays `claude-sonnet-5`. #8 (hide the temperature slider) and #9 (student name and role on the briefing) are **waiting** for a go-ahead.
+
+1. **Input stuck locked after the exec speaks: fixed.** The turn now goes back to the student when the exec's voice ends, errors, never starts (3 s, `SPEECH_START_TIMEOUT_SECONDS`), or runs past a limit based on the line's length, whichever comes first, exactly once (`js/turnGate.js` → `guardSpeech`). Also fixed a path in `voice.js` where an error while recording latency could skip the unlock. The debug panel notes when a fallback was needed.
+   - **Found while testing:** the call also **rang forever if the browser's microphone pop-up was never answered**, because pickup waited on it. Now the exec picks up after at most 4 s (`MIC_WAIT_SECONDS`); the student can type right away, a note asks them to answer the pop-up, and the talk button turns on once the mic is allowed (or the call switches to typing if it's blocked).
+   - Checked in headless Chrome, which has no audio (the "voice never starts" case): the call picks up, the exec's line shows, and the text box unlocks.
+2. **Silence timer: fixed.** It never runs while input is locked (exec thinking or speaking, student recording, call over), and **every keystroke restarts the 8-second countdown** (`createSilenceWatch`). Words sitting in the text box also count as responding, so a slow typist is never charged.
+3. **Exec lines showing "…": fixed.** Only the *student's* silence shows as "…"; the exec's reply to a silence was wrongly shown as "…" too. Exec text shows as soon as the reply arrives.
+4. **Goodbyes above the lowest band: fixed in `js/execPrompt.js`.** At patience 30 or above, the exec must stay on the line (curt is fine; no goodbye, no "I have to go"). Below 30 it may warn it's about to go. A parting line only when patience reaches 0, when the app hangs up. Both the fixed rules and the per-turn state say so. (This is an instruction to the AI; it can still occasionally slip. The patience engine, not the AI, still decides the hang-up.)
+5. **Scroll to top when a call starts: fixed.** The page scrolls to the top, and focusing the text box or talk button no longer scrolls it down.
+6. **Crewbeam vs. Beth Olson's single plant: fixed in the offer copy.** "for teams that work in shifts across more than one site" → "for hourly teams that work in shifts, at one location or several"; "open shifts across every site" → "every open shift on one screen, across all shifts and locations". Duebird and Paperlight were checked against their execs; no changes needed.
+
+**Tests: 96, all passing** (9 new), including the requested one: the silence timer does not fire while input is locked, or while the text box has changed in the last 8 seconds. Also tested: the speech guard releases on end, error, no-start, and timeout, and only once; and the goodbye rule is in the exec's instructions.
+
+**Not yet verified:** #3 and #4 in a real call (they need an API key); the fixes aren't on the live site until pushed.
+
 ## Deployed (2026-09-28)
 - **Live:** https://coldcall-lab.vercel.app (public; Vercel Authentication turned off).
 - **Repo:** https://github.com/johnnyled25-lgtm/Cold-Call, branch `main`. Vercel redeploys on every push.

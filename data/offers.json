@@ -3,12 +3,12 @@
     "id": "crewbeam",
     "company": "Lanternfield Software",
     "product": "Crewbeam",
-    "oneLiner": "Shift scheduling by text message for teams that work in shifts across more than one site. When someone calls out, it finds a qualified replacement for you.",
+    "oneLiner": "Shift scheduling by text message for hourly teams that work in shifts, at one location or several. When someone calls out, it finds a qualified replacement for you.",
     "valuePoints": [
       "When someone calls out, Crewbeam texts qualified, available people in order until the shift is covered. No phone tree.",
       "Flags overtime before it happens, while there is still time to move a shift.",
       "Works by text message, so crews don't need to install an app.",
-      "Managers see open shifts across every site on one screen."
+      "Managers see every open shift on one screen, across all shifts and locations."
     ],
     "priceHint": "About $6 per scheduled employee per month. No setup fee.",
     "fitsPersonaIds": ["brasswell-freight", "oxbow-precision"]

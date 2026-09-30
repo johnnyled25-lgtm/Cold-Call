@@ -87,6 +87,10 @@ export const BANDS = {
 // Seconds of silence (after the exec finishes speaking) before the exec reacts.
 export const SILENCE_TIMEOUT_SECONDS = 8;
 
+// If the exec's voice hasn't started after this many seconds, the student gets the
+// turn back anyway (the exec's line is already on screen).
+export const SPEECH_START_TIMEOUT_SECONDS = 3;
+
 // How much patience a silence costs.
 export const SILENCE_COST = -8;
 
@@ -95,6 +99,11 @@ export const CALL_TIME_CAP_MINUTES = 6;
 
 // How long the phone rings before the exec picks up, in seconds.
 export const RING_SECONDS = 2;
+
+// The longest the phone rings while waiting for the student to answer the browser's
+// microphone pop-up. After this, the exec picks up anyway and the student can type
+// until the pop-up is answered.
+export const MIC_WAIT_SECONDS = 4;
 
 // ---------------------------------------------------------------------------
 // Voice

@@ -4,7 +4,7 @@
 import { COPY, fill } from "./copy.js";
 import {
   MOODS, DEFAULT_MODELS, MODELS_WITHOUT_TEMPERATURE, OUTCOMES, RING_SECONDS, SILENCE_TIMEOUT_SECONDS, STORAGE_KEYS,
-  MAX_TALK_SECONDS,
+  MAX_TALK_SECONDS, MIC_WAIT_SECONDS,
 } from "./constants.js";
 import { newSeed } from "./rng.js";
 import { drawCall } from "./draw.js";
@@ -22,6 +22,7 @@ import {
   recognitionSupported, synthesisSupported, requestMicAccess, createPushToTalk, loadVoices, speak, stopSpeaking,
 } from "./voice.js";
 import { pickVoice } from "./voicePick.js";
+import { guardSpeech, createSilenceWatch } from "./turnGate.js";
 import { mountExec } from "./exec-drawing.js";
 import { analyzeCall, formatTranscriptText } from "./debrief.js";
 import { renderDebrief as drawDebrief, renderPastCalls } from "./debrief-view.js";
@@ -180,7 +181,7 @@ async function startCall() {
     ptt: null,
     interim: "",
     waitUntil: null,
-    silenceTimer: null,
+    silence: null, // the 8-second silence countdown (turnGate.js)
     talkTimer: null,
     timer: null,
     abort: null,
@@ -188,6 +189,7 @@ async function startCall() {
     notes: [],
   };
   call = thisCall;
+  thisCall.silence = createSilenceWatch({ onSilence: () => onSilence(thisCall) });
   if (thisCall.voiceIn) thisCall.ptt = makePushToTalk(thisCall);
 
   thisCall.drawing = mountExec($("exec-stage"), persona, COPY.exec.describe);
@@ -197,20 +199,23 @@ async function startCall() {
   $("phone-timer").textContent = "0:00";
   setCallNote(thisCall.voiceIn ? "" : COPY.voice.unavailable);
   $("typed-input").value = "";
-  showScreen("call");
+  showScreen("call"); // scrolls to the top
   renderCall();
 
-  // Ring while the browser's voices load and the microphone permission is settled,
-  // so the permission pop-up never interrupts the student's first line.
+  // Ring while the browser's voices load and the microphone permission is asked,
+  // so the permission pop-up doesn't interrupt the student's first line. If the
+  // pop-up isn't answered within MIC_WAIT_SECONDS, the exec picks up anyway: the
+  // student can type, and voice turns on once the pop-up is answered.
+  const wait = (ms, value) => new Promise((r) => setTimeout(() => r(value), ms));
+  const micCheck = thisCall.voiceIn ? micAccess() : Promise.resolve("unsupported");
   const [voices, mic] = await Promise.all([
     loadVoices(),
-    thisCall.voiceIn ? micAccess() : Promise.resolve("unsupported"),
-    new Promise((r) => setTimeout(r, RING_SECONDS * 1000)),
+    Promise.race([micCheck, wait(MIC_WAIT_SECONDS * 1000, "pending")]),
+    wait(RING_SECONDS * 1000),
   ]);
   if (call !== thisCall || thisCall.phase !== "ringing") return; // ended while ringing
-  thisCall.mic = mic;
-  if (thisCall.voiceIn && mic === "denied") switchToTyping(thisCall, COPY.voice.micBlocked);
-  else if (thisCall.voiceIn && mic === "no-mic") switchToTyping(thisCall, COPY.voice.noMic);
+  applyMicResult(thisCall, mic);
+  if (mic === "pending") micCheck.then((late) => { if (call === thisCall && thisCall.phase === "live") { applyMicResult(thisCall, late); renderCall(); } });
   thisCall.voiceOut = pickVoice(voices, persona);
   thisCall.notes.push(`voice: ${thisCall.voiceOut.voice?.name || "browser default"} (rate ${thisCall.voiceOut.rate}, pitch ${thisCall.voiceOut.pitch})`);
 
@@ -220,7 +225,18 @@ async function startCall() {
   thisCall.timer = setInterval(tick, 250);
   renderCall();
   speakExec(thisCall, thisCall.state.turns[0].text);
-  (thisCall.voiceIn ? $("btn-talk") : $("typed-input")).focus();
+  (thisCall.voiceIn ? $("btn-talk") : $("typed-input")).focus({ preventScroll: true });
+  window.scrollTo(0, 0);
+}
+
+// Records the microphone check's result on the call and adjusts voice input.
+function applyMicResult(c, mic) {
+  c.mic = mic;
+  if (!c.voiceIn) return;
+  if (mic === "denied") switchToTyping(c, COPY.voice.micBlocked);
+  else if (mic === "no-mic") switchToTyping(c, COPY.voice.noMic);
+  else if (mic === "pending") setCallNote(COPY.voice.micPending);
+  else if ($("call-note").textContent === COPY.voice.micPending) setCallNote("");
 }
 
 let micGranted = false;
@@ -282,7 +298,7 @@ function renderCall() {
   list.replaceChildren(
     ...turns.map((t) => {
       const who = t.speaker === "student" ? COPY.call.you : firstName;
-      const text = t.events.includes("silence") ? "…" : t.text;
+      const text = t.speaker === "student" && t.events.includes("silence") ? "…" : t.text;
       const parts = [];
       if (t.inputMode === "voice") {
         parts.push(el("span", { className: "mic", text: "🎤 " }));
@@ -299,7 +315,7 @@ function renderCall() {
   $("typed-input").disabled = !open;
   $("btn-send").disabled = !open;
   $("btn-talk").hidden = !c.voiceIn;
-  $("btn-talk").disabled = !open && !c.recording;
+  $("btn-talk").disabled = (!open && !c.recording) || c.mic === "pending";
   $("btn-talk").textContent = c.recording ? COPY.call.talkRelease : COPY.call.talkButton;
   $("btn-talk").classList.toggle("is-recording", c.recording);
   if (c.state) $("phone-timer").textContent = formatTime(callDurationMs(c.state, Date.now()));
@@ -307,17 +323,21 @@ function renderCall() {
   renderDebug();
 }
 
-// The exec says a line. When the voice starts, onStarted(time) runs (for latency).
-// When it ends, the student's turn begins, or the call finishes if it has ended.
+// The exec says a line. Its text is already on screen. When the voice starts,
+// onStarted(time) runs (for latency). The turn goes back to the student when the
+// voice ends, errors, never starts, or runs past its expected length, whichever
+// comes first (guardSpeech), so the input can never stay locked.
 function speakExec(c, text, onStarted) {
   c.speaking = true;
+  c.silence.lock();
   renderCall();
   const v = c.voiceOut || {};
-  c.speech = speak(text, {
-    voice: v.voice, rate: v.rate, pitch: v.pitch,
-    onStart: () => onStarted?.(Date.now()),
-    onBoundary: () => c.drawing?.pulseMouth(),
-    onEnd: () => {
+  const guard = guardSpeech({
+    text,
+    rate: v.rate ?? 1,
+    onRelease: (reason) => {
+      if (reason === "no-start") c.speech?.cancel(); // don't let a late voice talk over the student
+      if (reason !== "ended") c.notes.push(`exec voice: ${reason}; turn handed back anyway`);
       c.speaking = false;
       c.speech = null;
       if (call !== c) return;
@@ -327,24 +347,35 @@ function speakExec(c, text, onStarted) {
         return;
       }
       armSilence(c);
-      if (!c.voiceIn) $("typed-input").focus();
+      if (!c.voiceIn) $("typed-input").focus({ preventScroll: true });
     },
   });
+  c.speechGuard = guard;
+  try {
+    const handle = speak(text, {
+      voice: v.voice, rate: v.rate, pitch: v.pitch,
+      onStart: () => { guard.started(); onStarted?.(Date.now()); },
+      onBoundary: () => c.drawing?.pulseMouth(),
+      onEnd: () => guard.ended(),
+    });
+    if (!guard.released) c.speech = handle;
+  } catch (err) {
+    console.error(err);
+    guard.ended();
+  }
 }
 
 // --- Silence -----------------------------------------------------------------
-// The clock starts when the exec finishes speaking. Holding the talk button or
-// having text in the box counts as responding, so a slow typist isn't penalized.
-function armSilence(c) {
-  clearTimeout(c.silenceTimer);
-  if (!canAct(c) || c.recording || $("typed-input").value.trim()) return;
-  c.silenceTimer = setTimeout(() => {
-    if (call === c && canAct(c) && !c.recording && !$("typed-input").value.trim()) {
-      takeTurn(c, { silence: true, releasedAt: Date.now() });
-    }
-  }, SILENCE_TIMEOUT_SECONDS * 1000);
+// The countdown (createSilenceWatch) starts when the student's turn begins, never
+// runs while input is locked, and starts over on every keystroke. Words waiting in
+// the text box also count as responding, so a slow typist is never charged.
+function onSilence(c) {
+  if (call !== c || !canAct(c) || c.recording) return;
+  if ($("typed-input").value.trim()) { c.silence.activity(); return; }
+  takeTurn(c, { silence: true, releasedAt: Date.now() });
 }
-const disarmSilence = (c) => { if (c) clearTimeout(c.silenceTimer); };
+const armSilence = (c) => c?.silence?.unlock();
+const disarmSilence = (c) => c?.silence?.lock();
 
 // --- Push to talk -------------------------------------------------------------
 function makePushToTalk(c) {
@@ -383,12 +414,12 @@ function switchToTyping(c, note) {
   c.voiceIn = false;
   c.ptt?.cancel();
   setCallNote(note);
-  $("typed-input").focus();
+  $("typed-input").focus({ preventScroll: true });
 }
 
 function pressTalk() {
   const c = call;
-  if (!c || !c.voiceIn || c.recording || !canAct(c)) return;
+  if (!c || !c.voiceIn || c.recording || !canAct(c) || c.mic === "pending") return;
   disarmSilence(c);
   setCallNote("");
   c.interim = "";
@@ -417,11 +448,9 @@ function wireTalkButton() {
     else pressTalk();
   });
 
-  // Typing counts as responding (see armSilence).
+  // Every keystroke starts the silence countdown over.
   $("typed-input").addEventListener("input", () => {
-    if (!call || call.phase !== "live") return;
-    if ($("typed-input").value.trim()) disarmSilence(call);
-    else armSilence(call);
+    if (call?.phase === "live") call.silence.activity();
   });
 }
 
@@ -473,6 +502,7 @@ async function takeTurn(c, { text = "", inputMode = "typed", silence = false, re
 
 function stopEverything(c) {
   disarmSilence(c);
+  c.speechGuard?.cancel();
   clearTimeout(c.talkTimer);
   c.abort?.abort();
   c.ptt?.cancel();

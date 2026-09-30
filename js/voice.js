@@ -157,12 +157,17 @@ export function speak(text, { voice = null, rate = 1, pitch = 1, onStart, onBoun
 
   let started = false;
   let finished = false;
-  const begin = () => { if (!started) { started = true; onStart?.(); } };
+  // A problem in onStart (e.g. while recording latency) must never stop onEnd from
+  // running, or the student's input would stay locked.
+  const begin = () => {
+    if (started) return;
+    started = true;
+    try { onStart?.(); } catch (err) { console.error(err); }
+  };
   const finish = () => {
     if (finished) return;
     finished = true;
     clearTimeout(safety);
-    begin();
     onEnd?.();
   };
   u.onstart = begin;

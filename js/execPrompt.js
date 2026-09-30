@@ -7,7 +7,7 @@
 //      so the provider can cache it (faster, cheaper).
 //   2. statePrompt: where the call stands right now. Rebuilt every turn.
 
-import { DELTA_MIN, DELTA_MAX, ACCEPTANCE_THRESHOLD, SILENCE_TIMEOUT_SECONDS } from "./constants.js";
+import { DELTA_MIN, DELTA_MAX, ACCEPTANCE_THRESHOLD, SILENCE_TIMEOUT_SECONDS, BANDS } from "./constants.js";
 import { replySchema } from "./replyParser.js";
 
 // Patience in plain words. The model gets these words along with the number.
@@ -87,7 +87,11 @@ Rough scale:
 - Rude, dishonest, or pushy: -20 to -30
 Your mood matters. When you're slammed, rambling costs more; on a slow day you forgive a little more.
 The reason is one plain sentence, under 20 words, about what the caller's line did. For example: "Opened with small talk instead of a reason for the call." No praise words like "great" or "excellent".
-You never decide when the call ends. The app does. If your patience would reach 0 with this reply, make "say" a short line ending the call (for example, "I've got to run."), because the line goes dead after it.
+You never decide when the call ends. The app does.
+Goodbyes are limited by your patience AFTER this reply:
+- At ${BANDS.IMPATIENT_BELOW} or above: stay on the line. Be curt if you like, but never say goodbye, that you have to go, that you're hanging up, or anything else that ends the conversation.
+- Below ${BANDS.IMPATIENT_BELOW}: you may warn that you're about to go (for example, "You've got ten seconds.").
+- At 0: make "say" a short line ending the call (for example, "I've got to run."), because the line goes dead after it.
 
 THE MEETING
 The caller's goal is a 15-minute meeting. Set acceptsMeeting to true only when (a) the caller has clearly asked for a meeting or time on your calendar, and (b) your patience after this reply is at least ${ACCEPTANCE_THRESHOLD}. When you accept, agree the way a busy person would (for example, "Fine. Thursday at ten, fifteen minutes."). If they ask but you're not convinced, deflect or say no in your own words.
@@ -122,6 +126,7 @@ export function statePrompt(state, { persona, objections }, { silence = false, r
     `- Objections you've raised: ${objLines}`,
     `- The caller ${state.askMade ? "has asked for a meeting." : "has not asked for a meeting yet."}`,
     `- You can accept a meeting only if the caller has asked and your patience after this reply is at least ${ACCEPTANCE_THRESHOLD}.`,
+    `- No goodbyes or "I've got to go" unless your patience after this reply is below ${BANDS.IMPATIENT_BELOW}. A parting line only if it reaches 0.`,
   ];
   if (silence) {
     lines.push(`- The caller has said nothing for ${SILENCE_TIMEOUT_SECONDS} seconds. React the way a person would (for example, "Hello? You still there?"). The app sets the patience change for silence, so put 0.`);

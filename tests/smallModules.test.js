@@ -74,3 +74,10 @@ test("Anthropic request: temperature left out where the model rejects it; thinki
   assert.equal(anthropicBody({ ...base, model: "claude-haiku-4-5" }).temperature, 0.8);
   assert.equal("thinking" in anthropicBody({ ...base, model: "claude-opus-5-5" }), false);
 });
+
+test("the exec may not say goodbye above the lowest band", () => {
+  const req = buildExecRequest(addStudentTurn(newCall(46), { text: "Let me tell you about us." }), ctx);
+  assert.match(req.system[0], new RegExp(`At ${BANDS.IMPATIENT_BELOW} or above: stay on the line`));
+  assert.match(req.system[0], /never say goodbye/);
+  assert.match(req.system[1], new RegExp(`No goodbyes .* unless your patience after this reply is below ${BANDS.IMPATIENT_BELOW}`));
+});

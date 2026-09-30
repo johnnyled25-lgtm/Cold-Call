@@ -64,6 +64,7 @@ export const COPY = {
     serviceBlocked:
       "The microphone works, but this browser's speech-to-text service is turned off or blocked. This is common on work and school computers. Type your side of the call, or try another browser (Chrome or Edge).",
     noMic: "Voice input isn't available: no microphone was found. You can type your side of the call.",
+    micPending: "To talk, answer the browser's microphone pop-up (Allow). You can type in the meantime.",
     serviceDown: "The browser's speech service couldn't be reached. You can type your side of the call.",
     // Settings → Test microphone
     testHeading: "Voice",
