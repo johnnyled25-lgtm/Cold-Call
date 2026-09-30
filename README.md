@@ -76,7 +76,7 @@ The content is in `data/` (field-by-field notes in `data/SCHEMA.md`):
 
 Keep everything fictional: no real companies, products, or people. After editing, run the tests (below); they check that ids match, every pairing is a real fit, and no banned words slipped into student-facing text.
 
-To see how the execs look in every state: `http://localhost:8000/?gallery=1` (add `&only=kettle-creek-dental`, or any exec's id, to see one large). To see a sample debrief: `http://localhost:8000/dev/debrief-preview.html`.
+To see how the execs look in every state: `http://localhost:8000/?gallery=1` (still by default; **Play animations** makes them move; add `&only=kettle-creek-dental`, or any exec's id, to see one large). To see a sample debrief: `http://localhost:8000/dev/debrief-preview.html`.
 
 ---
 

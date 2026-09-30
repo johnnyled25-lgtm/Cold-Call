@@ -32,6 +32,28 @@ import { execPose } from "./pose.js";
 const $ = (id) => document.getElementById(id);
 const DEBUG = new URLSearchParams(location.search).get("debug") === "1";
 
+// Debug only: a record of main-thread tasks over 50 ms (and, in Chrome, long frames),
+// so the "no task over 200 ms during a call" target can be checked on a real machine.
+const perf = { tasks: [], frames: [] };
+if (DEBUG && globalThis.PerformanceObserver) {
+  const watch = (type, into) => {
+    try {
+      new PerformanceObserver((list) => {
+        for (const e of list.getEntries()) into.push({ at: e.startTime, ms: Math.round(e.duration) });
+        renderDebug();
+      }).observe({ type, buffered: true });
+    } catch { /* not supported in this browser */ }
+  };
+  watch("longtask", perf.tasks);
+  watch("long-animation-frame", perf.frames);
+}
+function perfSummary(since) {
+  const tasks = perf.tasks.filter((t) => t.at >= since);
+  const frames = perf.frames.filter((t) => t.at >= since);
+  const max = (xs) => (xs.length ? Math.max(...xs.map((x) => x.ms)) : 0);
+  return `main thread this call: tasks over 50 ms: ${tasks.length}, over 200 ms: ${tasks.filter((t) => t.ms > 200).length}, longest: ${max(tasks)} ms; long frames: ${frames.length}, worst: ${max(frames)} ms`;
+}
+
 // ---------------------------------------------------------------------------
 // Small helpers
 // ---------------------------------------------------------------------------
@@ -145,11 +167,14 @@ function markPrivacyNoteSeen() {
 }
 
 // Shows the one-time voice privacy note, then resolves when the student clicks "Got it".
+// It counts as seen as soon as it's shown, so closing the tab with the note open
+// doesn't bring it back next time.
 function showPrivacyNote() {
   return new Promise((resolve) => {
     const dialog = $("privacy-dialog");
-    dialog.addEventListener("close", () => { markPrivacyNoteSeen(); resolve(); }, { once: true });
+    dialog.addEventListener("close", () => resolve(), { once: true });
     dialog.showModal();
+    markPrivacyNoteSeen();
   });
 }
 
@@ -185,6 +210,7 @@ async function startCall() {
     waitUntil: null,
     silence: null, // the silence countdown (turnGate.js)
     lastInputMode: "typed", // "voice" or "typed": sets how long a silence takes
+    perfSince: performance.now(), // for the debug panel's main-thread record
     talkTimer: null,
     timer: null,
     abort: null,
@@ -198,6 +224,7 @@ async function startCall() {
   });
   if (thisCall.voiceIn) thisCall.ptt = makePushToTalk(thisCall);
 
+  call?.drawing?.destroy?.();
   thisCall.drawing = mountExec($("exec-stage"), persona, COPY.exec.describe);
   $("call-brief-body").replaceChildren(...briefingNodes(draw));
   $("phone-name").textContent = persona.name;
@@ -302,20 +329,25 @@ function renderCall() {
   const firstName = c.ctx.persona.name.split(" ")[0];
   const turns = c.state ? c.state.turns : [];
   const list = $("transcript");
-  list.replaceChildren(
-    ...turns.map((t) => {
-      const who = t.speaker === "student" ? COPY.call.you : firstName;
-      const text = t.speaker === "student" && t.events.includes("silence") ? COPY.debrief.silence : t.text;
-      const parts = [];
-      if (t.inputMode === "voice") {
-        parts.push(el("span", { className: "mic", text: "🎤 " }));
-        parts.push(el("span", { className: "visually-hidden", text: `${COPY.voice.spoken} ` }));
-      }
-      parts.push(el("span", { className: "line-who", text: `${who}: ` }), text);
-      return el("li", { className: `line line-${t.speaker}` }, parts);
-    }),
-  );
-  list.scrollTop = list.scrollHeight;
+  const transcriptKey = `${turns.length}|${turns.at(-1)?.text ?? ""}`;
+  // Rebuild the transcript only when it changed (not on every status update).
+  if (c.transcriptKey !== transcriptKey) {
+    c.transcriptKey = transcriptKey;
+    list.replaceChildren(
+      ...turns.map((t) => {
+        const who = t.speaker === "student" ? COPY.call.you : firstName;
+        const text = t.speaker === "student" && t.events.includes("silence") ? COPY.debrief.silence : t.text;
+        const parts = [];
+        if (t.inputMode === "voice") {
+          parts.push(el("span", { className: "mic", text: "🎤 " }));
+          parts.push(el("span", { className: "visually-hidden", text: `${COPY.voice.spoken} ` }));
+        }
+        parts.push(el("span", { className: "line-who", text: `${who}: ` }), text);
+        return el("li", { className: `line line-${t.speaker}` }, parts);
+      }),
+    );
+    list.scrollTop = list.scrollHeight;
+  }
   renderStatus();
 
   const open = canAct(c);
@@ -553,8 +585,9 @@ function finishCall() {
   clearInterval(c.timer);
   disarmSilence(c);
   setCallNote("");
-  savePastCall(c.state, { persona: c.ctx.persona, offer: c.ctx.offer, mood: c.ctx.mood, objections: c.ctx.objections });
+  // Show the debrief first; save the call a moment later so the two never share one long task.
   renderDebrief(c);
+  setTimeout(() => savePastCall(c.state, { persona: c.ctx.persona, offer: c.ctx.offer, mood: c.ctx.mood, objections: c.ctx.objections }), 0);
 }
 
 // ---------------------------------------------------------------------------
@@ -796,6 +829,7 @@ function renderDebug() {
     `outcome: ${s.outcome || "-"}`,
     `latency, release/Enter → exec's voice (ms): typed [${byMode.typed.join(", ")}]  voice [${byMode.voice.join(", ")}]`,
     `median latency (ms): typed ${median(byMode.typed) ?? "-"} (${byMode.typed.length} turns)  voice ${median(byMode.voice) ?? "-"} (${byMode.voice.length} turns)`,
+    perfSummary(call.perfSince ?? 0),
     ...call.notes.map((n) => `note: ${n}`),
     "",
     "last result:",

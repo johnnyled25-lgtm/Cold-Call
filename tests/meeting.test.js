@@ -71,7 +71,9 @@ test("REJECTION PATH: an acceptance the code rejects is repaired, and words matc
   // The debrief can't print an acceptance above "didn't agree".
   const a = analyzeCall(r.state, ctx);
   assert.equal(a.ask.accepted, false);
-  assert.equal(looksLikeAgreement(a.ask.responseText), false);
+  assert.equal(a.ask.asks.length, 1);
+  assert.equal(a.ask.asks[0].booked, false);
+  assert.equal(looksLikeAgreement(a.ask.asks[0].responseText), false);
 });
 
 test("REJECTION PATH: if the repair still agrees, the line is replaced and nothing is booked", async () => {

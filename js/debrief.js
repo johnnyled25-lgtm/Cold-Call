@@ -66,24 +66,35 @@ export function analyzeCall(state, ctx) {
     return { id: o.id, line: def.line, whatHandlesIt: def.whatHandlesIt, handled: o.handled };
   });
 
-  // The ask: when, how it was detected, and how the exec answered.
+  // Every ask, in order: when, how it was detected, how the exec answered, and
+  // whether it booked the meeting. An ask is a student line the phrase list caught
+  // (event "ask_made") or that the AI flagged in its reply (modelFlaggedAsk).
   const studentLines = state.turns.filter((t) => t.speaker === "student" && !t.events.includes("silence"));
-  let ask = { made: false };
-  if (state.askMade && state.askTurnIndex != null) {
-    const askTurn = state.turns[state.askTurnIndex];
-    const response = state.turns.slice(state.askTurnIndex + 1).find((t) => t.speaker === "exec");
-    ask = {
-      made: true,
-      text: askTurn?.text || "",
-      atMs: at(askTurn),
-      lineNumber: studentLines.findIndex((t) => t.index === state.askTurnIndex) + 1,
-      totalLines: studentLines.length,
-      detectedBy: state.askDetectedBy,
-      phrase: state.askPhrase,
-      responseText: response?.text || null,
-      accepted: state.meetingBooked,
-    };
-  }
+  const asks = [];
+  state.turns.forEach((t, i) => {
+    if (t.speaker !== "student" || t.events.includes("silence")) return;
+    const response = state.turns[i + 1]?.speaker === "exec" ? state.turns[i + 1] : null;
+    const byPhrase = t.events.includes("ask_made");
+    const byModel = Boolean(response?.modelFlaggedAsk);
+    if (!byPhrase && !byModel) return;
+    asks.push({
+      number: asks.length + 1,
+      text: t.text,
+      atMs: at(t),
+      lineNumber: studentLines.findIndex((x) => x.index === t.index) + 1,
+      detectedBy: byPhrase ? "phrase" : "model",
+      phrase: t.askPhrase || (t.index === state.askTurnIndex ? state.askPhrase : null),
+      responseText: response?.text ?? null,
+      booked: Boolean(response?.events.includes("meeting_accepted")),
+    });
+  });
+  const ask = {
+    made: asks.length > 0,
+    asks,
+    totalLines: studentLines.length,
+    bookedAsk: asks.find((x) => x.booked)?.number ?? null,
+    accepted: state.meetingBooked,
+  };
 
   const studentWords = studentLines.reduce((n, t) => n + wordCount(t.text), 0);
   const execWords = state.turns.filter((t) => t.speaker === "exec").reduce((n, t) => n + wordCount(t.text), 0);
@@ -128,6 +139,14 @@ export function analyzeCall(state, ctx) {
   };
 }
 
+// "You asked for a meeting 3 times. Ask 3 booked the meeting."
+export function askSummary(a) {
+  const d = COPY.debrief;
+  const count = a.ask.asks.length === 1 ? d.askCountOne : fill(d.askCountMany, { n: a.ask.asks.length });
+  const booked = a.ask.bookedAsk ? fill(d.askBookedBy, { n: a.ask.bookedAsk }) : d.askNoneBooked;
+  return `${count} ${booked}`;
+}
+
 // The plain-text version for "Copy transcript". dateText is passed in so the
 // output doesn't depend on the computer's clock or time zone.
 export function formatTranscriptText(a, { dateText = "" } = {}) {
@@ -163,7 +182,15 @@ export function formatTranscriptText(a, { dateText = "" } = {}) {
   lines.push("");
 
   lines.push(`${d.askHeading}:`);
-  lines.push(`  ${a.ask.made ? fill(d.askMadeText, { time: formatClock(a.ask.atMs), text: a.ask.text }) : d.askNone}`);
+  if (!a.ask.made) lines.push(`  ${d.askNone}`);
+  else {
+    lines.push(`  ${askSummary(a)}`);
+    for (const x of a.ask.asks) {
+      lines.push(`  ${fill(d.askItem, { n: x.number, time: formatClock(x.atMs), line: x.lineNumber, total: a.ask.totalLines })}: “${x.text}”`);
+      if (x.responseText != null) lines.push(`    ${fill(d.askReply, { first: a.firstName, text: x.responseText })}`);
+      lines.push(`    ${x.booked ? d.askBooked : d.askNotBooked}`);
+    }
+  }
   lines.push("");
 
   lines.push(`${d.transcriptHeading}:`);

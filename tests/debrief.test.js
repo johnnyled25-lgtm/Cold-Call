@@ -60,10 +60,15 @@ test("objections, the ask, and plain facts", () => {
   const a = analyzeCall(fixtureCall(), ctx);
   assert.deepEqual(a.objections.map((o) => [o.id, o.handled]), [["send-email", false]]);
   assert.equal(a.ask.made, true);
-  assert.equal(a.ask.lineNumber, 3);
-  assert.equal(a.ask.atMs, 20000);
-  assert.equal(a.ask.detectedBy, "phrase");
-  assert.equal(a.ask.responseText, "No. Send the email.");
+  assert.equal(a.ask.asks.length, 1);
+  const [first] = a.ask.asks;
+  assert.equal(first.lineNumber, 3);
+  assert.equal(first.atMs, 20000);
+  assert.equal(first.detectedBy, "phrase");
+  assert.equal(first.phrase, "15 minute");
+  assert.equal(first.responseText, "No. Send the email.");
+  assert.equal(first.booked, false);
+  assert.equal(a.ask.bookedAsk, null);
   assert.equal(a.ask.accepted, false);
   assert.equal(a.facts.studentLines, 3);
   assert.equal(a.facts.durationMs, 30000);
@@ -96,7 +101,10 @@ test("the transcript text is stable for a fixed call", () => {
     '  "Just send me an email.": Not handled',
     "",
     "The ask:",
-    "  You asked at 0:20: “Sure. Could we grab 15 minutes Thursday instead?”",
+    "  You asked for a meeting once. None of your asks booked a meeting.",
+    "  Ask 1, at 0:20 (your line 3 of 3): “Sure. Could we grab 15 minutes Thursday instead?”",
+    "    Mike: “No. Send the email.”",
+    "    No meeting",
     "",
     "Full transcript:",
     "[0:00] Mike: Mike.",
@@ -137,4 +145,35 @@ test("past calls keep the newest 20 and hold no key", () => {
   assert.doesNotMatch(JSON.stringify(list), /apiKey|sk-/);
   clearEverything();
   assert.deepEqual(loadPastCalls(), []);
+});
+
+test("every ask is listed in order with the exec's reply; the third is marked as the one that booked", () => {
+  let s = newCall(40);
+  const turn = (text, r, at) => {
+    s = addStudentTurn(s, { text, at });
+    s = applyExecTurn(s, reply(r), ctx, { at: at + 2000 });
+  };
+  turn("Could we set up a meeting this week?", { say: "No. I don't even know what you do.", patienceDelta: -5 }, 5000);
+  turn("How do you cover call-outs now?", { say: "Mondays are a mess.", patienceDelta: 15, revealPainId: "monday-callouts" }, 12000);
+  turn("Fair enough. Would you be open to a call next week?", { say: "Maybe. What's the price?", patienceDelta: 15 }, 20000);
+  turn("About $6 a driver. Tell me more about overtime?", { say: "It's over budget.", patienceDelta: 10 }, 28000);
+  // The third ask is caught only by the AI (no phrase from the list), and it's accepted.
+  turn("Let's get you and me in a room Thursday and settle this.", { say: "Fine. Thursday at ten.", patienceDelta: 5, acceptsMeeting: true, studentMadeAsk: true }, 36000);
+  assert.equal(s.meetingBooked, true);
+
+  const a = analyzeCall(s, ctx);
+  assert.equal(a.ask.asks.length, 3);
+  assert.deepEqual(a.ask.asks.map((x) => x.number), [1, 2, 3]);
+  assert.deepEqual(a.ask.asks.map((x) => x.lineNumber), [1, 3, 5]);
+  assert.deepEqual(a.ask.asks.map((x) => x.responseText), ["No. I don't even know what you do.", "Maybe. What's the price?", "Fine. Thursday at ten."]);
+  assert.deepEqual(a.ask.asks.map((x) => x.booked), [false, false, true]);
+  assert.deepEqual(a.ask.asks.map((x) => x.detectedBy), ["phrase", "phrase", "model"]);
+  assert.equal(a.ask.bookedAsk, 3);
+
+  const text = formatTranscriptText(a);
+  assert.match(text, /You asked for a meeting 3 times\. Ask 3 booked the meeting\./);
+  const askBlock = text.slice(text.indexOf("The ask:"), text.indexOf("Full transcript:"));
+  assert.equal((askBlock.match(/No meeting/g) || []).length, 2);
+  assert.equal((askBlock.match(/Booked the meeting/g) || []).length, 1);
+  assert.ok(askBlock.indexOf("Ask 3") < askBlock.indexOf("Booked the meeting"));
 });

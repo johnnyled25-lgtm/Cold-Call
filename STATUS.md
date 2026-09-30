@@ -1,5 +1,23 @@
 # Status
 
+## Third round from Johnny's testing (2026-09-30; done, not yet pushed)
+
+Johnny confirmed the meeting-state fix, silence timing, briefing name, and restyle work (restyle pushed as `c020ea0`).
+
+1. **Debrief lists every ask: done.** The patience engine now marks *every* asking line (the phrase list's catch, with the phrase; or the AI's flag, recorded on the exec's reply), not just the first. "The ask" shows a summary ("You asked for a meeting 3 times. Ask 3 booked the meeting." / "None of your asks booked a meeting."), then each ask in order: when, which line, how it was detected, the exec's reply, and **Booked the meeting** (✓, marked green) or **No meeting**. Copy transcript has the same list. The single-ask fields in the call state are unchanged, so older saved calls still open.
+   - **Test added:** three asks, the third accepted (and caught only by the AI); the debrief lists all three in order with the right replies, and only the third is marked booked.
+2. **Performance.**
+   - **Measured first.** On this machine (headless Chrome driven through its debugging interface, with performance traces), neither case reproduced a freeze. A full simulated call to a booked meeting (fake AI, real app) had **no main-thread task over 50 ms**. The longest task anywhere, at double pixel density with no graphics acceleration, was 24 ms. The heavy case was the gallery: with all 45 drawings animating, **the main thread was busy about 3.5 s of every 6 s** (painting and compositing the animated SVG). That, plus raster work this trace can't fully see, fits a machine without graphics acceleration freezing up.
+   - **Off-screen drawings pause** their animations (one shared `IntersectionObserver`; class `offscreen`).
+   - **The gallery is still by default**, costing 172 ms of main-thread time per 6 s with no painting, with a **Play animations** / **Stop animations** toggle.
+   - **No endless animations during a call:** the engaged nod and the impatient glance now play a few times and stop, so an idle drawing does no per-frame work. Each drawing is its own paint area (`contain: layout paint`).
+   - **Booked-meeting hand-off:** the debrief shows first and the call is saved in a separate task afterward. The live transcript is rebuilt only when it changes, not on every status update.
+   - **Monitor for the 200 ms target:** with `?debug=1`, the debug panel shows "main thread this call: tasks over 50 ms / over 200 ms / longest / long frames / worst". Re-measured after the changes with a full booked call: 0 tasks over 50 ms.
+   - **Not verified on Johnny's machine.** Please check with `?debug=1` there. If it still freezes, `chrome://gpu` will show whether Chrome has graphics acceleration.
+3. **Privacy note once per browser: confirmed working, and hardened.** Tested across two separate browser sessions sharing one profile: after the note was dismissed and Chrome had saved site data, the second session **did not** show it. This computer has no Chrome policy that clears site data. The note now counts as seen **as soon as it's shown**, so closing the tab while it's open doesn't bring it back. Remaining causes are outside the app: Chrome closed within about a second of dismissing it (before saving), a different Chrome profile or incognito window, or a Chrome setting that clears site data on exit.
+
+**Tests: 112, all passing.**
+
 ## Exec drawing restyle (2026-09-30; built, awaiting Johnny's review, not pushed)
 
 Before starting, the second round of fixes was pushed as commit `fa41b48`.

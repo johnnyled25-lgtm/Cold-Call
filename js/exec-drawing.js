@@ -405,18 +405,32 @@ export function buildExecSvg(appearance, { label = "", idPrefix = "ex" } = {}) {
 const reducedMotion = () => globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
 let mountCount = 0;
 
+// One shared observer pauses the animations of any drawing that's off-screen
+// (class "offscreen"; see styles.css), so drawings nobody can see cost nothing.
+const offscreenObserver = globalThis.IntersectionObserver
+  ? new IntersectionObserver((entries) => {
+      for (const e of entries) e.target.classList.toggle("offscreen", !e.isIntersecting);
+    })
+  : null;
+
 // Draws the exec in `container` and returns controls for the call screen.
 // words: COPY.exec.describe, for the screen-reader description.
 export function mountExec(container, persona, words) {
   const firstName = persona.name.split(" ")[0];
   container.innerHTML = buildExecSvg(persona.appearance, { idPrefix: `ex${++mountCount}` }); // our own fixed markup; no model text
   const svg = container.querySelector("svg");
+  offscreenObserver?.observe(svg);
   let lastPose = "";
   let mouthTimer = null;
   let boundaryMode = false;
 
   return {
     svg,
+    // Stops watching this drawing (call before replacing it).
+    destroy() {
+      offscreenObserver?.unobserve(svg);
+      clearTimeout(mouthTimer);
+    },
     // Applies a pose from pose.js. Only touches the page when something changed.
     setPose(pose) {
       const key = JSON.stringify(pose);

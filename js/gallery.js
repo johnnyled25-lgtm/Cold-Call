@@ -43,9 +43,21 @@ export function renderGallery(container, personas, words) {
       if (extra) exec.svg.classList.add(extra);
     }
   }
+  // Still poses by default: 45 animated drawings at once is a lot of work for a
+  // computer without graphics acceleration. The button turns animation on and off.
+  const toggle = el("button", "btn", "Play animations");
+  toggle.type = "button";
+  toggle.setAttribute("aria-pressed", "false");
+  grid.classList.add("gallery-static");
+  toggle.addEventListener("click", () => {
+    const playing = grid.classList.toggle("gallery-static") === false;
+    toggle.textContent = playing ? "Stop animations" : "Play animations";
+    toggle.setAttribute("aria-pressed", String(playing));
+  });
   container.replaceChildren(
     el("h2", "", "Exec gallery"),
-    el("p", "muted", "Every exec in every state. Colors come from the variables at the top of styles.css. Turn on your computer's reduce-motion setting to see the still versions."),
+    el("p", "muted", "Every exec in every state, shown still. Use Play animations to see them move. Colors come from the variables at the top of styles.css."),
+    toggle,
     grid,
   );
 }

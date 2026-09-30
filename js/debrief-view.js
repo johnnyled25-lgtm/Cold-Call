@@ -3,7 +3,7 @@
 
 import { COPY, fill } from "./copy.js";
 import { ACCEPTANCE_THRESHOLD, OUTCOMES } from "./constants.js";
-import { formatClock, formatDelta, recordSummary } from "./debrief.js";
+import { formatClock, formatDelta, recordSummary, askSummary } from "./debrief.js";
 
 const d = COPY.debrief;
 
@@ -198,14 +198,20 @@ export function renderDebrief(container, a, { onCallAgain, onCopy, transcriptTex
         ])))
     : el("p", { text: fill(d.objectionsNone, { first }) }));
 
-  // 7. The ask
+  // 7. The ask: every ask in order, with the exec's reply, and which one booked the meeting.
   const ask = a.ask;
   const askSection = section(d.askHeading, ask.made
     ? [
-        el("p", { text: fill(d.askMadeText, { time: formatClock(ask.atMs), text: ask.text }) }),
-        el("p", { className: "muted small", text: `${fill(d.askLine, { n: ask.lineNumber, total: ask.totalLines })} ${ask.detectedBy === "phrase" ? fill(d.askByPhrase, { phrase: ask.phrase }) : d.askByModel}` }),
-        ask.responseText ? el("p", { text: fill(d.askResponse, { first, text: ask.responseText }) }) : null,
-        el("p", { text: fill(ask.accepted ? d.askAccepted : d.askDeclined, { first }) }),
+        el("p", { text: askSummary(a) }),
+        el("ol", { className: "ask-list" }, ask.asks.map((x) =>
+          el("li", { className: x.booked ? "ask-booked" : "" }, [
+            el("div", {}, [el("strong", { text: fill(d.askItem, { n: x.number, time: formatClock(x.atMs), line: x.lineNumber, total: ask.totalLines }) }), `: “${x.text}”`]),
+            el("div", { className: "muted small", text: x.detectedBy === "phrase" && x.phrase ? fill(d.askByPhrase, { phrase: x.phrase }) : d.askByModel }),
+            x.responseText != null ? el("div", { text: fill(d.askReply, { first, text: x.responseText }) }) : null,
+            x.booked
+              ? el("div", { className: "outcome-badge outcome-meetingBooked" }, [el("span", { className: "outcome-icon", text: "✓", attrs: { "aria-hidden": "true" } }), ` ${d.askBooked}`])
+              : el("div", { className: "muted small", text: d.askNotBooked }),
+          ]))),
       ]
     : [el("p", { text: d.askNone })]);
 

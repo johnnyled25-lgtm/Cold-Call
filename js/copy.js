@@ -156,13 +156,16 @@ export const COPY = {
     // 7. The ask
     askHeading: "The ask",
     askNone: "You didn't ask for a meeting. The goal of the call is a booked 15-minute meeting.",
-    askMadeText: "You asked at {time}: “{text}”",
-    askLine: "Line {n} of your {total}.",
+    askCountOne: "You asked for a meeting once.",
+    askCountMany: "You asked for a meeting {n} times.",
+    askBookedBy: "Ask {n} booked the meeting.",
+    askNoneBooked: "None of your asks booked a meeting.",
+    askItem: "Ask {n}, at {time} (your line {line} of {total})",
+    askReply: "{first}: “{text}”",
+    askBooked: "Booked the meeting",
+    askNotBooked: "No meeting",
     askByPhrase: "Counted as an ask because it included “{phrase}”.",
     askByModel: "Counted as an ask by the AI's reading of your line.",
-    askResponse: "{first} answered: “{text}”",
-    askAccepted: "{first} agreed to the meeting.",
-    askDeclined: "{first} didn't agree to a meeting.",
 
     // 8. Plain facts
     factsHeading: "Plain facts",

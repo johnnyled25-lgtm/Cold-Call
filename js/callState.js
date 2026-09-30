@@ -76,14 +76,16 @@ export function createCallState({ seed, persona, offer, mood, pickupLine, starte
 }
 
 // The student said (or typed) something. Detects the ask; never changes patience.
+// EVERY asking line is marked (event "ask_made", with the phrase that caught it), so
+// the debrief can list them all. The state's askTurnIndex/askPhrase keep the first.
 export function addStudentTurn(state, { text, inputMode = "typed", at = null }) {
   if (state.ended) return state;
   const clean = String(text || "").trim();
-  const ask = state.askMade ? { asked: false } : detectAsk(clean);
+  const ask = detectAsk(clean);
   const events = ask.asked ? ["ask_made"] : [];
-  const turn = makeTurn(state, { speaker: "student", text: clean, inputMode, events, at });
+  const turn = makeTurn(state, { speaker: "student", text: clean, inputMode, events, at, extra: ask.asked ? { askPhrase: ask.phrase } : {} });
   const next = { ...state, turns: [...state.turns, turn] };
-  if (ask.asked) {
+  if (ask.asked && !state.askMade) {
     Object.assign(next, { askMade: true, askDetectedBy: "phrase", askPhrase: ask.phrase, askTurnIndex: turn.index });
   }
   return next;
@@ -178,7 +180,8 @@ export function applyExecTurn(state, reply, ctx, opts = {}) {
     events,
     latencyMs: opts.latencyMs,
     at: opts.at,
-    extra: { proposedDelta: opts.silence ? null : reply.patienceDelta, ignored, fixes: opts.fixes || [] },
+    // modelFlaggedAsk: the AI said the student's line just before this one asked for a meeting.
+    extra: { proposedDelta: opts.silence ? null : reply.patienceDelta, ignored, fixes: opts.fixes || [], modelFlaggedAsk: !opts.silence && reply.studentMadeAsk === true },
   });
 
   return { ...state, ...ask, ...ending, patience: after, revealedPainIds, raisedObjections, turns: [...state.turns, turn] };
