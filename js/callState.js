@@ -178,7 +178,7 @@ export function applyExecTurn(state, reply, ctx, opts = {}) {
     events,
     latencyMs: opts.latencyMs,
     at: opts.at,
-    extra: { proposedDelta: opts.silence ? null : reply.patienceDelta, ignored },
+    extra: { proposedDelta: opts.silence ? null : reply.patienceDelta, ignored, fixes: opts.fixes || [] },
   });
 
   return { ...state, ...ask, ...ending, patience: after, revealedPainIds, raisedObjections, turns: [...state.turns, turn] };

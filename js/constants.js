@@ -84,8 +84,17 @@ export const BANDS = {
 // Timing
 // ---------------------------------------------------------------------------
 
-// Seconds of silence (after the exec finishes speaking) before the exec reacts.
+// Seconds of silence (after the exec finishes speaking) before the exec reacts,
+// when the student is talking by voice.
 export const SILENCE_TIMEOUT_SECONDS = 8;
+
+// The same, in milliseconds, when the student is typing. Typing takes longer than
+// talking, so a typist gets more time. Every keystroke starts the countdown over,
+// and it never runs out while there's text in the box.
+export const SILENCE_TIMEOUT_TYPED_MS = 20000;
+
+// Extra time before the student's FIRST line, for getting the opener together.
+export const FIRST_TURN_GRACE_MS = 10000;
 
 // If the exec's voice hasn't started after this many seconds, the student gets the
 // turn back anyway (the exec's line is already on screen).

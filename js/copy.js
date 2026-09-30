@@ -6,6 +6,12 @@
 export const COPY = {
   appName: "Cold Call Lab",
 
+  // Who the student plays on every call. Shown on the briefing card.
+  student: {
+    name: "Jordan",
+    role: "sales rep",
+  },
+
   briefing: {
     heading: "Briefing",
     youAreCalling: "Who you're calling",
@@ -14,7 +20,8 @@ export const COPY = {
     price: "Price",
     goalHeading: "Your goal",
     goal: "Book a 15-minute meeting. You're not trying to make a sale on this call.",
-    youWorkFor: "You work for {company}.",
+    youAreHeading: "You are",
+    youAre: "{name}, {role} at {company}",
     callButton: "Call",
     randomButton: "Random exec",
     loading: "Loading…",
@@ -81,6 +88,10 @@ export const COPY = {
 
   // What the exec says when the app can't read the AI's reply. The student isn't penalized.
   retryLine: "Sorry, you cut out. Say that again?",
+
+  // What the exec says if the AI twice tried to agree to a meeting the app can't
+  // allow yet (patience too low or no clear ask). Keeps words and state consistent.
+  notReadyLine: "I'm not putting anything on the calendar yet.",
 
   // Reasons the app records itself (not written by the AI).
   reasons: {
@@ -251,7 +262,6 @@ export const COPY = {
     modelReset: "Use default ({model})",
     temperature: "Temperature",
     temperatureNote: "Higher = the same exec reacts less predictably",
-    temperatureIgnored: "{model} sets its own variety, so this setting isn't sent.",
     test: "Test connection",
     testing: "Testing…",
     testOk: "Connected. {provider} answered in {seconds} s.",

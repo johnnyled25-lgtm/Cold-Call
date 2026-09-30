@@ -112,3 +112,39 @@ test("cancel (the call ended) releases nothing", withClock((tick) => {
   tick(60000);
   assert.deepEqual(reasons, []);
 }));
+
+// --- Silence timing by input mode ------------------------------------------------
+
+test("silence timing: 8 s by voice, 20 s typing, plus 10 s grace before the first line", async () => {
+  const { silenceTimeoutMs } = await import("../js/turnGate.js");
+  const { SILENCE_TIMEOUT_TYPED_MS, FIRST_TURN_GRACE_MS } = await import("../js/constants.js");
+  assert.equal(SILENCE_TIMEOUT_TYPED_MS, 20000);
+  assert.equal(SILENCE_MS, 8000);
+  assert.equal(silenceTimeoutMs({ voice: true, firstTurn: false }), 8000);
+  assert.equal(silenceTimeoutMs({ voice: false, firstTurn: false }), 20000);
+  assert.equal(silenceTimeoutMs({ voice: false, firstTurn: true }), 20000 + FIRST_TURN_GRACE_MS);
+  assert.equal(silenceTimeoutMs({ voice: true, firstTurn: true }), 8000 + FIRST_TURN_GRACE_MS);
+});
+
+test("a typed turn waits its full 20 s", withClock((tick) => {
+  let fired = 0;
+  const watch = createSilenceWatch({ onSilence: () => fired++ });
+  watch.unlock(20000);
+  tick(19999);
+  assert.equal(fired, 0);
+  tick(1);
+  assert.equal(fired, 1);
+}));
+
+test("silence never fires while the text box has content, however long it sits", withClock((tick) => {
+  let fired = 0;
+  let boxText = "Hi Anna, quick question about";
+  const watch = createSilenceWatch({ onSilence: () => fired++, holdWhile: () => boxText.trim() !== "" });
+  watch.unlock(20000);
+  tick(20000 * 6); // two minutes with a half-typed line sitting there
+  assert.equal(fired, 0);
+  // Box emptied (student deleted it): the countdown can run out again.
+  boxText = "";
+  tick(20000);
+  assert.equal(fired, 1);
+}));

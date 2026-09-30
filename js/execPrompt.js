@@ -7,7 +7,7 @@
 //      so the provider can cache it (faster, cheaper).
 //   2. statePrompt: where the call stands right now. Rebuilt every turn.
 
-import { DELTA_MIN, DELTA_MAX, ACCEPTANCE_THRESHOLD, SILENCE_TIMEOUT_SECONDS, BANDS } from "./constants.js";
+import { DELTA_MIN, DELTA_MAX, ACCEPTANCE_THRESHOLD, BANDS } from "./constants.js";
 import { replySchema } from "./replyParser.js";
 
 // Patience in plain words. The model gets these words along with the number.
@@ -106,7 +106,19 @@ Use only the exact ids listed above, or null.`;
 // ---------------------------------------------------------------------------
 // Part 2: where the call stands right now
 // ---------------------------------------------------------------------------
-export function statePrompt(state, { persona, objections }, { silence = false, repair = false, now = null } = {}) {
+// Whether a meeting is possible right now, in plain words, so the exec never
+// agrees to one the app would refuse (the app checks again; see meetingCheck.js).
+export function meetingLine(state) {
+  if (state.patience < ACCEPTANCE_THRESHOLD) {
+    return `You are NOT willing to agree to a meeting yet (your patience is ${state.patience}; you'd need ${ACCEPTANCE_THRESHOLD}). Don't agree to any meeting, day, or time, even if asked. Say no or deflect in your own words, and keep acceptsMeeting false.`;
+  }
+  if (!state.askMade) {
+    return `A meeting is possible if the caller clearly asks for one and this line doesn't drop your patience below ${ACCEPTANCE_THRESHOLD}. They haven't asked yet, so don't offer one.`;
+  }
+  return `A meeting is possible: the caller has asked. You may agree (set acceptsMeeting true) as long as this line doesn't drop your patience below ${ACCEPTANCE_THRESHOLD}.`;
+}
+
+export function statePrompt(state, { persona, objections }, { silence = false, repair = false, meetingRepair = false, now = null } = {}) {
   const revealed = state.revealedPainIds.length
     ? state.revealedPainIds.map((id) => `"${id}"`).join(", ") + ". Don't reveal these again."
     : "none yet.";
@@ -125,11 +137,14 @@ export function statePrompt(state, { persona, objections }, { silence = false, r
     `- Problems you've already revealed: ${revealed}`,
     `- Objections you've raised: ${objLines}`,
     `- The caller ${state.askMade ? "has asked for a meeting." : "has not asked for a meeting yet."}`,
-    `- You can accept a meeting only if the caller has asked and your patience after this reply is at least ${ACCEPTANCE_THRESHOLD}.`,
+    `- ${meetingLine(state)}`,
     `- No goodbyes or "I've got to go" unless your patience after this reply is below ${BANDS.IMPATIENT_BELOW}. A parting line only if it reaches 0.`,
   ];
   if (silence) {
-    lines.push(`- The caller has said nothing for ${SILENCE_TIMEOUT_SECONDS} seconds. React the way a person would (for example, "Hello? You still there?"). The app sets the patience change for silence, so put 0.`);
+    lines.push(`- The caller has gone quiet on the line. React the way a person would (for example, "Hello? You still there?"). The app sets the patience change for silence, so put 0.`);
+  }
+  if (meetingRepair) {
+    lines.push(`- Your previous reply agreed to a meeting, but you are NOT willing to agree to one right now. Write a new reply that does not agree to any meeting, day, or time, and set acceptsMeeting to false.`);
   }
   if (repair) {
     lines.push("- Your previous reply couldn't be read. Return only the JSON object in the exact format described above.");

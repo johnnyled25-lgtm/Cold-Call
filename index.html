@@ -147,9 +147,11 @@
       <p class="muted small" data-copy="settings.modelNote"></p>
       <button type="button" class="link-button small" id="btn-model-reset"></button>
 
-      <label for="set-temp"><span data-copy="settings.temperature"></span>: <output id="temp-value" for="set-temp"></output></label>
-      <input type="range" id="set-temp" min="0" max="1" step="0.1" aria-describedby="temp-note">
-      <p class="muted small" id="temp-note"></p>
+      <div id="temp-field">
+        <label for="set-temp"><span data-copy="settings.temperature"></span>: <output id="temp-value" for="set-temp"></output></label>
+        <input type="range" id="set-temp" min="0" max="1" step="0.1" aria-describedby="temp-note">
+        <p class="muted small" id="temp-note"></p>
+      </div>
 
       <div class="actions">
         <button type="button" class="btn" id="btn-test" data-copy="settings.test"></button>

@@ -1,5 +1,26 @@
 # Status
 
+## Second round of fixes from Johnny's test calls (2026-09-30; done, not yet pushed)
+
+The first round (below) was pushed as commit `f385eca`. This round is on the development computer only.
+
+1. **SERIOUS, the exec agreeing while the app refuses: fixed.**
+   - **(a)** Every turn now tells the exec plainly whether a meeting is possible. Below the threshold: *"You are NOT willing to agree to a meeting yet (your patience is 46; you'd need 60). Don't agree to any meeting, day, or time, even if asked."* At or above it: possible once the caller has asked, as long as the line doesn't drop patience below 60 (`meetingLine` in `js/execPrompt.js`).
+   - **(b)** Before a reply is used, `js/meetingCheck.js` works out, with the same numbers the patience engine uses, whether the booking would be allowed. It also spots lines whose *words* agree to a time ("Fine. Thursday, ten o'clock."). If the exec accepts (flag or words) and the rules don't allow it, the model is asked **once** for a line that doesn't agree. If it still agrees, the app keeps the patience change and reason but replaces the line with *"I'm not putting anything on the calendar yet."* (`notReadyLine` in `copy.js`), and nothing is booked. If the rules allow it and the words agree but the flag was left off, the meeting is booked. Either way, the exec's words and the state match, so the debrief can't print an acceptance above "didn't agree". Each fix is recorded on the turn (`fixes`), visible in `?debug=1`.
+2. **Silence timing by input mode: done.** Voice: 8 s (`SILENCE_TIMEOUT_SECONDS`). Typed: 20 s (`SILENCE_TIMEOUT_TYPED_MS = 20000`). Plus 10 s of grace before the student's first line (`FIRST_TURN_GRACE_MS`). The countdown **never runs out while the text box has content**, and every keystroke restarts it.
+3. **Typed text is never lost to a silence.** A silence turn never touches the text box, and with #2 it can't fire while there's text in it.
+4. **Silence shows live** as "You: (silence)", followed by the exec's actual reaction line.
+5. **Voice privacy note once per browser.** It's stored in `localStorage` (wrapped in try/catch) and now survives **Clear everything**, which only clears keys, settings, and past calls, as its label says. Browsers keep storage per web address, so the note shows once on `coldcall-lab.vercel.app` and once on any other address (e.g. the old `r15wh22x6` link). That's likely why it reappeared.
+6. **Student name and role on the briefing card:** "You are: Jordan, sales rep at {company}". The name and role are in `copy.js` (`student`), so they're easy to change. (This was #9 in the first list.)
+- **#8 from the first list: the temperature control is hidden** (not just greyed out) when the selected model ignores temperature, e.g. `claude-sonnet-5`.
+- The silence reaction no longer tells the exec "8 seconds" (the timing now varies).
+
+**Tests: 108, all passing** (12 new), including the requested rejection-path test: an acceptance the code rejects triggers one repair, and the final line doesn't agree; if the repair also agrees, the line is replaced and nothing is booked. Also tested: the agreement detector on agreeing and refusing lines, the per-turn meeting line, the 8 s / 20 s / grace timings, silence never firing with text in the box, and the privacy note surviving Clear everything.
+
+**Checked in headless Chrome:** the briefing starts "You are: Jordan, sales rep at…"; the temperature control is hidden for Sonnet 5 and shown for Haiku 4.5; before the first line the text box stays open through the full 30 s, then "You: (silence)" appears.
+
+**Not yet verified in a real call** (needs an API key): the exec's reaction to a silence, and the meeting repair with the real model.
+
 ## Fixes from Johnny's Chrome test (2026-09-30; done, not yet pushed)
 
 Johnny approved items 1–6 of his test list. #7 (default model → `claude-haiku-4-5`) is **on hold**: Haiku 4.5 may be retired as soon as Oct 15, 2026, so the default stays `claude-sonnet-5`. #8 (hide the temperature slider) and #9 (student name and role on the briefing) are **waiting** for a go-ahead.

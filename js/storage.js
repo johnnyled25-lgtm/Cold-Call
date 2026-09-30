@@ -88,9 +88,11 @@ export function savePastCall(state, ctx) {
   return record;
 }
 
-// "Clear everything": keys, settings, past calls, and notes already seen.
+// "Clear everything": keys, settings, and past calls (what the button says).
+// The one-time voice privacy note stays dismissed, so it's shown once per browser.
 export function clearEverything() {
   for (const key of Object.values(STORAGE_KEYS)) {
+    if (key === STORAGE_KEYS.privacyNoteSeen) continue;
     remove("session", key);
     remove("local", key);
   }

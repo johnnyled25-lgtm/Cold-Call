@@ -13,3 +13,7 @@ Thumbs.db
 # The original build brief stays local: it names GCSU and a colleague, and the app
 # carries no GCSU name anywhere.
 docs/
+
+# Style reference images: licensed stock art, local use only. Never push or deploy.
+reference/
+*.avif

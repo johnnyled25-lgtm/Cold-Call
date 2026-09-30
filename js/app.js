@@ -22,7 +22,7 @@ import {
   recognitionSupported, synthesisSupported, requestMicAccess, createPushToTalk, loadVoices, speak, stopSpeaking,
 } from "./voice.js";
 import { pickVoice } from "./voicePick.js";
-import { guardSpeech, createSilenceWatch } from "./turnGate.js";
+import { guardSpeech, createSilenceWatch, silenceTimeoutMs } from "./turnGate.js";
 import { mountExec } from "./exec-drawing.js";
 import { analyzeCall, formatTranscriptText } from "./debrief.js";
 import { renderDebrief as drawDebrief, renderPastCalls } from "./debrief-view.js";
@@ -108,12 +108,13 @@ function newDraw() {
 function briefingNodes({ persona, offer }) {
   const b = COPY.briefing;
   return [
+    el("h3", { text: b.youAreHeading }),
+    el("p", { text: fill(b.youAre, { name: COPY.student.name, role: COPY.student.role, company: offer.company }) }),
     el("h3", { text: b.youAreCalling }),
     el("p", { className: "briefing-who" }, [el("strong", { text: persona.name }), `, ${persona.title}, ${persona.company}`]),
     el("h3", { text: b.whatYouKnow }),
     el("ul", {}, [persona.industry, persona.companySize, persona.currentSetup].map((t) => el("li", { text: t }))),
     el("h3", { text: b.whatYouSell }),
-    el("p", { text: fill(b.youWorkFor, { company: offer.company }) }),
     el("p", {}, [el("strong", { text: offer.product }), ` (${offer.company}). ${offer.oneLiner}`]),
     el("ul", {}, offer.valuePoints.map((t) => el("li", { text: t }))),
     el("p", { className: "muted", text: `${b.price}: ${offer.priceHint}` }),
@@ -181,7 +182,8 @@ async function startCall() {
     ptt: null,
     interim: "",
     waitUntil: null,
-    silence: null, // the 8-second silence countdown (turnGate.js)
+    silence: null, // the silence countdown (turnGate.js)
+    lastInputMode: "typed", // "voice" or "typed": sets how long a silence takes
     talkTimer: null,
     timer: null,
     abort: null,
@@ -189,7 +191,10 @@ async function startCall() {
     notes: [],
   };
   call = thisCall;
-  thisCall.silence = createSilenceWatch({ onSilence: () => onSilence(thisCall) });
+  thisCall.silence = createSilenceWatch({
+    onSilence: () => onSilence(thisCall),
+    holdWhile: () => Boolean($("typed-input").value.trim()), // text waiting in the box counts as responding
+  });
   if (thisCall.voiceIn) thisCall.ptt = makePushToTalk(thisCall);
 
   thisCall.drawing = mountExec($("exec-stage"), persona, COPY.exec.describe);
@@ -215,6 +220,7 @@ async function startCall() {
   ]);
   if (call !== thisCall || thisCall.phase !== "ringing") return; // ended while ringing
   applyMicResult(thisCall, mic);
+  thisCall.lastInputMode = thisCall.voiceIn && mic === "granted" ? "voice" : "typed";
   if (mic === "pending") micCheck.then((late) => { if (call === thisCall && thisCall.phase === "live") { applyMicResult(thisCall, late); renderCall(); } });
   thisCall.voiceOut = pickVoice(voices, persona);
   thisCall.notes.push(`voice: ${thisCall.voiceOut.voice?.name || "browser default"} (rate ${thisCall.voiceOut.rate}, pitch ${thisCall.voiceOut.pitch})`);
@@ -298,7 +304,7 @@ function renderCall() {
   list.replaceChildren(
     ...turns.map((t) => {
       const who = t.speaker === "student" ? COPY.call.you : firstName;
-      const text = t.speaker === "student" && t.events.includes("silence") ? "…" : t.text;
+      const text = t.speaker === "student" && t.events.includes("silence") ? COPY.debrief.silence : t.text;
       const parts = [];
       if (t.inputMode === "voice") {
         parts.push(el("span", { className: "mic", text: "🎤 " }));
@@ -366,15 +372,19 @@ function speakExec(c, text, onStarted) {
 }
 
 // --- Silence -----------------------------------------------------------------
-// The countdown (createSilenceWatch) starts when the student's turn begins, never
-// runs while input is locked, and starts over on every keystroke. Words waiting in
-// the text box also count as responding, so a slow typist is never charged.
+// The countdown (createSilenceWatch) starts when the student's turn begins: 8 s by
+// voice, 20 s typing, plus 10 s before the first line. It never runs while input is
+// locked, starts over on every keystroke, and never runs out while text is waiting
+// in the box, so a slow typist is never charged.
 function onSilence(c) {
   if (call !== c || !canAct(c) || c.recording) return;
-  if ($("typed-input").value.trim()) { c.silence.activity(); return; }
   takeTurn(c, { silence: true, releasedAt: Date.now() });
 }
-const armSilence = (c) => c?.silence?.unlock();
+function armSilence(c) {
+  if (!c?.silence) return;
+  const firstTurn = !c.state?.turns.some((t) => t.speaker === "student" && !t.events.includes("silence"));
+  c.silence.unlock(silenceTimeoutMs({ voice: c.lastInputMode === "voice", firstTurn }));
+}
 const disarmSilence = (c) => c?.silence?.lock();
 
 // --- Push to talk -------------------------------------------------------------
@@ -412,6 +422,7 @@ function makePushToTalk(c) {
 
 function switchToTyping(c, note) {
   c.voiceIn = false;
+  c.lastInputMode = "typed";
   c.ptt?.cancel();
   setCallNote(note);
   $("typed-input").focus({ preventScroll: true });
@@ -460,7 +471,9 @@ async function takeTurn(c, { text = "", inputMode = "typed", silence = false, re
   if (call !== c || !canAct(c)) return;
   if (!silence && !text.trim()) return;
   disarmSilence(c);
+  // A silence never touches the text box: anything typed there stays, ready to send.
   c.state = silence ? addSilenceTurn(c.state, { at: releasedAt }) : addStudentTurn(c.state, { text, inputMode, at: releasedAt });
+  if (!silence) c.lastInputMode = inputMode;
   c.busy = true;
   c.abort = new AbortController();
   renderCall();
@@ -649,8 +662,8 @@ function renderTemperature() {
   $("temp-value").textContent = Number($("set-temp").value).toFixed(1);
   const model = $("set-model").value.trim();
   const ignored = MODELS_WITHOUT_TEMPERATURE.includes(model) || droppedParamsFor(model).includes("temperature");
-  $("set-temp").disabled = ignored;
-  $("temp-note").textContent = ignored ? fill(COPY.settings.temperatureIgnored, { model }) : COPY.settings.temperatureNote;
+  $("temp-field").hidden = ignored;
+  $("temp-note").textContent = COPY.settings.temperatureNote;
 }
 
 async function runTest() {

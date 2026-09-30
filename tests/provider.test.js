@@ -142,3 +142,21 @@ test("storage: one key per provider, settings with defaults, and Clear everythin
   assert.equal(getKey("openai"), "");
   assert.equal(loadSettings().provider, DEFAULT_PROVIDER);
 });
+
+test("Clear everything keeps the one-time privacy note dismissed", async () => {
+  const { STORAGE_KEYS } = await import("../js/constants.js");
+  // In Node there's no localStorage, so storage.js falls back to memory; check via its own API.
+  const storage = await import("../js/storage.js");
+  globalThis.localStorage = {
+    data: {}, getItem(k) { return this.data[k] ?? null; }, setItem(k, v) { this.data[k] = String(v); }, removeItem(k) { delete this.data[k]; },
+  };
+  try {
+    localStorage.setItem(STORAGE_KEYS.privacyNoteSeen, "1");
+    localStorage.setItem(STORAGE_KEYS.settings, "{}");
+    storage.clearEverything();
+    assert.equal(localStorage.getItem(STORAGE_KEYS.privacyNoteSeen), "1");
+    assert.equal(localStorage.getItem(STORAGE_KEYS.settings), null);
+  } finally {
+    delete globalThis.localStorage;
+  }
+});
