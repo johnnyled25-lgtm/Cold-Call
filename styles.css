@@ -13,32 +13,47 @@
   --outcome-hungup: #B42318;  /* Hung up — 6.5:1 on white */
   --focus-ring: #2F6FEB;
 
-  /* The drawn exec (appearance values from personas.json map to these) */
-  --skin-light: #F3D2B8;
-  --skin-medium-light: #E1B08A;
-  --skin-medium: #C68A62;
-  --skin-medium-dark: #9C6644;
-  --skin-dark: #6B4430;
-  --hair-black: #231F20;
-  --hair-brown: #5B3A29;
-  --hair-blonde: #D9B26A;
-  --hair-red: #A5442A;
-  --hair-gray: #A7A9AC;
-  --attire-blazer: #2E3A59;
-  --attire-button-down: #6C8EBF;
-  --attire-polo: #3F7D5A;
-  --attire-sweater: #8E5A7C;
-  --attire-cardigan: #B7894A;
-  --shirt: #F4F6F9;
-  --stage-wall: #E4E9F0;
-  --stage-window: #CFE0F5;
-  --stage-desk: #B98B5E;
-  --stage-desk-front: #9C7249;
-  --stage-monitor: #2B3440;
-  --stage-screen: #DDE6F2;
-  --stage-phone: #3A4350;
-  --stage-notepad: #FFF8DC;
-  --face-ink: #1F2933;
+  /* The drawn exec: warm, slightly desaturated. Appearance values from
+     personas.json map to these; shades and highlights are mixed from them. */
+  --skin-light: #F2D3BD;
+  --skin-medium-light: #DDB08C;
+  --skin-medium: #C28E68;
+  --skin-medium-dark: #9A6A4B;
+  --skin-dark: #6E4A36;
+  --hair-black: #2B2522;
+  --hair-brown: #6B4532;
+  --hair-blonde: #D4AE72;
+  --hair-red: #A2553A;
+  --hair-gray: #A9A6A2;
+  --attire-blazer: #3B3F4A;
+  --attire-button-down: #7C97B8;
+  --attire-polo: #5E8A6E;
+  --attire-sweater: #8C6479;
+  --attire-cardigan: #B98A5C;
+  --shirt: #F3EDE3;
+  --shirt-shade: #DDD3C4;
+  --shade-mix: #3A2418;      /* mixed in to make shadows */
+  --hi-mix: #FFFFFF;         /* mixed in to make highlights */
+  --blush: #E0876F;
+  --lip: #B9675A;
+  --mouth-dark: #5A2E2A;
+  --eye-white: #FFFDF8;
+  --eye-iris: #4A3226;
+  --face-ink: #2A2320;
+  --stage-wall: #F7F1E8;
+  --stage-backdrop: #EDE0CC;
+  --stage-paper: #FBF7F0;
+  --stage-paper-shade: #E4D8C6;
+  --stage-desk: #C99A6E;
+  --stage-desk-shade: #A97D55;
+  --stage-phone: #3B3F4A;
+  --stage-cup: #D6A77A;
+  --accent-warm: #D9A441;
+  --accent-teal: #5E8C8A;
+  --accent-rust: #B8674A;
+  --book-1: #8E4B3B;
+  --book-2: #5E7C8A;
+  --book-3: #CBB48E;
 
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: Consolas, Menlo, monospace;  /* debug panel only */
@@ -193,14 +208,17 @@ button:disabled, input:disabled { opacity: 0.6; cursor: not-allowed; }
 .drawer-subhead { font-size: 1rem; margin: 20px 0 0; }
 
 /* ---------------------------------------------------------------------------
-   The drawn exec (js/exec-drawing.js). Poses are classes on the <svg>:
-   pose-ringing | pose-on-call | pose-hung-up | pose-booked,
-   mood-engaged | mood-neutral | mood-impatient, is-skeptical, is-talking.
+   The drawn exec (js/exec-drawing.js): flat vector, no outlines, soft shading.
+   Each colored part has a base tone; its darker shade and lighter highlight are
+   mixed from that base here, so changing one color variable updates all three.
+   Poses are classes on the <svg>:
+     pose-ringing | pose-on-call | pose-hung-up | pose-booked,
+     mood-engaged | mood-neutral | mood-impatient, is-skeptical, is-talking.
    --------------------------------------------------------------------------- */
-.exec-stage { display: flex; align-items: flex-end; justify-content: center; overflow: hidden; background: linear-gradient(to bottom, var(--stage-wall) 78%, var(--stage-desk-front) 78%); }
+.exec-stage { display: flex; align-items: flex-end; justify-content: center; overflow: hidden; background: var(--stage-wall); }
 .exec { width: 100%; height: auto; display: block; }
 
-/* Colors from the appearance classes */
+/* Appearance → base colors */
 .exec.skin-light { --exec-skin: var(--skin-light); }
 .exec.skin-medium-light { --exec-skin: var(--skin-medium-light); }
 .exec.skin-medium { --exec-skin: var(--skin-medium); }
@@ -217,90 +235,130 @@ button:disabled, input:disabled { opacity: 0.6; cursor: not-allowed; }
 .exec.attire-sweater { --exec-attire: var(--attire-sweater); }
 .exec.attire-cardigan { --exec-attire: var(--attire-cardigan); }
 
+/* One darker shade and one lighter highlight per base color */
+.exec {
+  --exec-skin-shade: color-mix(in srgb, var(--exec-skin) 80%, var(--shade-mix));
+  --exec-skin-hi: color-mix(in srgb, var(--exec-skin) 78%, var(--hi-mix));
+  --exec-hair-shade: color-mix(in srgb, var(--exec-hair) 68%, var(--shade-mix));
+  --exec-hair-hi: color-mix(in srgb, var(--exec-hair) 72%, var(--hi-mix));
+  --exec-attire-shade: color-mix(in srgb, var(--exec-attire) 74%, var(--shade-mix));
+  --exec-attire-hi: color-mix(in srgb, var(--exec-attire) 80%, var(--hi-mix));
+}
+
+/* Scene */
 .exec .wall { fill: var(--stage-wall); }
-.exec .window-glass { fill: var(--stage-window); }
-.exec .window-frame { stroke: var(--card); stroke-width: 4; fill: none; }
-.exec .monitor-body { fill: var(--stage-monitor); }
-.exec .monitor-screen { fill: var(--stage-screen); }
-.exec .monitor-lines { stroke: var(--muted); stroke-width: 3; stroke-linecap: round; opacity: 0.5; }
-.exec .skin { fill: var(--exec-skin); }
-.exec .hair { fill: var(--exec-hair); }
-.exec .hair-thin { opacity: 0.85; }
-.exec .shine { stroke: var(--card); stroke-width: 3; fill: none; opacity: 0.35; stroke-linecap: round; }
-.exec .attire { fill: var(--exec-attire); }
-.exec .sleeve { stroke: var(--exec-attire); stroke-width: 26; stroke-linecap: round; fill: none; }
-.exec .shirt { fill: var(--shirt); }
-.exec .shade { fill: var(--face-ink); opacity: 0.22; }
-.exec .light { fill: var(--card); opacity: 0.3; }
-.exec .seam { stroke: var(--face-ink); opacity: 0.2; stroke-width: 1.5; }
-.exec .button { fill: var(--card); opacity: 0.7; }
-.exec .band { stroke: var(--face-ink); opacity: 0.22; stroke-width: 6; fill: none; stroke-linecap: round; }
-.exec .band-thin { stroke-width: 4; }
-.exec .pupil { fill: var(--face-ink); }
-.exec .brow, .exec .nose, .exec .mouth-line { stroke: var(--face-ink); stroke-width: 3; fill: none; stroke-linecap: round; }
-.exec .nose { stroke-width: 2; opacity: 0.5; }
-.exec .mouth-open { fill: var(--face-ink); opacity: 0; }
-.exec .glasses rect, .exec .glasses path { fill: none; stroke: var(--face-ink); stroke-width: 2.5; }
-.exec .desk-top { fill: var(--stage-desk); }
-.exec .desk-front { fill: var(--stage-desk-front); }
+.exec .backdrop { fill: var(--stage-backdrop); }
+.exec .backdrop-ring { fill: none; stroke: var(--stage-backdrop); stroke-width: 3; opacity: 0.6; stroke-dasharray: 60 22; }
+.exec .confetti { opacity: 0.8; }
+.exec .c1 { fill: var(--accent-warm); }
+.exec .c2 { fill: var(--accent-teal); }
+.exec .c3 { fill: var(--accent-rust); }
+.exec .paper { fill: var(--stage-paper); }
+.exec .paper-shade { fill: var(--stage-paper-shade); stroke: var(--stage-paper-shade); stroke-width: 1.5; }
+.exec .ink-soft { fill: var(--stage-paper-shade); }
+.exec .bar.b1 { fill: var(--accent-rust); }
+.exec .bar.b2 { fill: var(--accent-teal); }
+.exec .bar.b3 { fill: var(--accent-warm); }
+.exec .book.k1 { fill: var(--book-1); }
+.exec .book.k2 { fill: var(--book-2); }
+.exec .book.k3 { fill: var(--book-3); }
+.exec .book-pages { fill: var(--stage-paper); opacity: 0.8; }
+.exec .cup { fill: var(--stage-cup); }
+.exec .cup-shade { fill: var(--shade-mix); opacity: 0.12; }
+.exec .pencil.p1 { fill: var(--accent-warm); }
+.exec .pencil.p2 { fill: var(--accent-teal); }
+.exec .pencil.p3 { fill: var(--accent-rust); }
+.exec .desk { fill: var(--stage-desk); }
+.exec .desk-shade { fill: var(--stage-desk-shade); }
 .exec .phone { fill: var(--stage-phone); }
-.exec .phone-keys { stroke: var(--card); stroke-width: 3; stroke-linecap: round; opacity: 0.5; }
-.exec .ring-waves path { stroke: var(--accent); stroke-width: 3; fill: none; stroke-linecap: round; opacity: 0; }
-.exec .notepad { fill: var(--stage-notepad); }
-.exec .notepad-lines { stroke: var(--muted); stroke-width: 1.5; opacity: 0.5; }
-.exec .pen { stroke: var(--face-ink); stroke-width: 3.5; stroke-linecap: round; opacity: 0; }
+.exec .phone-hi { fill: var(--hi-mix); opacity: 0.25; }
+.exec .ring-waves path { stroke: var(--accent-rust); stroke-width: 3; fill: none; stroke-linecap: round; opacity: 0; }
+
+/* Figure */
+.exec .skin { fill: var(--exec-skin); }
+.exec .skin-shade { fill: var(--exec-skin-shade); }
+.exec .skin-hi { fill: var(--exec-skin-hi); }
+.exec .blush { fill: var(--blush); opacity: 0.35; }
+.exec.skin-medium-dark .blush, .exec.skin-dark .blush { opacity: 0.18; }
+.exec .hair { fill: var(--exec-hair); }
+.exec .hair-shade { fill: var(--exec-hair-shade); }
+.exec .hair-hi { fill: var(--exec-hair-hi); }
+.exec .attire { fill: var(--exec-attire); }
+.exec .attire-shade { fill: var(--exec-attire-shade); }
+.exec .attire-hi { fill: var(--exec-attire-hi); }
+.exec .shirt { fill: var(--shirt); }
+.exec .shirt-shade { fill: var(--shirt-shade); }
+.exec .button { fill: var(--exec-attire-hi); }
+.exec .sleeve { fill: none; stroke: var(--exec-attire); stroke-width: 30; stroke-linecap: round; stroke-linejoin: round; }
+.exec .sleeve-shade { fill: none; stroke: var(--exec-attire-shade); stroke-width: 11; stroke-linecap: round; stroke-linejoin: round; transform: translate(4px, 6px); }
+.exec .eye-white { fill: var(--eye-white); }
+.exec .iris { fill: var(--eye-iris); }
+.exec .pupil { fill: var(--face-ink); }
+.exec .eye-glint { fill: var(--eye-white); }
+.exec .lash, .exec .brow { fill: var(--face-ink); }
+.exec .brow { fill: var(--exec-hair-shade); }
+.exec.hair-gray .brow, .exec.hair-blonde .brow { fill: color-mix(in srgb, var(--exec-hair) 55%, var(--face-ink)); }
+.exec .lid { fill: var(--exec-skin); }
+.exec .lip { fill: var(--lip); }
+.exec .lip-shade { fill: color-mix(in srgb, var(--lip) 80%, var(--shade-mix)); }
+.exec .mouth-line, .exec .mouth-dark { fill: var(--mouth-dark); }
+.exec .teeth { fill: var(--eye-white); }
+.exec .frame { fill: var(--hi-mix); fill-opacity: 0.12; stroke: var(--face-ink); stroke-width: 3.5; }
+.exec .frame-line { fill: none; stroke: var(--face-ink); stroke-width: 3; stroke-linecap: round; }
+.exec .pen { fill: var(--face-ink); opacity: 0; }
 
 /* Moving parts turn around sensible points */
-.exec .body { transform-origin: 240px 300px; transition: transform 0.5s ease; }
-.exec .head { transform-origin: 240px 205px; transition: transform 0.4s ease; }
-.exec .eyes { transition: transform 0.3s ease; }
-.exec .brow-right { transform-origin: 257px 132px; transition: transform 0.25s ease; }
+.exec .layer-body { transform-origin: 240px 300px; transition: transform 0.5s ease; }
+.exec .head { transform-origin: 240px 196px; transition: transform 0.4s ease; }
+.exec .iris-group { transition: transform 0.3s ease; }
 .exec .arm, .exec .handset-cradle { transition: opacity 0.35s ease; }
-.exec .mouth-line { transition: opacity 0.2s ease; }
+.exec .expr, .exec .mouth-open { transition: opacity 0.2s ease; }
+
+/* Expressions: exactly one face shows. Neutral by default; the mood picks another;
+   skeptical (an objection was just raised) overrides the mood's face. */
+.exec .expr { opacity: 0; }
+.exec .expr-neutral { opacity: 1; }
+.exec.mood-engaged .expr-neutral, .exec.mood-impatient .expr-neutral { opacity: 0; }
+.exec.mood-engaged .expr-engaged, .exec.mood-impatient .expr-impatient { opacity: 1; }
+.exec.is-skeptical .expr { opacity: 0; }
+.exec.is-skeptical .expr-skeptical { opacity: 1; }
+/* Ringing and hung up: a neutral face, eyes down */
+.exec.pose-ringing .expr { opacity: 0; }
+.exec.pose-ringing .expr-neutral { opacity: 1; }
 
 /* Phone in hand, or on the desk */
 .exec .arm-up { opacity: 0; }
-.exec.pose-on-call .arm-up, .exec.pose-booked .arm-up { opacity: 1; }
+.exec.pose-on-call .arm-up, .exec.pose-booked .arm-up { opacity: 1; animation: pickup 0.5s ease-out; transform-origin: 162px 282px; }
 .exec.pose-on-call .arm-down-left, .exec.pose-booked .arm-down-left,
 .exec.pose-on-call .handset-cradle, .exec.pose-booked .handset-cradle { opacity: 0; }
 
-/* Ringing: phone buzzing, exec looking at the screen */
-.exec.pose-ringing .eyes { transform: translate(6px, -1px); }
-.exec.pose-ringing .head { transform: translateX(3px) rotate(2deg); }
-.exec.pose-ringing .desk-phone { animation: buzz 1.2s infinite; transform-origin: 86px 270px; }
+/* Ringing: phone buzzing, exec reading something on the desk */
+.exec.pose-ringing .iris-group { transform: translate(2px, 4px); }
+.exec.pose-ringing .head { transform: rotate(3deg) translateY(2px); }
+.exec.pose-ringing .desk-phone { animation: buzz 1.2s infinite; transform-origin: 140px 280px; }
 .exec.pose-ringing .ring-waves path { animation: ring 1.2s infinite; }
 
-/* Mouth follows the mood: neutral by default */
-.exec .mouth-engaged, .exec .mouth-impatient { opacity: 0; }
-.exec.mood-engaged .mouth-neutral, .exec.mood-impatient .mouth-neutral { opacity: 0; }
-.exec.mood-engaged .mouth-engaged, .exec.mood-impatient .mouth-impatient { opacity: 1; }
-
 /* Engaged (patience at or above the upper band): leans in, nods */
-.exec.pose-on-call.mood-engaged .body, .exec.pose-booked .body { transform: translateY(10px) scale(1.07); }
-.exec .brow { transition: transform 0.25s ease; }
-.exec.pose-on-call.mood-engaged .brow-left, .exec.pose-booked .brow-left { transform: translateY(-3px); }
-.exec.pose-on-call.mood-engaged .brow-right { transform: translateY(-3px); }
+.exec.pose-on-call.mood-engaged .layer-body, .exec.pose-booked .layer-body { transform: translateY(8px) scale(1.06); }
 .exec.pose-on-call.mood-engaged .head { animation: nod 3.2s ease-in-out infinite; }
 
-/* Impatient (below the lower band): looks away at the screen, sits back */
-.exec.pose-on-call.mood-impatient .eyes { transform: translate(7px, -2px); animation: glance 5s ease-in-out infinite; }
-.exec.pose-on-call.mood-impatient .head { transform: translateX(3px) rotate(4deg); }
-.exec.pose-on-call.mood-impatient .body { transform: translateY(-2px) scale(0.99); }
-
-/* Skeptical: one eyebrow up when an objection is raised */
-.exec.is-skeptical .brow-right { transform: translateY(-6px) rotate(-10deg); }
+/* Impatient (below the lower band): looks away, sits back */
+.exec.pose-on-call.mood-impatient .iris-group { transform: translate(5px, -1px); animation: glance 5s ease-in-out infinite; }
+.exec.pose-on-call.mood-impatient .head { transform: translateX(3px) rotate(5deg); }
+.exec.pose-on-call.mood-impatient .layer-body { transform: translateY(-2px) scale(0.985); }
 
 /* Talking: a simple loop, or following the words where the browser reports them */
+.exec .mouth-open { opacity: 0; }
 .exec.talking-loop .mouth-open { animation: talk 0.26s ease-in-out infinite alternate; }
 .exec.mouth-is-open .mouth-open { opacity: 1; }
 
 /* Hung up: phone back on the desk, eyes down */
-.exec.pose-hung-up .eyes { transform: translate(4px, 4px); }
+.exec.pose-hung-up .iris-group { transform: translate(2px, 4px); }
 
 /* Meeting booked: writes a note */
 .exec.pose-booked .pen { opacity: 1; }
-.exec.pose-booked .writing-hand { animation: write 0.9s ease-in-out infinite; transform-origin: 296px 296px; }
-.exec.pose-booked .eyes { transform: translate(5px, 5px); }
+.exec.pose-booked .writing-hand { animation: write 0.9s ease-in-out infinite; transform-origin: 298px 296px; }
+.exec.pose-booked .iris-group { transform: translate(3px, 4px); }
 
 @keyframes buzz {
   0%, 40%, 100% { transform: none; }
@@ -308,14 +366,15 @@ button:disabled, input:disabled { opacity: 0.6; cursor: not-allowed; }
   10%, 20%, 30% { transform: translateX(2px) rotate(1.5deg); }
 }
 @keyframes ring { 0%, 45% { opacity: 0.9; } 60%, 100% { opacity: 0; } }
+@keyframes pickup { from { transform: rotate(38deg) translateY(18px); opacity: 0.4; } to { transform: none; opacity: 1; } }
 @keyframes nod { 0%, 70%, 100% { transform: rotate(0); } 78% { transform: rotate(3deg) translateY(2px); } 86% { transform: rotate(-1deg); } }
-@keyframes glance { 0%, 60%, 100% { transform: translate(7px, -2px); } 70%, 85% { transform: translate(-3px, 4px); } }
+@keyframes glance { 0%, 60%, 100% { transform: translate(5px, -1px); } 70%, 85% { transform: translate(-2px, 3px); } }
 @keyframes talk { from { opacity: 0; } to { opacity: 1; } }
 @keyframes write { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(-4px, 1px); } 50% { transform: translate(-8px, 0); } 75% { transform: translate(-4px, -1px); } }
 
 /* Reduced motion: no animation, just still poses. Talking shows a still open mouth. */
 @media (prefers-reduced-motion: reduce) {
-  .exec.is-talking .mouth-open { opacity: 0.8; }
+  .exec.is-talking .mouth-open { opacity: 0.85; }
   .exec.pose-ringing .ring-waves path { opacity: 0.9; }
 }
 
@@ -391,3 +450,13 @@ button:disabled, input:disabled { opacity: 0.6; cursor: not-allowed; }
 .explainer .explainer-label { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin: 12px 0 2px; }
 .explainer p { margin: 0 0 4px; max-width: 70ch; }
 #screen-call .explainer { margin-bottom: 12px; padding: 6px 14px; }
+
+/* Exec gallery (?gallery=1) */
+main:has(#screen-gallery:not([hidden])) { max-width: none; }
+.gallery-grid { display: grid; grid-template-columns: 150px repeat(var(--gallery-cols), minmax(120px, 1fr)); gap: 6px; align-items: center; }
+.gallery-head { font-size: 0.8rem; color: var(--muted); text-align: center; font-weight: 600; }
+.gallery-name { font-size: 0.85rem; }
+.gallery-cell { background: var(--card); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.exec.demo-pickup .arm-up { animation: pickup 1.4s ease-out infinite; }
+.gallery-large .gallery-grid { grid-template-columns: repeat(3, 1fr); }
+.gallery-large .gallery-head, .gallery-large .gallery-corner, .gallery-large .gallery-name { display: none; }

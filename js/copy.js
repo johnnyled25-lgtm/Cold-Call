@@ -47,11 +47,11 @@ export const COPY = {
   // What the drawn exec is doing, for screen readers. Same cue as the picture, in words.
   exec: {
     describe: {
-      ringing: "{first}'s desk phone is ringing. {first} is looking at a computer screen.",
+      ringing: "{first}'s desk phone is ringing. {first} is reading something on the desk.",
       engaged: "{first} is leaning in and nodding.",
       neutral: "{first} is listening.",
-      impatient: "{first} is glancing at the screen, looking away.",
-      skeptical: "{first} raises an eyebrow.",
+      impatient: "{first} is frowning and looking away.",
+      skeptical: "{first} raises an eyebrow, unconvinced.",
       hungUp: "{first} lowers the phone.",
       booked: "{first} is writing a note.",
     },

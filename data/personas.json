@@ -8,7 +8,7 @@
     "companySize": "140 employees, 85 drivers, 3 terminals",
     "currentSetup": "A dispatch system for loads. Driver schedules live in a spreadsheet, and call-outs get covered by phone and group text.",
     "personality": "Blunt and fast. Former dispatcher who came up through the terminals. Respects people who get to the point and hates being sold to. Says 'Go ahead' when he means 'You have ten seconds.'",
-    "appearance": { "skinTone": "dark", "hair": "buzz", "hairColor": "gray", "attire": "polo", "glasses": false },
+    "appearance": { "skinTone": "dark", "hair": "side-part", "hairColor": "gray", "attire": "polo", "glasses": false },
     "voice": { "type": "male", "rate": 1.1, "pitch": 0.9 },
     "painPoints": [
       {
@@ -160,7 +160,7 @@
     "companySize": "One plant, 230 employees, two shifts",
     "currentSetup": "An ERP system for production. Shift schedules are built in a spreadsheet and posted on the break-room board. Call-outs go to the shift supervisor's cell phone.",
     "personality": "Analytical and dry. A mechanical engineer by training. Wants numbers, not adjectives. Isn't rude, but goes silent and flat when bored, and the word 'solution' makes her wince.",
-    "appearance": { "skinTone": "light", "hair": "short", "hairColor": "blonde", "attire": "button-down", "glasses": true },
+    "appearance": { "skinTone": "light", "hair": "bob", "hairColor": "blonde", "attire": "button-down", "glasses": true },
     "voice": { "type": "female", "rate": 0.95, "pitch": 0.95 },
     "painPoints": [
       {

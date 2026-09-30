@@ -1,5 +1,25 @@
 # Status
 
+## Exec drawing restyle (2026-09-30; built, awaiting Johnny's review, not pushed)
+
+Before starting, the second round of fixes was pushed as commit `fa41b48`.
+
+Restyled `js/exec-drawing.js` using `reference/exec-style.png` as a **style guide only** (not traced; the image stays local via `.gitignore` and isn't part of the app). Still 100% SVG built in JavaScript, no image files.
+
+- **Style:** flat vector, no outlines, soft shading. Each colored part has a base tone plus one darker shade and one lighter highlight, mixed in CSS from the base color variable (`color-mix`), so changing one color updates all three. Warm, slightly desaturated palette; every color is a variable at the top of `styles.css`.
+- **Figure:** slightly large head, rounded features, neck with a shadow under the chin, shoulders, chest-up behind a desk. Face: almond eyes with a white highlight dot, filled eyebrows, a small nose shadow, lips with a darker line between them, soft cheek blush (lighter on darker skin tones).
+- **Hair:** layered in 2–3 tones for every style. Two new styles, `bob` and `side-part`; **Beth now has the bob and Mike the side part** (easy to change back in `data/personas.json`). Short, long, bun, curly, buzz, and bald still work.
+- **Clothing:** each exec keeps their own outfit (Johnny's choice): blazer with lapels over a contrasting shirt (Nina), cardigan over a shirt (Anna), button-down (Beth), polo (Mike), sweater (Marcus), all in the new shaded style.
+- **Scene:** a soft round backdrop with a few accents, a bar-chart poster, stacked books, a pencil cup, the desk phone, and a notepad. The monitor is gone, so the screen-reader text now says "looking away" instead of "glancing at the screen".
+- **Swappable layers:** backdrop · props · body · head (hair-back, face, expressions, hair-front, glasses) · arms/phone · desk. Each state swaps only what it needs.
+- **Expressions are more readable:** one face per mood. *Engaged*: raised, arched brows, smiling eyes (raised lower lids), open smile with teeth, leaning in and nodding. *Neutral*: level brows, soft closed smile. *Impatient*: brows angled down, half-closed eyes, pressed lips, looking away. *Skeptical*: one brow up, one eye narrowed, a lopsided smirk. *Talking*: the mouth opens and closes over the current face.
+- **States:** ringing (phone buzzing, exec reading something on the desk), picks up (the arm lifts the handset: a short animation), listening, talking, engaged, neutral, impatient, skeptical, hung up (phone back on the desk), meeting booked (writing a note). The phone arm is bent now, with the elbow on the desk and the handset at the ear.
+- **Body language still follows the patience bands exactly:** `pose.js` is unchanged, and all band-mapping tests pass.
+- **Reduced motion:** no animation; still poses, and a still open mouth while talking.
+- **Gallery:** open the app with **`?gallery=1`** to see all 5 execs in all 9 states in one grid. Add `&only=<exec id>` (e.g. `&only=kettle-creek-dental`) to see one exec large. It replaces `dev/exec-preview.html`, which was removed.
+- **Tests: 111, all passing** (3 new: the layers and one face per expression exist; hair has base, shade, and highlight in every style; eye clip-path ids are unique when several drawings share a page). Every combination of skin, hair (now 8 styles), hair color, outfit, and glasses renders.
+- Checked by screenshot: the full gallery, plus Anna and Mike large. The app loads with no console errors.
+
 ## Second round of fixes from Johnny's test calls (2026-09-30; done, not yet pushed)
 
 The first round (below) was pushed as commit `f385eca`. This round is on the development computer only.

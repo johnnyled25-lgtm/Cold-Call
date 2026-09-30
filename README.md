@@ -76,7 +76,7 @@ The content is in `data/` (field-by-field notes in `data/SCHEMA.md`):
 
 Keep everything fictional: no real companies, products, or people. After editing, run the tests (below); they check that ids match, every pairing is a real fit, and no banned words slipped into student-facing text.
 
-To see how an exec will look: `http://localhost:8000/dev/exec-preview.html`. To see a sample debrief: `http://localhost:8000/dev/debrief-preview.html`.
+To see how the execs look in every state: `http://localhost:8000/?gallery=1` (add `&only=kettle-creek-dental`, or any exec's id, to see one large). To see a sample debrief: `http://localhost:8000/dev/debrief-preview.html`.
 
 ---
 
@@ -128,6 +128,6 @@ js/exec-drawing.js  the drawn exec (SVG, no images)
 js/debrief*.js      the debrief analysis and screen
 js/app.js           ties the screens together
 data/               execs, offers, objections
-dev/                developer pages (previews, provider check)
+dev/                developer pages (debrief preview, provider check)
 tests/              Node tests
 ```

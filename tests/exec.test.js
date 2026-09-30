@@ -22,7 +22,8 @@ test("every appearance combination draws, with its colors as classes", () => {
     assert.equal(svg.includes('class="glasses"'), a.glasses);
     count++;
   }
-  assert.equal(count, 5 * 6 * 5 * 5 * 2);
+  const o = APPEARANCE_OPTIONS;
+  assert.equal(count, o.skinTone.length * o.hair.length * o.hairColor.length * o.attire.length * o.glasses.length);
 });
 
 test("each hair style and outfit draws differently", () => {
@@ -76,7 +77,35 @@ test("the pose follows the call: ringing, on the call, skeptical, hung up after 
 
 test("screen readers get the same cue in words", () => {
   const words = COPY.exec.describe;
-  assert.equal(describePose({ base: "on-call", mood: "impatient", skeptical: false }, "Mike", words), "Mike is glancing at the screen, looking away.");
-  assert.equal(describePose({ base: "on-call", mood: "neutral", skeptical: true }, "Anna", words), "Anna is listening. Anna raises an eyebrow.");
+  assert.equal(describePose({ base: "on-call", mood: "impatient", skeptical: false }, "Mike", words), "Mike is frowning and looking away.");
+  assert.equal(describePose({ base: "on-call", mood: "neutral", skeptical: true }, "Anna", words), "Anna is listening. Anna raises an eyebrow, unconvinced.");
   assert.match(describePose({ base: "ringing", mood: "neutral" }, "Nina", words), /ringing/);
+});
+
+test("the drawing is built from swappable layers, with one face per expression", () => {
+  const svg = buildExecSvg(personas[0].appearance);
+  for (const layer of ["layer-backdrop", "layer-props", "layer-body", "hair-back", "face", "hair-front", "layer-arms", "layer-desk"]) {
+    assert.ok(svg.includes(`class="${layer}"`), layer);
+  }
+  for (const expr of ["expr-neutral", "expr-engaged", "expr-impatient", "expr-skeptical"]) {
+    assert.ok(svg.includes(`expr ${expr}`), expr);
+  }
+  for (const part of ["arm-up", "arm-down-left", "handset-cradle", "mouth-open", "writing-hand", "prop-poster", "prop-books", "prop-pencils"]) {
+    assert.ok(svg.includes(part), part);
+  }
+});
+
+test("hair is layered (base, shade, highlight) for every style except bald", () => {
+  for (const hair of APPEARANCE_OPTIONS.hair) {
+    const svg = buildExecSvg({ ...personas[0].appearance, hair });
+    if (hair === "bald") continue;
+    assert.ok(svg.includes('class="hair"') && svg.includes('class="hair-shade"') && svg.includes('class="hair-hi"'), hair);
+  }
+});
+
+test("eye clip-path ids are unique per drawing, so many can share a page", () => {
+  const a = buildExecSvg(personas[0].appearance, { idPrefix: "ex1" });
+  const b = buildExecSvg(personas[0].appearance, { idPrefix: "ex2" });
+  assert.ok(a.includes('id="ex1-eye-l"') && b.includes('id="ex2-eye-l"'));
+  assert.ok(!b.includes("ex1-"));
 });

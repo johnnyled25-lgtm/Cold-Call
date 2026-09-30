@@ -190,7 +190,7 @@ export const ASK_PHRASES = [
 
 export const APPEARANCE_OPTIONS = {
   skinTone: ["light", "medium-light", "medium", "medium-dark", "dark"],
-  hair: ["short", "long", "bun", "curly", "buzz", "bald"],
+  hair: ["short", "long", "bun", "curly", "buzz", "bald", "bob", "side-part"],
   hairColor: ["black", "brown", "blonde", "red", "gray"],
   attire: ["blazer", "button-down", "polo", "sweater", "cardigan"],
   glasses: [true, false],

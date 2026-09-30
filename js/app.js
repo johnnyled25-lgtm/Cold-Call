@@ -24,6 +24,7 @@ import {
 import { pickVoice } from "./voicePick.js";
 import { guardSpeech, createSilenceWatch, silenceTimeoutMs } from "./turnGate.js";
 import { mountExec } from "./exec-drawing.js";
+import { renderGallery } from "./gallery.js";
 import { analyzeCall, formatTranscriptText } from "./debrief.js";
 import { renderDebrief as drawDebrief, renderPastCalls } from "./debrief-view.js";
 import { execPose } from "./pose.js";
@@ -63,7 +64,7 @@ function applyCopy() {
 }
 
 function showScreen(name) {
-  for (const id of ["briefing", "call", "debrief", "past"]) $(`screen-${id}`).hidden = id !== name;
+  for (const id of ["briefing", "call", "debrief", "past", "gallery"]) $(`screen-${id}`).hidden = id !== name;
   window.scrollTo(0, 0);
 }
 
@@ -832,6 +833,15 @@ async function init() {
     data = await loadData();
   } catch {
     $("briefing-card").textContent = COPY.briefing.loadFailed;
+    return;
+  }
+  // ?gallery=1: every exec in every state, for checking the drawing.
+  if (new URLSearchParams(location.search).get("gallery") === "1") {
+    // Add &only=<persona id> (e.g. &only=kettle-creek-dental) to see one exec large.
+    const only = new URLSearchParams(location.search).get("only");
+    renderGallery($("screen-gallery"), data.personas.filter((p) => !only || p.id === only), COPY.exec.describe);
+    if (only) $("screen-gallery").classList.add("gallery-large");
+    showScreen("gallery");
     return;
   }
   draw = newDraw();
