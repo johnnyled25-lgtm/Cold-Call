@@ -871,6 +871,21 @@ h2[tabindex="-1"]:focus { outline: none; }
 .dialog-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 .btn-danger-solid { background: var(--end-red); border-color: var(--end-red); color: var(--accent-ink); }
 
+/* The mic tutorial: three always-visible steps; the middle one pulses as a flourish
+   (reduced motion freezes it, which still reads fine as a static diagram). */
+.mic-tutorial-steps { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; list-style: none; margin: 4px 0 18px; padding: 0; }
+.mic-tutorial-step { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 112px; font-size: 0.82rem; color: var(--muted); }
+.mic-tutorial-btn { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); flex: none; }
+.mic-tutorial-btn svg { width: 18px; height: 18px; }
+.mic-tutorial-btn.is-recording { background: var(--end-red); box-shadow: 0 0 0 5px var(--end-red-soft); animation: mic-tutorial-pulse 1.6s ease-in-out infinite; }
+.mic-tutorial-bars { display: flex; align-items: flex-end; gap: 3px; height: 16px; }
+.mic-tutorial-bars i { width: 3px; height: 100%; background: var(--accent-ink); border-radius: 2px; animation: mic-tutorial-bar 0.9s ease-in-out infinite; }
+.mic-tutorial-bars i:nth-child(2) { animation-delay: 0.15s; }
+.mic-tutorial-bars i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes mic-tutorial-bar { 0%, 100% { transform: scaleY(0.35); } 50% { transform: scaleY(1); } }
+@keyframes mic-tutorial-pulse { 0%, 100% { box-shadow: 0 0 0 5px var(--end-red-soft); } 50% { box-shadow: 0 0 0 9px var(--end-red-soft); } }
+.mic-tutorial-dismiss { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.88rem; color: var(--muted); margin: 0 0 16px; }
+
 /* ---------------------------------------------------------------------------
    Settings drawer: numbered sections, provider cards, results with icons
    --------------------------------------------------------------------------- */

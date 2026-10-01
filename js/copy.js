@@ -123,6 +123,12 @@ export const COPY = {
     privacyBody:
       "In Chrome and Edge, what you say is sent to Google's or Microsoft's speech service to be turned into text. This app never records, stores, or sends audio itself. Firefox can't do voice input, and Safari's support is partial. You can always type instead.",
     privacyOk: "Got it",
+    tutorialTitle: "How to talk",
+    tutorialStep1: "Click the microphone button to start talking.",
+    tutorialStep2: "Say your line — the button turns red while it's listening.",
+    tutorialStep3: "Click it again when you're done. It sends automatically.",
+    tutorialDontShow: "Don't show this again",
+    tutorialOk: "Got it",
     recording: "Listening to you… click the mic again to send",
     didntCatch: "Didn't catch that. Click to talk and try again.",
     spoken: "(spoken)",

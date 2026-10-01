@@ -399,6 +399,25 @@ function showPrivacyNote() {
   });
 }
 
+// Unlike the privacy note, the mic tutorial shows every time a voice call starts
+// (new users don't read it once and remember it) until a student checks "Don't show
+// this again" — so it's opt-out, not one-time.
+function micTutorialHidden() {
+  try { return localStorage.getItem(STORAGE_KEYS.micTutorialHidden) === "1"; } catch { return false; }
+}
+function showMicTutorial() {
+  return new Promise((resolve) => {
+    const dialog = $("mic-tutorial-dialog");
+    const dismiss = $("mic-tut-dismiss");
+    dismiss.checked = false;
+    dialog.addEventListener("close", () => {
+      try { if (dismiss.checked) localStorage.setItem(STORAGE_KEYS.micTutorialHidden, "1"); } catch {}
+      resolve();
+    }, { once: true });
+    dialog.showModal();
+  });
+}
+
 async function startCall() {
   showMessage("");
   const settings = currentCallSettings();
@@ -407,6 +426,7 @@ async function startCall() {
     return;
   }
   if (recognitionSupported() && !privacyNoteSeen()) await showPrivacyNote();
+  if (recognitionSupported() && !micTutorialHidden()) await showMicTutorial();
   setAddress("call");
 
   const { persona, offer, mood } = draw;

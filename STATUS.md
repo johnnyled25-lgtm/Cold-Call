@@ -1,5 +1,14 @@
 # Status
 
+## Mic tutorial (2026-10-01; done, not yet pushed)
+
+The settings/dialogs round was pushed as `58cec9e`.
+
+- **"How to talk" dialog:** shows every time a voice call connects (unlike the one-time privacy note), with three always-visible steps — click the mic button, say your line (the middle step pulses red with bouncing bars, matching the real Talk button's own colors and states), click again to send. A **Don't show this again** checkbox stops it for good; checking "Clear everything" does not bring it back (same as the privacy note).
+- Built entirely in CSS/SVG like the rest of the app's visuals — no image or video file — so it respects the app's existing reduced-motion setting (the pulse/bars just freeze, leaving a plain static 3-step diagram) and needs no hosting.
+- New storage key `ccl.micTutorialHidden` (`js/constants.js`, `js/storage.js`); dialog markup in `index.html`; copy in `js/copy.js` under `voice.tutorial*`; wiring in `js/app.js` alongside the existing privacy-note dialog.
+- **Checked:** a Chrome click-through (first call shows privacy note then the tutorial; checking "Don't show again" and calling again shows neither); accessibility check on the dialog, 0 issues. **Tests: 130, all passing** (no new tests — the dialog is DOM wiring, like the privacy note beside it).
+
 ## Settings, dialogs, messages, empty state, Record (2026-10-01; done, not yet pushed)
 
 The Home page and navigation were pushed as `0dfd18e`.

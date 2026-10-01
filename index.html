@@ -197,6 +197,37 @@
     </form>
   </dialog>
 
+  <!-- How to use the talk button: shown every time a voice call starts, until dismissed for good -->
+  <dialog id="mic-tutorial-dialog" class="small-dialog" aria-labelledby="mic-tut-heading">
+    <form method="dialog">
+      <div class="dialog-icon dialog-icon-teal" data-icon="mic"></div>
+      <h2 id="mic-tut-heading" data-copy="voice.tutorialTitle"></h2>
+      <ol class="mic-tutorial-steps">
+        <li class="mic-tutorial-step" id="mic-tut-step-1">
+          <span class="mic-tutorial-btn" aria-hidden="true" data-icon="mic"></span>
+          <span data-copy="voice.tutorialStep1"></span>
+        </li>
+        <li class="mic-tutorial-step" id="mic-tut-step-2">
+          <span class="mic-tutorial-btn is-recording" aria-hidden="true">
+            <span class="mic-tutorial-bars"><i></i><i></i><i></i></span>
+          </span>
+          <span data-copy="voice.tutorialStep2"></span>
+        </li>
+        <li class="mic-tutorial-step" id="mic-tut-step-3">
+          <span class="mic-tutorial-btn" aria-hidden="true" data-icon="mic"></span>
+          <span data-copy="voice.tutorialStep3"></span>
+        </li>
+      </ol>
+      <label class="mic-tutorial-dismiss">
+        <input type="checkbox" id="mic-tut-dismiss">
+        <span data-copy="voice.tutorialDontShow"></span>
+      </label>
+      <div class="dialog-actions">
+        <button type="submit" class="btn btn-primary" value="ok" data-copy="voice.tutorialOk"></button>
+      </div>
+    </form>
+  </dialog>
+
   <!-- A styled yes/no question (instead of the browser's own confirm box) -->
   <dialog id="confirm-dialog" class="small-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-body">
     <form method="dialog">

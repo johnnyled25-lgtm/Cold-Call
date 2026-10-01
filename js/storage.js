@@ -89,10 +89,12 @@ export function savePastCall(state, ctx) {
 }
 
 // "Clear everything": keys, settings, and past calls (what the button says).
-// The one-time voice privacy note stays dismissed, so it's shown once per browser.
+// The one-time voice privacy note and the mic tutorial's "don't show again" choice
+// both stay as they were, so clearing everything doesn't bring back dialogs a
+// student already dismissed.
 export function clearEverything() {
   for (const key of Object.values(STORAGE_KEYS)) {
-    if (key === STORAGE_KEYS.privacyNoteSeen) continue;
+    if (key === STORAGE_KEYS.privacyNoteSeen || key === STORAGE_KEYS.micTutorialHidden) continue;
     remove("session", key);
     remove("local", key);
   }

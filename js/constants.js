@@ -232,4 +232,5 @@ export const STORAGE_KEYS = {
   settings: "ccl.settings",
   pastCalls: "ccl.pastCalls",
   privacyNoteSeen: "ccl.privacyNoteSeen",
+  micTutorialHidden: "ccl.micTutorialHidden",
 };
