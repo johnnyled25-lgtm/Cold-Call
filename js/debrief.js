@@ -127,6 +127,7 @@ export function analyzeCall(state, ctx) {
     offer,
     mood,
     startingPatience: state.startingPatience,
+    finalPatience: state.patience,
     seed: state.seed,
     changes,
     chart,

@@ -1,5 +1,17 @@
 # Status
 
+## Call layout swap + debrief outcome banner (2026-10-01; done, not yet pushed)
+
+The briefing redesign was pushed as `d9b2645`.
+
+**Call screen, swapped (Johnny's request):** the exec and the phone (header, chat, buttons) are stacked on the left, and **Your briefing** is in the right-hand column, **fully open with no scroll box**. It's a plain section, no longer collapsible.
+- To make every part fit on a laptop screen: the "Calling" tile was dropped (the exec's name and title are on the phone beside it), the goal chip is the first line, the briefing column is wider (1.15 : 1), the exec drawing is a little smaller (27% of the window height), the tiles are tighter, and the call screen's "What is happening here" panel moved below the call.
+- Checked at a laptop-sized window (about 650 px of visible height) with the longest briefing (Mike / Crewbeam): goal, you are, what you know, their setup, selling, all four key points, and price are all visible. Only the chat scrolls, inside the phone.
+
+**Debrief outcome banner:** the exec in their final pose next to the outcome. **Meeting booked:** writing the note, on a green tint. **Hung up:** phone back on the desk, on a red tint. **Other endings:** phone down, on a warm neutral tint. The face follows the final patience band (`outcomePose` in `js/pose.js`). Beside the drawing: "How it ended", the outcome word with its icon (never color alone), the one-line detail, and three quick facts (length, pain points found, number of asks). Tints are in `:root` (`--booked-tint`, `--hungup-tint`), contrast checked. Reopened past calls get the same banner.
+
+**Checked:** screenshots of the swapped call and of the banner for booked, hung up, and student-ended calls. Accessibility check: 0 issues on the live call and the debrief. **Tests: 127, all passing** (1 new: the final pose by outcome, never "engaged" below the band).
+
 ## Briefing redesign: a dossier (2026-10-01; done, not yet pushed)
 
 The previous round (warm palette + phone-style call) was pushed as `c7e3b2e`.

@@ -4,6 +4,8 @@
 import { COPY, fill } from "./copy.js";
 import { ACCEPTANCE_THRESHOLD, OUTCOMES } from "./constants.js";
 import { formatClock, formatDelta, recordSummary, askSummary } from "./debrief.js";
+import { mountExec } from "./exec-drawing.js";
+import { outcomePose } from "./pose.js";
 
 const d = COPY.debrief;
 
@@ -147,10 +149,22 @@ export function buildPatienceChart(a) {
 export function renderDebrief(container, a, { onCallAgain, onCopy, transcriptText }) {
   const first = a.firstName;
 
-  // 1. Outcome
-  const outcome = el("div", { className: `card outcome-block outcome-${a.outcome}` }, [
-    el("p", { className: "outcome" }, outcomeBadge(a.outcome)),
-    el("p", { text: a.outcomeLine }),
+  // 1. Outcome: a banner with the exec in their final pose (writing the note, or the
+  // phone back on the desk), the outcome word with its icon, and three plain facts.
+  const art = el("div", { className: "outcome-art" });
+  mountExec(art, a.persona, COPY.exec.describe).setPose(outcomePose(a.outcome, a.finalPatience));
+  const outcome = el("section", { className: `outcome-banner outcome-${a.outcome}`, attrs: { "aria-label": d.outcomeEyebrow } }, [
+    art,
+    el("div", { className: "outcome-text" }, [
+      el("div", { className: "eyebrow", text: d.outcomeEyebrow }),
+      el("p", { className: "outcome outcome-word" }, outcomeBadge(a.outcome)),
+      el("p", { className: "outcome-line", text: a.outcomeLine }),
+      el("div", { className: "outcome-facts" }, [
+        el("span", { className: "pill", text: fill(d.bannerLength, { time: formatClock(a.facts.durationMs) }) }),
+        el("span", { className: "pill", text: fill(d.bannerPains, { found: a.pains.found.length, total: a.pains.total }) }),
+        el("span", { className: "pill", text: fill(d.bannerAsks, { n: a.ask.asks.length }) }),
+      ]),
+    ]),
   ]);
 
   // 2. Who you called

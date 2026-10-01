@@ -109,3 +109,13 @@ test("eye clip-path ids are unique per drawing, so many can share a page", () =>
   assert.ok(a.includes('id="ex1-eye-l"') && b.includes('id="ex2-eye-l"'));
   assert.ok(!b.includes("ex1-"));
 });
+
+test("the debrief's final pose: writing the note if booked, phone down otherwise, face from the final band", async () => {
+  const { outcomePose } = await import("../js/pose.js");
+  assert.deepEqual(outcomePose(OUTCOMES.MEETING_BOOKED, 70), { base: "booked", mood: "engaged", skeptical: false, talking: false });
+  assert.equal(outcomePose(OUTCOMES.HUNG_UP, 0).base, "hung-up");
+  assert.equal(outcomePose(OUTCOMES.HUNG_UP, 0).mood, "impatient");
+  assert.equal(outcomePose(OUTCOMES.NO_ASK, 50).mood, "neutral");
+  assert.equal(outcomePose(OUTCOMES.ASKED_NO_MEETING, 65).mood, "engaged");
+  for (let p = 0; p < BANDS.ENGAGED_MIN; p++) assert.notEqual(outcomePose(OUTCOMES.TIMES_UP, p).mood, "engaged");
+});

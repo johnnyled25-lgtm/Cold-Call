@@ -27,6 +27,14 @@ export function execPose({ phase, state, speaking = false }) {
   return { base, mood, skeptical, talking: Boolean(speaking) };
 }
 
+// The exec's pose in the debrief's outcome banner, from how the call ended.
+// Meeting booked: writing the note. Every other ending: the phone back on the desk.
+// The face still follows the final patience band, so it never contradicts the state.
+export function outcomePose(outcome, finalPatience) {
+  if (outcome === OUTCOMES.MEETING_BOOKED) return { base: "booked", mood: "engaged", skeptical: false, talking: false };
+  return { base: "hung-up", mood: patienceBand(finalPatience), skeptical: false, talking: false };
+}
+
 // CSS classes for the drawing's root element.
 export function poseClasses(pose) {
   return [

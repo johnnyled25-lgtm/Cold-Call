@@ -138,6 +138,11 @@ export const COPY = {
       dropped: "Call dropped (connection problem) after {time}. This wasn't your fault, and it isn't counted in your Record.",
     },
 
+    outcomeEyebrow: "How it ended",
+    bannerLength: "Length {time}",
+    bannerPains: "Pain points {found} of {total}",
+    bannerAsks: "Asks {n}",
+
     // 2. Who you called
     whoHeading: "Who you called",
     whoYouCalled: "{name} was {mood}. Starting patience: {start}.",

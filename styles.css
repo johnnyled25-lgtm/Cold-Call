@@ -31,6 +31,9 @@
   --mono-5: #5E6B3A;  /* olive */
   --mono-ink-light: #FFFFFF;
   --mono-ink-dark: #2A2320;
+  /* Debrief outcome banner tints (contrast checked: green word 4.5:1, red word 4.8:1, muted 5.1:1+) */
+  --booked-tint: #E6F2EB;
+  --hungup-tint: #F7E4E0;
 
   /* The drawn exec: warm, slightly desaturated. Appearance values from
      personas.json map to these; shades and highlights are mixed from them. */
@@ -524,27 +527,32 @@ main:has(#screen-gallery:not([hidden])) { max-width: none; }
 .round-btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
 
 /* The live call */
-.call-layout { display: grid; grid-template-columns: 1.55fr 1fr; gap: var(--gap); align-items: start; }
+.call-layout { display: grid; grid-template-columns: 1.15fr 1fr; gap: var(--gap); align-items: start; }
 .call-left { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .exec-stage {
   background: var(--stage-wall); border: 1px solid var(--border); border-radius: var(--radius-lg);
   box-shadow: var(--shadow); display: flex; align-items: flex-end; justify-content: center; overflow: hidden;
 }
-.exec-stage .exec { width: auto; max-width: 100%; max-height: 40vh; margin: 0 auto; }
+.exec-stage .exec { width: auto; max-width: 100%; max-height: 27vh; margin: 0 auto; }
 
-.call-brief { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 12px 16px; box-shadow: var(--shadow); max-height: 30vh; overflow-y: auto; }
-.call-brief summary { cursor: pointer; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-.call-brief summary svg { width: 16px; height: 16px; flex: none; }
-.brief-tiles { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-.brief-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 6px 10px; font-size: 0.88rem; flex: 1 1 200px; }
+/* Your briefing: the right-hand column, always fully open (no scroll box). */
+.call-brief { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; box-shadow: var(--shadow); }
+.call-brief h3 { margin: 0; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+.call-brief h3 svg { width: 16px; height: 16px; flex: none; color: var(--accent); }
+
+.brief-tiles { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.brief-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 5px 10px; font-size: 0.84rem; line-height: 1.35; flex: 1 1 180px; }
 .brief-tile.wide { flex-basis: 100%; }
 .brief-tile b { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
-.brief-tile ul { margin: 2px 0 0; padding-left: 18px; }
+.brief-tile ul { margin: 2px 0 0; padding-left: 16px; }
+.brief-tile li + li { margin-top: 2px; }
+.call-brief .goal-chip { flex: 1 1 100%; border-radius: 10px; font-size: 0.85rem; padding: 6px 12px; }
 
 .phone-panel {
   display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--border);
   border-radius: 26px; box-shadow: var(--shadow); overflow: hidden;
-  height: clamp(440px, calc(100vh - 200px), 720px);
+  /* Under the exec: whatever height is left on the screen (the chat scrolls inside). */
+  height: clamp(320px, calc(100vh - 27vh - 150px), 600px);
 }
 .phone-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, var(--calling-top), var(--card)); }
 .phone-header .avatar { width: 48px; height: 48px; }
@@ -656,3 +664,34 @@ main:has(#screen-gallery:not([hidden])) { max-width: none; }
   .dossier-company { justify-content: center; }
   .briefing-actions { width: 100%; }
 }
+
+.explainer-below { margin-top: var(--gap); }
+
+/* ---------------------------------------------------------------------------
+   Debrief: the outcome banner. The exec in their final pose beside the outcome.
+   Tinted green (meeting booked), red (hung up), or warm neutral (anything else);
+   the icon and word always carry the outcome too, never color alone.
+   --------------------------------------------------------------------------- */
+.outcome-banner {
+  display: grid; grid-template-columns: minmax(200px, 300px) 1fr; align-items: center; gap: 8px 24px;
+  background: linear-gradient(135deg, var(--calling-top) 0%, var(--card) 75%);
+  border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden;
+}
+.outcome-banner.outcome-meetingBooked { background: linear-gradient(135deg, var(--booked-tint) 0%, var(--card) 80%); border-color: var(--outcome-booked); }
+.outcome-banner.outcome-hungUp { background: linear-gradient(135deg, var(--hungup-tint) 0%, var(--card) 80%); border-color: var(--outcome-hungup); }
+.outcome-art { align-self: stretch; display: flex; align-items: flex-end; contain: layout paint; }
+.outcome-art .exec { width: 100%; height: auto; display: block; }
+.outcome-text { padding: 20px 24px 20px 0; }
+.outcome-word { font-size: 2rem; line-height: 1.1; margin: 4px 0 6px; }
+.outcome-word .outcome-icon { width: 1.1em; }
+.outcome-line { margin: 0 0 12px; font-size: 1.05rem; }
+.outcome-facts { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 700px) {
+  .outcome-banner { grid-template-columns: 1fr; }
+  .outcome-art { max-width: 320px; margin: 0 auto; }
+  .outcome-text { padding: 0 20px 20px; text-align: center; }
+  .outcome-facts { justify-content: center; }
+}
+/* The banner's tint shows through the drawing's wall; only the outcome word is colored. */
+.outcome-art .exec .wall { fill: transparent; }
+.outcome-banner .outcome-line { color: var(--ink); }

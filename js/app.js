@@ -205,9 +205,10 @@ function briefingDossier({ persona, offer }) {
 function briefingTiles({ persona, offer }) {
   const c = COPY.call;
   const tile = (label, body, wide = false) => el("div", { className: `brief-tile${wide ? " wide" : ""}` }, [el("b", { text: label }), body]);
+  // No "Calling" tile: the exec's name and title are on the phone right beside it.
   return [
+    el("span", { className: "goal-chip" }, [icon("goal"), COPY.call.goalChip]),
     tile(c.briefYouAre, fill(COPY.briefing.youAre, { name: COPY.student.name, role: COPY.student.role, company: offer.company })),
-    tile(c.briefCalling, `${persona.name}, ${persona.title}, ${persona.company}`),
     tile(c.briefKnow, `${persona.industry} · ${persona.companySize}`),
     tile(c.briefSetup, persona.currentSetup, true),
     tile(c.briefSelling, `${offer.product}: ${offer.oneLiner}`, true),
