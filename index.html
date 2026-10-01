@@ -35,10 +35,16 @@
         <h3 class="explainer-label" data-copy="explainers.whyLabel"></h3>
         <p data-copy="explainers.briefing.why"></p>
       </details>
-      <div class="card briefing-card" id="briefing-card"></div>
-      <div class="actions">
-        <button type="button" class="btn btn-primary" id="btn-call" data-copy="briefing.callButton"></button>
-        <button type="button" class="btn" id="btn-random" data-copy="briefing.randomButton"></button>
+      <div class="dossier" id="briefing-card"></div>
+      <div class="briefing-actions" id="briefing-actions">
+        <button type="button" class="btn btn-primary btn-big" id="btn-call">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.3 0 .7-.2 1z"/></svg>
+          <span id="btn-call-label" data-copy="briefing.callButton"></span>
+        </button>
+        <button type="button" class="btn btn-icon" id="btn-random">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span data-copy="briefing.randomButton"></span>
+        </button>
       </div>
     </section>
 

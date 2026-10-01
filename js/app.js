@@ -24,6 +24,7 @@ import {
 import { pickVoice, deliveryFor, voiceTierLabel } from "./voicePick.js";
 import { guardSpeech, createSilenceWatch, silenceTimeoutMs } from "./turnGate.js";
 import { mountExec, buildExecPortraitSvg } from "./exec-drawing.js";
+import { monogramInitials, monogramColor } from "./monogram.js";
 import { renderGallery } from "./gallery.js";
 import { analyzeCall, formatTranscriptText } from "./debrief.js";
 import { renderDebrief as drawDebrief, renderPastCalls } from "./debrief-view.js";
@@ -134,24 +135,70 @@ function newDraw() {
 // ---------------------------------------------------------------------------
 // Briefing
 // ---------------------------------------------------------------------------
-// The briefing: shown before the call, and again beside the exec during it.
-// Only what the student is allowed to know; nothing hidden (patience, mood, pain points).
-function briefingNodes({ persona, offer }) {
+// The briefing, as a dossier: who you're calling, the goal, what you know, and
+// what you're selling. Only what the student is allowed to know; nothing hidden
+// (patience, mood, pain points). Icons are fixed markup from ICONS below.
+const ICONS = {
+  goal: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/></svg>',
+  know: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  sell: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12V4h8l10 10-8 8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="7.5" cy="8.5" r="1.6" fill="currentColor"/></svg>',
+  check: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.15"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+};
+const icon = (name) => {
+  const span = el("span", { className: "icon" });
+  span.innerHTML = ICONS[name]; // fixed markup above; never model text
+  return span.firstElementChild;
+};
+const monogramBadge = (company, size = "") =>
+  el("span", { className: `monogram mono-${monogramColor(company)} ${size}`.trim(), text: monogramInitials(company), attrs: { "aria-hidden": "true" } });
+
+function briefingDossier({ persona, offer }) {
   const b = COPY.briefing;
-  return [
-    el("h3", { text: b.youAreHeading }),
-    el("p", { text: fill(b.youAre, { name: COPY.student.name, role: COPY.student.role, company: offer.company }) }),
-    el("h3", { text: b.youAreCalling }),
-    el("p", { className: "briefing-who" }, [el("strong", { text: persona.name }), `, ${persona.title}, ${persona.company}`]),
-    el("h3", { text: b.whatYouKnow }),
-    el("ul", {}, [persona.industry, persona.companySize, persona.currentSetup].map((t) => el("li", { text: t }))),
-    el("h3", { text: b.whatYouSell }),
-    el("p", {}, [el("strong", { text: offer.product }), ` (${offer.company}). ${offer.oneLiner}`]),
-    el("ul", {}, offer.valuePoints.map((t) => el("li", { text: t }))),
-    el("p", { className: "muted", text: `${b.price}: ${offer.priceHint}` }),
-    el("h3", { text: b.goalHeading }),
-    el("p", { text: b.goal }),
-  ];
+  const portrait = el("div", { className: "avatar" });
+  portrait.innerHTML = buildExecPortraitSvg(persona.appearance, { idPrefix: "pb" }); // our own fixed markup
+
+  const hero = el("section", { className: "dossier-hero", attrs: { "aria-label": b.youAreCalling } }, [
+    portrait,
+    el("div", { className: "dossier-who" }, [
+      el("div", { className: "eyebrow", text: b.eyebrow }),
+      el("h3", { className: "dossier-name", text: persona.name }),
+      el("div", { className: "dossier-title", text: persona.title }),
+      el("div", { className: "dossier-company" }, [
+        monogramBadge(persona.company),
+        el("strong", { text: persona.company }),
+        el("span", { className: "pill", text: persona.industry }),
+      ]),
+    ]),
+  ]);
+
+  const goal = el("div", { className: "goal-banner" }, [icon("goal"), el("div", {}, [el("strong", { text: b.goalHeading }), el("span", { text: b.goal })])]);
+
+  const fact = (label, value) => el("div", {}, [el("dt", { text: label }), el("dd", { text: value })]);
+  const know = el("section", { className: "dossier-card" }, [
+    el("h3", {}, [icon("know"), b.knowHeading]),
+    el("dl", { className: "facts" }, [
+      fact(b.knowSize, persona.companySize),
+      fact(b.knowSetup, persona.currentSetup),
+    ]),
+  ]);
+
+  const sell = el("section", { className: "dossier-card" }, [
+    el("h3", {}, [icon("sell"), b.sellHeading]),
+    el("div", { className: "product-head" }, [
+      monogramBadge(offer.company, "small"),
+      el("div", {}, [el("div", { className: "product-name", text: offer.product }), el("div", { className: "product-maker", text: fill(b.sellFrom, { company: offer.company }) })]),
+    ]),
+    el("p", { className: "product-pitch", text: offer.oneLiner }),
+    el("ul", { className: "checks" }, offer.valuePoints.map((t) => el("li", {}, [icon("check"), el("span", { text: t })]))),
+    el("div", { className: "price-chip" }, [el("b", { text: `${b.price}:` }), offer.priceHint]),
+  ]);
+
+  const youAre = el("p", { className: "you-are" }, [
+    el("strong", { text: `${b.youAreHeading}: ` }),
+    fill(b.youAre, { name: COPY.student.name, role: COPY.student.role, company: offer.company }),
+  ]);
+
+  return [hero, goal, el("div", { className: "dossier-grid" }, [know, sell]), youAre];
 }
 
 // The briefing as compact tiles, beside the exec during the call.
@@ -169,8 +216,14 @@ function briefingTiles({ persona, offer }) {
   ];
 }
 
+let briefingActions = null;
 function renderBriefing() {
-  $("briefing-card").replaceChildren(...briefingNodes(draw));
+  // The Call buttons sit in the hero, so they're on screen without scrolling. Keep
+  // our own reference: the hero is rebuilt each time, which takes them off the page.
+  briefingActions ??= $("briefing-actions");
+  $("briefing-card").replaceChildren(...briefingDossier(draw));
+  $("briefing-card").querySelector(".dossier-hero").append(briefingActions);
+  $("btn-call-label").textContent = fill(COPY.briefing.callButtonName, { first: draw.persona.name.split(" ")[0] });
   showScreen("briefing");
 }
 

@@ -23,6 +23,14 @@
   --outcome-hungup: #B23A2E;  /* Hung up: 5.9:1 on card */
   --focus-ring: #3F6F6D;
   --shadow: 0 1px 2px rgba(58, 36, 24, 0.06), 0 6px 18px rgba(58, 36, 24, 0.08);
+  /* Company badges (contrast checked: white on 1/2/3/5 is 5.5–6.8:1; ink on 4 is 6.9:1) */
+  --mono-1: #A3523A;  /* terracotta */
+  --mono-2: #3F6F6D;  /* teal */
+  --mono-3: #7A4E66;  /* plum */
+  --mono-4: #D9A441;  /* gold, with dark initials */
+  --mono-5: #5E6B3A;  /* olive */
+  --mono-ink-light: #FFFFFF;
+  --mono-ink-dark: #2A2320;
 
   /* The drawn exec: warm, slightly desaturated. Appearance values from
      personas.json map to these; shades and highlights are mixed from them. */
@@ -574,4 +582,77 @@ main:has(#screen-gallery:not([hidden])) { max-width: none; }
 @media (max-width: 860px) {
   .call-layout { grid-template-columns: 1fr; }
   .phone-panel { height: 520px; }
+}
+
+/* ---------------------------------------------------------------------------
+   Briefing: a dossier. Exec portrait and company badge, the goal as a banner,
+   then what you know and what you're selling side by side.
+   --------------------------------------------------------------------------- */
+.dossier { display: flex; flex-direction: column; gap: var(--gap); }
+.dossier-hero {
+  display: flex; align-items: center; gap: 24px; padding: 24px 28px;
+  background: linear-gradient(135deg, var(--calling-top) 0%, var(--card) 70%);
+  border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow);
+}
+.dossier-hero .avatar { width: 112px; height: 112px; box-shadow: 0 0 0 5px var(--card); }
+.dossier-who { flex: 1; min-width: 0; }
+.eyebrow { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--teal); font-weight: 700; }
+.dossier-name { font-size: 1.9rem; line-height: 1.15; margin: 2px 0 2px; }
+.dossier-title { color: var(--muted); }
+.dossier-company { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+.dossier-company strong { font-size: 1.05rem; }
+.pill { display: inline-flex; align-items: center; gap: 6px; background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px; font-size: 0.82rem; color: var(--muted); }
+
+/* Company badges: up to two initials on one of five colors (white or ink text, contrast checked) */
+.monogram {
+  display: inline-grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 11px;
+  font-weight: 800; font-size: 0.95rem; letter-spacing: 0.02em; color: var(--mono-ink-light);
+}
+.monogram.small { width: 30px; height: 30px; border-radius: 8px; font-size: 0.75rem; }
+.mono-1 { background: var(--mono-1); }
+.mono-2 { background: var(--mono-2); }
+.mono-3 { background: var(--mono-3); }
+.mono-4 { background: var(--mono-4); color: var(--mono-ink-dark); }
+.mono-5 { background: var(--mono-5); }
+
+.goal-banner {
+  display: flex; align-items: center; gap: 14px; padding: 14px 20px;
+  background: var(--teal-soft); border-radius: var(--radius); border-left: 5px solid var(--teal);
+}
+.goal-banner svg { width: 28px; height: 28px; color: var(--teal); flex: none; }
+.goal-banner strong { display: block; color: var(--teal); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.08em; }
+.goal-banner span { color: var(--ink); }
+
+.dossier-grid { display: grid; grid-template-columns: 1fr 1.25fr; gap: var(--gap); }
+.dossier-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow); padding: 18px 22px; }
+.dossier-card h3 { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0 0 12px; }
+.dossier-card h3 svg { width: 18px; height: 18px; color: var(--accent); flex: none; }
+.facts { margin: 0; display: grid; gap: 10px; }
+.facts div { display: grid; gap: 2px; }
+.facts dt { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
+.facts dd { margin: 0; }
+.product-head { display: flex; align-items: center; gap: 10px; }
+.product-name { font-size: 1.25rem; font-weight: 800; }
+.product-maker { color: var(--muted); font-size: 0.88rem; }
+.product-pitch { margin: 10px 0 12px; }
+.checks { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 8px; }
+.checks li { display: flex; gap: 10px; align-items: flex-start; }
+.checks svg { width: 18px; height: 18px; color: var(--outcome-booked); flex: none; margin-top: 2px; }
+.price-chip { display: inline-flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 5px 12px; font-size: 0.88rem; }
+.price-chip b { color: var(--muted); font-weight: 600; }
+.you-are { color: var(--muted); font-size: 0.92rem; }
+.you-are strong { color: var(--ink); }
+
+/* The big buttons under the dossier */
+.briefing-actions { display: flex; flex-direction: column; gap: 10px; align-items: stretch; flex: none; }
+.briefing-actions .btn { justify-content: center; }
+.btn-big { display: inline-flex; align-items: center; gap: 10px; padding: 14px 26px; font-size: 1.05rem; border-radius: 999px; box-shadow: var(--shadow); }
+.btn-big svg, .btn-icon svg { width: 20px; height: 20px; flex: none; }
+.btn-icon { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 12px 20px; }
+
+@media (max-width: 760px) {
+  .dossier-grid { grid-template-columns: 1fr; }
+  .dossier-hero { flex-direction: column; text-align: center; }
+  .dossier-company { justify-content: center; }
+  .briefing-actions { width: 100%; }
 }

@@ -1,5 +1,16 @@
 # Status
 
+## Briefing redesign: a dossier (2026-10-01; done, not yet pushed)
+
+The previous round (warm palette + phone-style call) was pushed as `c7e3b2e`.
+
+- **Hero:** the exec's round portrait (from the same drawing), "You're calling", name, title, a **company badge** (initials on a color picked from the company name, `js/monogram.js`), the company, and an industry tag. The **Call {first}** button (with a phone icon) and **Random exec** sit on the right of the hero, so they're on screen without scrolling. On narrow screens everything stacks.
+- **Goal banner:** "Your goal: Book a 15-minute meeting…", highlighted in teal right under the hero.
+- **Two cards:** *What you know about them* (size, how they work today) and *What you're selling* (product with its maker's badge, the one-liner, value points with green checkmarks, and a price tag). "You are: Jordan, sales rep at {company}" sits underneath.
+- **Badge colors** are five variables in `:root` (terracotta, teal, plum, gold with dark initials, olive), contrast checked at 5.5–6.9:1. The color hash spreads the five exec companies over four colors.
+- **Fixed while building:** (a) the Call button was below the fold at laptop height, so it moved into the hero; (b) after moving the buttons into the hero, each redraw would have taken them off the page, so the code now keeps its own reference (tested with repeated Random exec); (c) the industry was shown twice, so it's now only the tag; (d) the first badge-color formula put four of eight companies on the same color, so it was replaced.
+- **Checked:** screenshots at laptop and narrow widths, Random exec redraws, and the accessibility check (0 issues). **Tests: 126, all passing** (3 new for the badges).
+
 ## New look: warm palette + phone-style call screen (2026-10-01; done, not yet pushed)
 
 Approved by Johnny from a preview page (now removed, since it's built into the app).
