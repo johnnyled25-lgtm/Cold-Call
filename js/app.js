@@ -25,6 +25,7 @@ import { pickVoice, deliveryFor, voiceTierLabel } from "./voicePick.js";
 import { guardSpeech, createSilenceWatch, silenceTimeoutMs } from "./turnGate.js";
 import { mountExec, buildExecPortraitSvg } from "./exec-drawing.js";
 import { monogramInitials, monogramColor } from "./monogram.js";
+import { iconEl } from "./icons.js";
 import { renderGallery } from "./gallery.js";
 import { analyzeCall, formatTranscriptText } from "./debrief.js";
 import { renderDebrief as drawDebrief, renderPastCalls } from "./debrief-view.js";
@@ -137,18 +138,8 @@ function newDraw() {
 // ---------------------------------------------------------------------------
 // The briefing, as a dossier: who you're calling, the goal, what you know, and
 // what you're selling. Only what the student is allowed to know; nothing hidden
-// (patience, mood, pain points). Icons are fixed markup from ICONS below.
-const ICONS = {
-  goal: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/></svg>',
-  know: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
-  sell: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12V4h8l10 10-8 8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="7.5" cy="8.5" r="1.6" fill="currentColor"/></svg>',
-  check: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.15"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-};
-const icon = (name) => {
-  const span = el("span", { className: "icon" });
-  span.innerHTML = ICONS[name]; // fixed markup above; never model text
-  return span.firstElementChild;
-};
+// (patience, mood, pain points). Icons come from js/icons.js.
+const icon = iconEl;
 const monogramBadge = (company, size = "") =>
   el("span", { className: `monogram mono-${monogramColor(company)} ${size}`.trim(), text: monogramInitials(company), attrs: { "aria-hidden": "true" } });
 

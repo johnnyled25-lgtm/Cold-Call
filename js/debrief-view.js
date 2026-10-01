@@ -5,6 +5,7 @@ import { COPY, fill } from "./copy.js";
 import { ACCEPTANCE_THRESHOLD, OUTCOMES } from "./constants.js";
 import { formatClock, formatDelta, recordSummary, askSummary, patienceSeries, sparkline } from "./debrief.js";
 import { mountExec, buildExecPortraitSvg } from "./exec-drawing.js";
+import { iconEl } from "./icons.js";
 import { outcomePose } from "./pose.js";
 
 const d = COPY.debrief;
@@ -39,8 +40,22 @@ function outcomeBadge(outcome) {
   ]);
 }
 
-function section(heading, children, className = "") {
-  return el("section", { className: `card debrief-section ${className}` }, [el("h3", { text: heading }), ...[].concat(children)]);
+function section(heading, children, className = "", icon = null) {
+  const h = el("h3", { className: "section-head" }, [icon ? iconEl(icon) : null, heading]);
+  return el("section", { className: `card debrief-section ${className}` }, [h, ...[].concat(children)]);
+}
+
+// A patience change as a chip: "−22" on red, "+8" on green, "0" plain. The sign is
+// always in the text, so the color is never the only cue.
+function deltaChip(delta) {
+  const kind = delta < 0 ? "neg" : delta > 0 ? "pos" : "zero";
+  return el("span", { className: `delta-chip delta-${kind}`, text: formatDelta(delta) });
+}
+
+function portraitOf(persona, idPrefix, size = "") {
+  const box = el("div", { className: `avatar ${size}`.trim() });
+  box.innerHTML = buildExecPortraitSvg(persona.appearance, { idPrefix }); // our own fixed markup
+  return box;
 }
 
 const quoteLine = (change) => (change.silence ? d.silence : change.studentText != null ? `${COPY.call.you}: “${change.studentText}”` : null);
@@ -167,12 +182,21 @@ export function renderDebrief(container, a, { onCallAgain, onCopy, transcriptTex
     ]),
   ]);
 
-  // 2. Who you called
+  // 2. Who you called: portrait, name, today's mood, and what they're like.
   const who = section(d.whoHeading, [
-    el("p", {}, [el("strong", { text: `${a.persona.name}, ${a.persona.title}, ${a.persona.company}` })]),
-    el("p", { text: fill(d.whoYouCalled, { name: first, mood: a.mood.label, start: a.startingPatience }) }),
-    el("p", { className: "muted", text: `${fill(d.personalityLabel, { first })}: ${a.persona.personality}` }),
-  ]);
+    el("div", { className: "who-row" }, [
+      portraitOf(a.persona, "pw", "who-avatar"),
+      el("div", {}, [
+        el("strong", { className: "who-name", text: a.persona.name }),
+        el("div", { className: "muted", text: `${a.persona.title} · ${a.persona.company}` }),
+        el("div", { className: "who-pills" }, [
+          el("span", { className: "pill", text: fill(d.moodPill, { mood: a.mood.label }) }),
+          el("span", { className: "pill", text: fill(d.startPill, { start: a.startingPatience }) }),
+        ]),
+      ]),
+    ]),
+    el("p", { className: "who-personality" }, [el("strong", { text: `${fill(d.personalityLabel, { first })}: ` }), a.persona.personality]),
+  ], "", "person");
 
   // 3. Patience over the call
   const callAgainNear = el("button", { className: "btn", text: d.callAgain, attrs: { type: "button" } });
@@ -181,36 +205,64 @@ export function renderDebrief(container, a, { onCallAgain, onCopy, transcriptTex
     el("p", { className: "muted small", text: fill(d.chartCaption, { first }) }),
     buildPatienceChart(a),
     el("div", { className: "judgment-row" }, [el("p", { className: "muted", text: d.judgmentNote }), callAgainNear]),
-  ]);
+  ], "", "chart");
 
-  // 4. Where the call turned
+  // 4. Where the call turned: your line as a pull-quote, the exec's reaction, the drop.
   const t = a.turningPoint;
   const turned = section(d.turnedHeading, t
-    ? [
-        el("blockquote", { text: quoteLine(t) || "" }),
-        el("p", { className: "turn-move", text: fill(d.patienceMove, { before: t.before, after: t.after, delta: formatDelta(t.delta) }) }),
-        el("p", {}, [el("strong", { text: `${d.reasonLabel}: ` }), t.reason]),
-      ]
-    : [el("p", { text: d.turnedNone })]);
+    ? el("div", { className: "turn-grid" }, [
+        el("figure", { className: "turn-quote" }, [
+          el("blockquote", { text: t.silence ? d.silence : `“${t.studentText ?? ""}”` }),
+          el("figcaption", { className: "muted small", text: COPY.call.you }),
+        ]),
+        el("div", { className: "turn-side" }, [
+          el("div", { className: "turn-react" }, [
+            portraitOf(a.persona, "pt", "turn-avatar"),
+            el("div", { className: "bubble bubble-exec" }, [el("span", { className: "meta", text: first }), t.execText]),
+          ]),
+          el("div", { className: "turn-move", attrs: { "aria-label": fill(d.patienceMove, { before: t.before, after: t.after, delta: formatDelta(t.delta) }) } }, [
+            el("span", { className: "turn-label muted small", text: d.turnPatience }),
+            el("span", { className: "turn-num", text: String(t.before) }),
+            el("span", { className: "turn-arrow", text: "→", attrs: { "aria-hidden": "true" } }),
+            el("span", { className: "turn-num turn-after", text: String(t.after) }),
+            deltaChip(t.delta),
+          ]),
+        ]),
+        el("p", { className: "turn-reason" }, [el("strong", { text: `${d.reasonLabel}: ` }), t.reason]),
+      ])
+    : el("p", { text: d.turnedNone }), "", "turn");
 
-  // 5. Pain points
+  // 5. Pain points: a checklist. Found: green check. Missed: a hint card.
   const pains = section(d.painsHeading, [
     el("p", { text: fill(d.painSummary, { found: a.pains.found.length, total: a.pains.total }) }),
-    el("ul", { className: "plain-list" }, [
-      ...a.pains.found.map((p) => el("li", {}, [el("strong", { text: `${d.painFound}: ` }), p.text])),
-      ...a.pains.missed.map((p) => el("li", {}, [el("strong", { text: `${d.painMissed}: ` }), `${p.text} `, el("span", { className: "muted", text: `(${fill(d.painHint, { earnedBy: p.earnedBy })})` })])),
+    el("ul", { className: "checklist" }, [
+      ...a.pains.found.map((p) => el("li", { className: "item-found" }, [
+        iconEl("check"),
+        el("div", {}, [el("span", { className: "visually-hidden", text: `${d.painFound}: ` }), p.text]),
+      ])),
+      ...a.pains.missed.map((p) => el("li", { className: "item-missed" }, [
+        iconEl("hint"),
+        el("div", {}, [
+          el("span", { className: "visually-hidden", text: `${d.painMissed}: ` }),
+          el("span", { className: "missed-text", text: p.text }),
+          el("div", { className: "hint-card", text: fill(d.painHintCard, { earnedBy: p.earnedBy }) }),
+        ]),
+      ])),
     ]),
-  ]);
+  ], "", "know");
 
-  // 6. Objections
+  // 6. Objections: each one with a Handled / Not handled chip, and what tends to work.
   const objections = section(d.objectionsHeading, a.objections.length
-    ? el("ul", { className: "plain-list" }, a.objections.map((o) =>
-        el("li", {}, [
-          `“${o.line}” `,
-          el("strong", { text: o.handled ? d.handled : d.notHandled }),
-          !o.handled && o.whatHandlesIt ? el("div", { className: "muted small", text: fill(d.whatWorks, { text: o.whatHandlesIt }) }) : null,
+    ? el("ul", { className: "checklist" }, a.objections.map((o) =>
+        el("li", { className: o.handled ? "item-found" : "item-open" }, [
+          iconEl(o.handled ? "check" : "cross"),
+          el("div", {}, [
+            el("span", { className: "objection-line", text: `“${o.line}”` }),
+            el("span", { className: `status-chip ${o.handled ? "status-ok" : "status-open"}`, text: o.handled ? d.handled : d.notHandled }),
+            !o.handled && o.whatHandlesIt ? el("div", { className: "hint-card", text: fill(d.whatWorks, { text: o.whatHandlesIt }) }) : null,
+          ]),
         ])))
-    : el("p", { text: fill(d.objectionsNone, { first }) }));
+    : el("p", { text: fill(d.objectionsNone, { first }) }), "", "shield");
 
   // 7. The ask: every ask in order, with the exec's reply, and which one booked the meeting.
   const ask = a.ask;
@@ -227,35 +279,45 @@ export function renderDebrief(container, a, { onCallAgain, onCopy, transcriptTex
               : el("div", { className: "muted small", text: d.askNotBooked }),
           ]))),
       ]
-    : [el("p", { text: d.askNone })]);
+    : [el("p", { text: d.askNone })], "", "calendar");
 
-  // 8. Plain facts
+  // 8. Plain facts, as tiles: a number and what it is. No scores.
   const f = a.facts;
-  const facts = section(d.factsHeading, el("ul", { className: "plain-list" }, [
-    el("li", { text: fill(d.factLength, { time: formatClock(f.durationMs) }) }),
-    el("li", { text: fill(d.factLines, { n: f.studentLines }) }),
-    el("li", { text: fill(d.factShare, { pct: f.studentWordShare }) }),
-    f.silences ? el("li", { text: fill(d.factSilences, { n: f.silences }) }) : null,
-    f.retries ? el("li", { text: fill(d.factRetries, { n: f.retries }) }) : null,
-    f.voiceLines ? el("li", { text: fill(d.factVoice, { n: f.voiceLines }) }) : null,
-  ]));
+  const tile = (value, label) => el("div", { className: "fact-tile" }, [el("span", { className: "fact-value", text: value }), el("span", { className: "fact-label", text: label })]);
+  const facts = section(d.factsHeading, el("div", { className: "fact-tiles" }, [
+    tile(formatClock(f.durationMs), d.tileLength),
+    tile(String(f.studentLines), d.tileLines),
+    tile(`${f.studentWordShare}%`, d.tileShare),
+    f.silences ? tile(String(f.silences), d.tileSilences) : null,
+    f.retries ? tile(String(f.retries), d.tileRetries) : null,
+    f.voiceLines ? tile(String(f.voiceLines), d.tileVoice) : null,
+  ]), "", "list");
 
-  // 9. Full transcript, with Copy transcript
+  // 9. Full transcript: chat bubbles like the call, with each patience change under the exec's line.
   const copyStatus = el("span", { className: "muted small copy-status", attrs: { role: "status" } });
   const copyBtn = el("button", { className: "btn", text: d.copyTranscript, attrs: { type: "button" } });
   copyBtn.addEventListener("click", async () => { copyStatus.textContent = (await onCopy()) ? d.copied : d.copyFailed; });
   const transcript = section(d.transcriptHeading, [
     el("div", { className: "actions" }, [copyBtn, copyStatus]),
-    el("ol", { className: "debrief-transcript" }, a.transcript.map((line) =>
-      el("li", { className: `line line-${line.speaker}` }, [
-        el("span", { className: "muted small", text: `[${formatClock(line.atMs)}] ` }),
+    el("ol", { className: "debrief-chat" }, a.transcript.map((line) => {
+      const silent = Boolean(line.silence);
+      const meta = el("span", { className: "meta" }, [
         line.inputMode === "voice" ? el("span", { className: "mic", text: "🎤 ", attrs: { "aria-hidden": "true" } }) : null,
-        el("span", { className: "line-who", text: `${line.who}: ` }),
-        line.text,
-        line.change ? el("div", { className: "muted small", text: `${fill(d.patienceMove, { before: line.change.before, after: line.change.after, delta: formatDelta(line.change.delta) })}. ${line.change.reason || ""}` }) : null,
-      ]))),
+        `${line.who} · ${formatClock(line.atMs)}`,
+      ]);
+      return el("li", { className: `debrief-turn debrief-turn-${line.speaker}` }, [
+        el("div", { className: `bubble ${silent ? "bubble-silence" : `bubble-${line.speaker}`}` }, [meta, el("span", { className: "visually-hidden", text: ": " }), line.text]),
+        line.change
+          ? el("div", { className: "turn-change" }, [
+              deltaChip(line.change.delta),
+              el("span", { className: "turn-change-move", text: `${line.change.before} → ${line.change.after}` }),
+              el("span", { className: "muted", text: line.change.reason || "" }),
+            ])
+          : null,
+      ]);
+    })),
     el("details", { className: "plain-text" }, [el("summary", { className: "muted small", text: d.copyTranscript }), el("pre", { text: transcriptText })]),
-  ]);
+  ], "", "chat");
 
   container.replaceChildren(outcome, who, chart, turned, pains, objections, askSection, facts, transcript);
 }

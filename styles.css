@@ -726,3 +726,76 @@ main:has(#screen-gallery:not([hidden])) { max-width: none; }
 .card-open::after { content: ""; position: absolute; inset: 0; border-radius: var(--radius-lg); }
 .card-open:focus-visible { outline: none; }
 .card-open:focus-visible::after { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+
+/* ---------------------------------------------------------------------------
+   Debrief sections: icons on headings, a pull-quote turning point, checklists,
+   fact tiles, and the transcript as chat bubbles.
+   --------------------------------------------------------------------------- */
+.debrief-section .section-head { display: flex; align-items: center; gap: 10px; }
+.section-head svg { width: 20px; height: 20px; color: var(--accent); flex: none; }
+
+/* Who you called */
+.who-row { display: flex; align-items: center; gap: 14px; }
+.who-avatar { width: 64px; height: 64px; }
+.who-name { font-size: 1.15rem; }
+.who-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.who-personality { margin: 12px 0 0; color: var(--muted); }
+.who-personality strong { color: var(--ink); }
+
+/* Patience changes as chips: the sign is in the text, color is extra */
+.delta-chip { display: inline-block; font-weight: 700; font-variant-numeric: tabular-nums; font-size: 0.85rem; padding: 1px 8px; border-radius: 999px; }
+.delta-neg { color: var(--outcome-hungup); background: var(--hungup-tint); }
+.delta-pos { color: var(--outcome-booked); background: var(--booked-tint); }
+.delta-zero { color: var(--muted); background: var(--surface); }
+
+/* Where the call turned */
+.turn-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 14px 20px; align-items: start; }
+.turn-quote { margin: 0; padding: 14px 18px; background: var(--accent-soft); border-radius: 14px; border-left: 4px solid var(--accent); }
+.turn-quote blockquote { margin: 0; font-size: 1.1rem; line-height: 1.45; }
+.turn-quote figcaption { margin-top: 6px; }
+.turn-side { display: flex; flex-direction: column; gap: 12px; }
+.turn-react { display: flex; align-items: flex-end; gap: 10px; }
+.turn-avatar { width: 40px; height: 40px; }
+.turn-react .bubble { max-width: none; }
+.turn-move { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.turn-num { font-size: 1.8rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
+.turn-after { color: var(--outcome-hungup); }
+.turn-arrow { color: var(--muted); font-size: 1.3rem; }
+.turn-move .delta-chip { font-size: 0.95rem; }
+.turn-reason { grid-column: 1 / -1; margin: 0; padding-top: 10px; border-top: 1px dashed var(--border); }
+
+/* Checklists: pain points and objections */
+.checklist { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 10px; }
+.checklist li { display: flex; gap: 12px; align-items: flex-start; }
+.checklist li > svg { width: 22px; height: 22px; flex: none; margin-top: 1px; }
+.item-found > svg { color: var(--outcome-booked); }
+.item-open > svg { color: var(--outcome-hungup); }
+.item-missed > svg { color: var(--gold); }
+.missed-text { color: var(--muted); }
+.hint-card { margin-top: 6px; padding: 8px 12px; background: var(--surface); border: 1px dashed var(--border); border-radius: 10px; font-size: 0.9rem; }
+.objection-line { margin-right: 8px; }
+.status-chip { display: inline-block; font-size: 0.78rem; font-weight: 700; padding: 1px 9px; border-radius: 999px; vertical-align: 1px; }
+.status-ok { color: var(--outcome-booked); background: var(--booked-tint); }
+.status-open { color: var(--outcome-hungup); background: var(--hungup-tint); }
+
+/* Plain facts as tiles */
+.fact-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.fact-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; display: flex; flex-direction: column; gap: 2px; }
+.fact-value { font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.fact-label { font-size: 0.82rem; color: var(--muted); }
+
+/* Transcript as chat bubbles, each exec reply with its patience change */
+.debrief-chat { list-style: none; margin: 12px 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.debrief-turn { display: flex; flex-direction: column; }
+.debrief-turn-exec { align-items: flex-start; }
+.debrief-turn-student { align-items: flex-end; }
+.debrief-chat .bubble { max-width: 78%; }
+.turn-change { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin: 4px 0 0 6px; font-size: 0.82rem; max-width: 78%; }
+.turn-change-move { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+@media (max-width: 760px) {
+  .turn-grid { grid-template-columns: 1fr; }
+  .debrief-chat .bubble, .turn-change { max-width: 92%; }
+}
+/* The pull-quote is the box; its quote inside needs no second one. */
+.turn-quote blockquote { background: none; border: none; padding: 0; }

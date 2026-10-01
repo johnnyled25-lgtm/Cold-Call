@@ -1,5 +1,22 @@
 # Status
 
+## Debrief sections restyled + tab icon (2026-10-01; done, not yet pushed)
+
+Past calls cards were pushed as `cc02847`.
+
+- **Icons on every debrief heading** (who, chart, turn, pain points, objections, ask, facts, transcript). All icons now come from one shared file, `js/icons.js`, which the briefing uses too.
+- **Who you called:** the exec's portrait, name, title and company, mood and starting-patience tags, then what they're like.
+- **Where the call turned:** your line as a pull-quote, the exec's portrait and reply beside it, and the drop shown large (**38 → 16** with a **−22** chip), then the reason.
+- **Pain points:** a checklist. Found ones get a green check; missed ones get a hint icon and a hint card ("Hint: a question that asks about … would have brought this out.").
+- **Objections:** each with a **Handled** / **Not handled** chip; unhandled ones get a "What tends to work" hint card.
+- **Plain facts:** tiles with a number and a label (call length, your lines, your share of the words, plus silences, retries, and spoken lines when they apply). Facts only, no scores.
+- **Full transcript:** chat bubbles like the call screen (exec left, you right, silences dashed), with each patience change under the exec's reply (a −6 / +9 chip, before → after, and the reason). Copy transcript is unchanged.
+- Patience-change chips always show the sign in the text; color is extra.
+- **Tab icon:** the header's phone logo, built into `index.html` (no image file). Its three colors are written in, because tab icons can't use CSS variables.
+- Silences in the transcript are marked by the analysis (`silence` flag), not by matching the text "(silence)".
+- **Fixed while building:** the turning-point quote had a box inside a box (an older quote style); removed inside the pull-quote.
+- **Checked:** a full-page screenshot of the sample debrief; accessibility check 0 issues on a real debrief, the sample debrief, and the live call. **Tests: 128, all passing.**
+
 ## Past calls as cards (2026-10-01; done, not yet pushed)
 
 The call-layout swap and outcome banner were pushed as `f2ca039`.

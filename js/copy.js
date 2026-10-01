@@ -147,6 +147,8 @@ export const COPY = {
     whoHeading: "Who you called",
     whoYouCalled: "{name} was {mood}. Starting patience: {start}.",
     personalityLabel: "What {first} is like",
+    moodPill: "Mood: {mood}",
+    startPill: "Starting patience {start}",
 
     // 3. Patience over the call
     chartHeading: "Patience over the call",
@@ -161,6 +163,7 @@ export const COPY = {
     turnedNone: "Patience never dropped on this call.",
     patienceMove: "Patience {before} → {after} ({delta})",
     reasonLabel: "Reason (AI's judgment)",
+    turnPatience: "Patience",
 
     // 5. Pain points
     painsHeading: "Pain points",
@@ -168,6 +171,7 @@ export const COPY = {
     painFound: "Uncovered",
     painMissed: "Missed",
     painHint: "a question that {earnedBy} would have brought this out",
+    painHintCard: "Hint: a question that {earnedBy} would have brought this out.",
 
     // 6. Objections
     objectionsHeading: "Objections",
@@ -192,12 +196,12 @@ export const COPY = {
 
     // 8. Plain facts
     factsHeading: "Plain facts",
-    factLength: "Call length: {time}",
-    factLines: "Your lines: {n}",
-    factShare: "Your share of the words spoken: {pct}%",
-    factSilences: "Silences: {n}",
-    factRetries: "Turns affected by technical retries: {n} (not counted against you)",
-    factVoice: "Spoken lines: {n}. Check the transcript for anything the browser misheard.",
+    tileLength: "Call length",
+    tileLines: "Your lines",
+    tileShare: "Your share of the words",
+    tileSilences: "Silences",
+    tileRetries: "Technical retries (not counted against you)",
+    tileVoice: "Spoken lines (check the transcript for mishearings)",
 
     // 9. Full transcript
     transcriptHeading: "Full transcript",

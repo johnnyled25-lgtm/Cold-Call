@@ -111,6 +111,7 @@ export function analyzeCall(state, ctx) {
     speaker: t.speaker,
     who: t.speaker === "student" ? COPY.call.you : firstName,
     text: t.events.includes("silence") && t.speaker === "student" ? COPY.debrief.silence : t.text,
+    silence: t.events.includes("silence") && t.speaker === "student",
     atMs: at(t),
     inputMode: t.inputMode,
     change: t.speaker === "exec" && t.index > 0 ? { before: t.patienceBefore, after: t.patienceAfter, delta: t.delta, reason: t.reason } : null,
