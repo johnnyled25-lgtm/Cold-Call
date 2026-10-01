@@ -26,6 +26,7 @@ import { guardSpeech, createSilenceWatch, silenceTimeoutMs } from "./turnGate.js
 import { mountExec, buildExecPortraitSvg } from "./exec-drawing.js";
 import { monogramInitials, monogramColor } from "./monogram.js";
 import { iconEl } from "./icons.js";
+import { parseRoute, activeTab } from "./routes.js";
 import { renderGallery } from "./gallery.js";
 import { analyzeCall, formatTranscriptText } from "./debrief.js";
 import { renderDebrief as drawDebrief, renderPastCalls } from "./debrief-view.js";
@@ -95,10 +96,128 @@ function setLabel(node, text) {
   node.title = text;
 }
 
+// Shows one screen, marks the matching header tab, names the browser tab, and moves
+// keyboard focus to the screen's heading (so screen readers announce the change).
 function showScreen(name) {
-  for (const id of ["briefing", "call", "debrief", "past", "gallery"]) $(`screen-${id}`).hidden = id !== name;
+  for (const id of ["home", "briefing", "call", "debrief", "past", "gallery"]) $(`screen-${id}`).hidden = id !== name;
+  const tab = activeTab(name, { debriefFromPast });
+  document.querySelectorAll("[data-tab]").forEach((a) => {
+    if (a.dataset.tab === tab) a.setAttribute("aria-current", "page");
+    else a.removeAttribute("aria-current");
+  });
+  document.title = COPY.titles[name] || COPY.titles.home;
   window.scrollTo(0, 0);
+  const heading = $(`screen-${name}`).querySelector("h2[tabindex]");
+  if (heading && name !== "call") heading.focus({ preventScroll: true });
 }
+
+// ---------------------------------------------------------------------------
+// Moving around: each screen has an address (#home, #briefing, #call, #debrief,
+// #past), so the browser's Back and Forward buttons work. Leaving a call that's
+// still going asks first, then ends and saves it.
+// ---------------------------------------------------------------------------
+let currentDebrief = null;      // { state, ctx } of the debrief last shown
+let debriefFromPast = false;    // opened from Past calls (shows "Back to Past calls")
+
+const callInProgress = () => Boolean(call && !call.finished && call.phase !== "done");
+
+function setAddress(route, { replace = false } = {}) {
+  if (parseRoute(location.hash) === route && location.hash) return;
+  history[replace ? "replaceState" : "pushState"](null, "", `#${route}`);
+}
+
+// Ends the call in progress without showing its debrief (it's still saved).
+function leaveCall() {
+  const c = call;
+  if (!c) return;
+  if (c.phase === "ringing") {
+    c.phase = "done";
+    stopEverything(c);
+    call = null;
+    setCallNote("");
+    return;
+  }
+  if (!c.state.ended) {
+    stopEverything(c);
+    c.state = endByStudent(c.state, Date.now());
+  }
+  finishCall({ show: false });
+}
+
+// Shows a screen for a route, without touching the address.
+function renderRoute(route) {
+  showMessage("");
+  if (route === "briefing") { draw ??= newDraw(); renderBriefing(); }
+  else if (route === "past") showPastCalls();
+  else if (route === "debrief" && currentDebrief) renderDebrief(currentDebrief);
+  else if (route === "call" && callInProgress()) showScreen("call");
+  else renderHome();
+}
+
+// Go to a screen: asks before leaving a call, then shows it and records the address.
+function goTo(route) {
+  if (callInProgress() && route !== "call") {
+    if (!window.confirm(COPY.nav.leaveCall)) return;
+    leaveCall();
+  }
+  if (route !== "debrief") debriefFromPast = false;
+  renderRoute(route);
+  setAddress(parseRoute(`#${route}`));
+}
+
+// Back and Forward.
+function onPopState() {
+  const route = parseRoute(location.hash);
+  if (callInProgress() && route !== "call") {
+    if (!window.confirm(COPY.nav.leaveCall)) { history.pushState(null, "", "#call"); return; }
+    leaveCall();
+  }
+  if (route !== "debrief") debriefFromPast = false;
+  // A finished call can't be re-entered: show its debrief (or home) and fix the address to match.
+  const shown = route === "call" && !callInProgress() ? (currentDebrief ? "debrief" : "home") : route;
+  renderRoute(shown);
+  if (shown !== route) history.replaceState(null, "", `#${shown}`);
+}
+
+// ---------------------------------------------------------------------------
+// Home: the introduction page
+// ---------------------------------------------------------------------------
+function renderHome() {
+  const h = COPY.home;
+  // The five execs, as a row of portraits.
+  if (data && !$("home-faces").childElementCount) {
+    $("home-faces").replaceChildren(...data.personas.map((p, i) => {
+      const face = el("div", { className: "avatar" });
+      face.innerHTML = buildExecPortraitSvg(p.appearance, { idPrefix: `hf${i}` }); // our own fixed markup
+      return face;
+    }));
+  }
+  $("home-steps").replaceChildren(...h.steps.map((step, i) =>
+    el("li", { className: "home-step" }, [
+      el("span", { className: "step-num", text: String(i + 1), attrs: { "aria-hidden": "true" } }),
+      el("strong", { text: step.title }),
+      el("span", { className: "muted", text: step.text }),
+    ])));
+
+  // Before you start: live status.
+  const settings = currentCallSettings();
+  const check = (ok, text, action = null) =>
+    el("li", { className: ok ? "check-ok" : "check-todo" }, [iconEl(ok ? "check" : "hint"), el("span", { text }), action]);
+  const addKey = el("button", { className: "btn", text: h.keyAdd, attrs: { type: "button" } });
+  addKey.addEventListener("click", () => openSettings());
+  const isEdge = /\bEdg\//.test(navigator.userAgent);
+  $("home-checks").replaceChildren(
+    settings.key
+      ? check(true, fill(h.keyOk, { provider: COPY.settings.providerNames[settings.provider] }))
+      : check(false, h.keyMissing, addKey),
+    check(isEdge, isEdge ? h.browserEdge : h.browserOther),
+    check(recognitionSupported(), recognitionSupported() ? h.voiceYes : h.voiceNo),
+  );
+  $("btn-home-past").hidden = loadPastCalls().length === 0;
+  showScreen("home");
+}
+
+
 
 function showMessage(text) {
   $("app-message").textContent = text || "";
@@ -254,6 +373,7 @@ async function startCall() {
     return;
   }
   if (recognitionSupported() && !privacyNoteSeen()) await showPrivacyNote();
+  setAddress("call");
 
   const { persona, offer, mood } = draw;
   const ctx = {
@@ -652,6 +772,7 @@ function endCallByStudent() {
     call = null;
     setCallNote("");
     renderBriefing();
+    setAddress("briefing", { replace: true });
     return;
   }
   if (c.state.ended) return;
@@ -660,7 +781,7 @@ function endCallByStudent() {
   finishCall();
 }
 
-function finishCall() {
+function finishCall({ show = true } = {}) {
   const c = call;
   if (!c || c.finished || !c.state) return;
   c.finished = true;
@@ -669,8 +790,16 @@ function finishCall() {
   disarmSilence(c);
   setCallNote("");
   // Show the debrief first; save the call a moment later so the two never share one long task.
-  renderDebrief(c);
-  setTimeout(() => savePastCall(c.state, { persona: c.ctx.persona, offer: c.ctx.offer, mood: c.ctx.mood, objections: c.ctx.objections }), 0);
+  currentDebrief = { state: c.state, ctx: c.ctx };
+  debriefFromPast = false;
+  const save = () => savePastCall(c.state, { persona: c.ctx.persona, offer: c.ctx.offer, mood: c.ctx.mood, objections: c.ctx.objections });
+  if (show) {
+    renderDebrief(currentDebrief);
+    setAddress("debrief", { replace: true }); // Back from the debrief skips the finished call
+    setTimeout(save, 0);
+  } else {
+    save(); // leaving for another screen (e.g. Past calls): save now so it's already listed
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -706,16 +835,26 @@ function renderDebrief({ state, ctx }) {
   const transcriptText = formatTranscriptText(analysis, { dateText: formatDate(state.startedAt) });
   drawDebrief($("debrief-body"), analysis, {
     onCallAgain: callAgain,
+    onNewExec: newExecFromDebrief,
+    onPastCalls: () => goTo("past"),
     onCopy: () => copyText(transcriptText),
     transcriptText,
   });
   debriefSeed = state.seed;
+  currentDebrief = { state, ctx };
+  $("btn-debrief-back").hidden = !debriefFromPast;
   showScreen("debrief");
   renderDebug();
 }
 
 // "Call again": same exec, offer, and mood (same seed) as the debrief on screen.
 let debriefSeed = null;
+function newExecFromDebrief() {
+  draw = newDraw();
+  call = null;
+  goTo("briefing");
+}
+
 function callAgain() {
   if (debriefSeed == null) return;
   draw = makeDraw(debriefSeed);
@@ -726,7 +865,12 @@ function showPastCalls() {
   showMessage("");
   renderPastCalls($("past-body"), loadPastCalls(), {
     formatDate,
-    onOpen: (record) => { call = null; renderDebrief(record); },
+    onOpen: (record) => {
+      call = null;
+      debriefFromPast = true;
+      renderDebrief(record);
+      setAddress("debrief");
+    },
   });
   showScreen("past");
 }
@@ -856,6 +1000,7 @@ function onSettingsClose() {
   }
   $("set-key").value = ""; // don't leave the key sitting in the page
   draft = null;
+  if (!$("screen-home").hidden) renderHome(); // the key status may have changed
 }
 
 function wireSettings() {
@@ -941,9 +1086,18 @@ async function init() {
   $("btn-end").addEventListener("click", endCallByStudent);
   $("btn-calling-end").addEventListener("click", endCallByStudent);
   $("btn-call-again").addEventListener("click", callAgain);
-  $("btn-new-exec").addEventListener("click", () => { draw = newDraw(); call = null; showMessage(""); renderBriefing(); });
-  $("open-past").addEventListener("click", showPastCalls);
-  $("btn-past-back").addEventListener("click", () => { if (draw) renderBriefing(); });
+  $("btn-new-exec").addEventListener("click", newExecFromDebrief);
+  $("btn-debrief-past").addEventListener("click", () => goTo("past"));
+  $("btn-debrief-back").addEventListener("click", () => goTo("past"));
+  $("btn-past-back").addEventListener("click", () => goTo("briefing"));
+  $("btn-home-start").addEventListener("click", () => { draw = newDraw(); goTo("briefing"); });
+  $("btn-home-past").addEventListener("click", () => goTo("past"));
+  // Header tabs and the logo: same-page addresses, handled here so leaving a call asks first.
+  document.querySelectorAll("[data-route]").forEach((link) => link.addEventListener("click", (e) => {
+    e.preventDefault();
+    goTo(link.dataset.route);
+  }));
+  window.addEventListener("popstate", onPopState);
   window.addEventListener("pagehide", () => { if (call) stopEverything(call); });
 
   $("briefing-card").textContent = COPY.briefing.loading;
@@ -962,8 +1116,12 @@ async function init() {
     showScreen("gallery");
     return;
   }
-  draw = newDraw();
-  renderBriefing();
+  // Start where the address points (home by default). A call can't be resumed
+  // from an address, so "#call" (or a debrief from a past visit) opens home.
+  const asked = parseRoute(location.hash);
+  const start = asked === "call" || asked === "debrief" ? "home" : asked;
+  renderRoute(start);
+  history.replaceState(null, "", `#${start}`);
 }
 
 init();

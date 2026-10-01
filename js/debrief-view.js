@@ -161,8 +161,19 @@ export function buildPatienceChart(a) {
 // The debrief, in the brief's order
 // ---------------------------------------------------------------------------
 // handlers: { onCallAgain, onCopy } ; transcriptText: the plain-text version.
-export function renderDebrief(container, a, { onCallAgain, onCopy, transcriptText }) {
+export function renderDebrief(container, a, { onCallAgain, onNewExec, onPastCalls, onCopy, transcriptText }) {
   const first = a.firstName;
+
+  // What to do next, right in the banner (no scrolling to the bottom).
+  function bannerActions() {
+    const again = el("button", { className: "btn btn-primary", text: d.callAgain, attrs: { type: "button", title: d.callAgainHint } });
+    again.addEventListener("click", onCallAgain);
+    const fresh = el("button", { className: "btn", text: d.newExec, attrs: { type: "button" } });
+    fresh.addEventListener("click", onNewExec);
+    const past = el("button", { className: "btn", text: COPY.pastCalls.navLink, attrs: { type: "button" } });
+    past.addEventListener("click", onPastCalls);
+    return el("div", { className: "banner-actions" }, [again, fresh, past]);
+  }
 
   // 1. Outcome: a banner with the exec in their final pose (writing the note, or the
   // phone back on the desk), the outcome word with its icon, and three plain facts.
@@ -179,6 +190,7 @@ export function renderDebrief(container, a, { onCallAgain, onCopy, transcriptTex
         el("span", { className: "pill", text: fill(d.bannerPains, { found: a.pains.found.length, total: a.pains.total }) }),
         el("span", { className: "pill", text: fill(d.bannerAsks, { n: a.ask.asks.length }) }),
       ]),
+      bannerActions(),
     ]),
   ]);
 

@@ -13,6 +13,7 @@
   --accent: #A3523A;       /* terracotta: buttons, links */
   --accent-ink: #FFFFFF;   /* text on accent */
   --accent-soft: #F4E2D8;  /* your chat bubbles */
+  --accent-deep: #94472F;  /* terracotta text on the soft pill: 5.2:1 */
   --teal: #3F6F6D;         /* highlights, focus */
   --teal-soft: #E3EEEC;
   --gold: #D9A441;         /* small accents */
@@ -799,3 +800,48 @@ main:has(#screen-gallery:not([hidden])) { max-width: none; }
 }
 /* The pull-quote is the box; its quote inside needs no second one. */
 .turn-quote blockquote { background: none; border: none; padding: 0; }
+
+/* ---------------------------------------------------------------------------
+   Header tabs, back link, debrief actions
+   --------------------------------------------------------------------------- */
+.home-link { display: inline-flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; border-radius: 8px; }
+.app-nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.nav-tab {
+  font: inherit; font-weight: 600; color: var(--muted); text-decoration: none; background: none; border: none;
+  padding: 8px 12px; border-radius: 999px; cursor: pointer;
+}
+.nav-tab:hover { color: var(--ink); background: var(--surface); }
+.nav-tab[aria-current="page"] { color: var(--accent-deep); background: var(--accent-soft); }
+.back-link { display: inline-block; margin: 0 0 6px; padding: 4px 0; }
+h2[tabindex="-1"]:focus { outline: none; }
+.banner-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+
+/* ---------------------------------------------------------------------------
+   Home: the introduction page
+   --------------------------------------------------------------------------- */
+.home-hero {
+  text-align: center; padding: 36px 24px 32px; margin-bottom: var(--gap);
+  background: linear-gradient(180deg, var(--calling-top) 0%, var(--card) 100%);
+  border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow);
+}
+.home-faces { display: flex; justify-content: center; margin-bottom: 18px; }
+.home-faces .avatar { width: 64px; height: 64px; box-shadow: 0 0 0 4px var(--card); margin-left: -12px; }
+.home-faces .avatar:first-child { margin-left: 0; }
+.home-hero h2 { font-size: 2rem; line-height: 1.2; margin: 0 auto 10px; max-width: 26ch; }
+.home-tagline { color: var(--muted); font-size: 1.1rem; margin: 0 auto 22px; max-width: 52ch; }
+.home-actions { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+.home-subhead { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 26px 0 10px; }
+.home-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gap); }
+.home-step { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow); padding: 18px 20px; display: flex; flex-direction: column; gap: 6px; }
+.step-num { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); font-weight: 800; margin-bottom: 4px; }
+.home-checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.home-checks li { display: flex; align-items: center; gap: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; }
+.home-checks li > svg { width: 22px; height: 22px; flex: none; }
+.home-checks li > span { flex: 1; }
+.home-checks .check-ok > svg { color: var(--outcome-booked); }
+.home-checks .check-todo > svg { color: var(--gold); }
+@media (max-width: 760px) {
+  .home-steps { grid-template-columns: 1fr; }
+  .home-hero h2 { font-size: 1.5rem; }
+  .app-header { flex-wrap: wrap; gap: 6px; }
+}

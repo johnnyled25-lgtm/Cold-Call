@@ -6,6 +6,46 @@
 export const COPY = {
   appName: "Cold Call Lab",
 
+  // Header tabs and moving around the app.
+  nav: {
+    home: "Home",
+    briefing: "Briefing",
+    backToPast: "← Back to Past calls",
+    leaveCall: "End this call? It will be saved to Past calls.",
+  },
+
+  // Screen names for the browser tab and history ("Cold Call Lab · Debrief").
+  titles: {
+    home: "Cold Call Lab",
+    briefing: "Briefing · Cold Call Lab",
+    call: "On a call · Cold Call Lab",
+    debrief: "Debrief · Cold Call Lab",
+    past: "Past calls · Cold Call Lab",
+    gallery: "Exec gallery · Cold Call Lab",
+  },
+
+  // The introduction page (home).
+  home: {
+    title: "Practice cold calls with an exec who can hang up on you.",
+    tagline: "Call an AI executive, try to book a 15-minute meeting, and see exactly where the call turned.",
+    start: "Start a call",
+    seePast: "See past calls",
+    howHeading: "How it works",
+    steps: [
+      { title: "Read the briefing", text: "Who you're calling, what you know about them, and what you're selling. The goal is a meeting, not a sale." },
+      { title: "Make the call", text: "Talk or type. The exec has a patience level you can't see; their body language is your only clue." },
+      { title: "Read the debrief", text: "See how patience moved line by line, why, which problems you uncovered, and where the call turned." },
+    ],
+    readyHeading: "Before you start",
+    keyOk: "API key added ({provider}).",
+    keyMissing: "No API key yet. Calls need one; it stays in this browser tab only.",
+    keyAdd: "Add key",
+    browserEdge: "You're in Microsoft Edge: the execs get its most natural voices.",
+    browserOther: "Tip: Microsoft Edge has the most natural exec voices. Any modern browser works.",
+    voiceYes: "Voice input works in this browser (a microphone is optional; you can always type).",
+    voiceNo: "Voice input isn't available in this browser, so you'll type your side of the call.",
+  },
+
   // Who the student plays on every call. Shown on the briefing card.
   student: {
     name: "Jordan",
@@ -123,6 +163,7 @@ export const COPY = {
     judgmentNote:
       "Patience changes are the AI's judgment of how this exec would react. Call the same exec again and the same line may land differently.",
     callAgain: "Call again",
+    callAgainHint: "Same exec, offer, and mood",
     newExec: "New exec",
     copyTranscript: "Copy transcript",
     copied: "Copied. Paste it into your notes.",

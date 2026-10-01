@@ -1,5 +1,18 @@
 # Status
 
+## Home page + navigation (2026-10-01; done, not yet pushed)
+
+The debrief restyle was pushed as `3a85bb0`.
+
+- **Home (introduction page), every visit:** a hero with the five execs' portraits, "Practice cold calls with an exec who can hang up on you.", a tagline, **Start a call** (and **See past calls** once there are any); **How it works** in three steps; **Before you start**, a live checklist: API key added (or **Add key**, which opens Settings), Edge for the best voices, and whether voice input works in this browser. The key status refreshes when Settings closes.
+- **Header tabs:** Home · Briefing · Past calls · Settings, with the current one highlighted (`aria-current`). The logo also goes Home. ("Briefing" rather than "New call", to keep the brief's fixed vocabulary.)
+- **Addresses and the browser's Back/Forward:** each screen has one (`#home`, `#briefing`, `#call`, `#debrief`, `#past`; `js/routes.js`). A finished call's debrief replaces the call in the history, so Back from a debrief goes to the briefing. Going Back onto a finished call shows its debrief, and the address is corrected. A call can't be resumed from an address, so the app opens Home.
+- **Leaving a call in progress** (a tab, the logo, or Back) asks "End this call? It will be saved to Past calls." Cancel keeps the call going; OK ends it, saves it, and goes where you clicked.
+- **After a call:** **Call again**, **New exec**, and **Past calls** buttons sit in the outcome banner (still also at the bottom). A debrief opened from Past calls has **← Back to Past calls** at the top, and the Past calls tab stays highlighted.
+- Browser tab titles name the screen ("Debrief · Cold Call Lab"); keyboard focus moves to each screen's heading so screen readers announce the change.
+- **Fixed while testing:** (a) leaving a call for Past calls didn't list that call yet (it was saved a moment later), so a call is now saved immediately when no debrief is shown first; (b) Back onto a finished call left `#call` in the address; (c) the selected tab's text failed contrast on its pill (4.4:1), so it now uses a deeper terracotta (`--accent-deep`, 5.2:1).
+- **Checked:** a scripted click-through in Chrome (open → Home; Start a call; Call; tab mid-call with Cancel, then OK; open the saved call; Back, Back, Forward; logo), a Home screenshot, and the accessibility check (0 issues on Home, Briefing, Debrief, and Past calls). **Tests: 130, all passing** (2 new for addresses and tabs).
+
 ## Debrief sections restyled + tab icon (2026-10-01; done, not yet pushed)
 
 Past calls cards were pushed as `cc02847`.

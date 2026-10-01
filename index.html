@@ -11,25 +11,51 @@
 <body>
   <header class="app-header">
     <h1 class="app-name">
+      <a href="#home" class="home-link" data-route="home">
       <svg class="app-logo" viewBox="0 0 32 32" aria-hidden="true">
         <circle class="logo-disc" cx="16" cy="16" r="15"/>
         <path class="logo-phone" d="M10.5 9.5c1-1 2.4-.9 3 .3l1.2 2.3c.4.8.2 1.7-.5 2.2l-.9.7c.8 1.7 2.1 3 3.8 3.8l.7-.9c.5-.7 1.4-.9 2.2-.5l2.3 1.2c1.2.6 1.3 2 .3 3l-1 1c-1.2 1.2-3 1.5-4.5.8-3.4-1.6-6.1-4.3-7.7-7.7-.7-1.5-.4-3.3.8-4.5z"/>
         <circle class="logo-dot" cx="23" cy="9" r="2.2"/>
       </svg>
       <span data-copy="appName"></span>
+      </a>
     </h1>
     <nav class="app-nav" aria-label="App">
-      <button type="button" class="link-button" id="open-past" data-copy="pastCalls.navLink"></button>
-      <button type="button" class="link-button" id="open-settings" data-copy="settings.heading"></button>
+      <a href="#home" class="nav-tab" data-route="home" data-tab="home" data-copy="nav.home"></a>
+      <a href="#briefing" class="nav-tab" data-route="briefing" data-tab="briefing" data-copy="nav.briefing"></a>
+      <a href="#past" class="nav-tab" data-route="past" data-tab="past" id="open-past" data-copy="pastCalls.navLink"></a>
+      <button type="button" class="nav-tab nav-settings" id="open-settings" data-copy="settings.heading"></button>
     </nav>
   </header>
 
   <main>
     <p id="app-message" class="app-message" role="alert" hidden></p>
 
+    <!-- Home: the introduction page -->
+    <section id="screen-home" class="screen" aria-labelledby="home-heading" hidden>
+      <div class="home-hero">
+        <div class="home-faces" id="home-faces" aria-hidden="true"></div>
+        <h2 id="home-heading" tabindex="-1" data-copy="home.title"></h2>
+        <p class="home-tagline" data-copy="home.tagline"></p>
+        <div class="home-actions">
+          <button type="button" class="btn btn-primary btn-big" id="btn-home-start">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.3 0 .7-.2 1z"/></svg>
+            <span data-copy="home.start"></span>
+          </button>
+          <button type="button" class="btn btn-icon" id="btn-home-past" hidden><span data-copy="home.seePast"></span></button>
+        </div>
+      </div>
+
+      <h3 class="home-subhead" data-copy="home.howHeading"></h3>
+      <ol class="home-steps" id="home-steps"></ol>
+
+      <h3 class="home-subhead" data-copy="home.readyHeading"></h3>
+      <ul class="home-checks" id="home-checks"></ul>
+    </section>
+
     <!-- Screen 1: the briefing the student reads before calling -->
     <section id="screen-briefing" class="screen" aria-labelledby="briefing-heading">
-      <h2 id="briefing-heading" data-copy="briefing.heading"></h2>
+      <h2 id="briefing-heading" tabindex="-1" data-copy="briefing.heading"></h2>
       <details class="explainer">
         <summary data-copy="explainers.toggle"></summary>
         <h3 class="explainer-label" data-copy="explainers.whatLabel"></h3>
@@ -126,7 +152,8 @@
 
     <!-- Screen 3: the debrief — the hidden state, revealed -->
     <section id="screen-debrief" class="screen" aria-labelledby="debrief-heading" hidden>
-      <h2 id="debrief-heading" data-copy="debrief.heading"></h2>
+      <button type="button" class="link-button back-link" id="btn-debrief-back" hidden data-copy="nav.backToPast"></button>
+      <h2 id="debrief-heading" tabindex="-1" data-copy="debrief.heading"></h2>
       <details class="explainer">
         <summary data-copy="explainers.toggle"></summary>
         <h3 class="explainer-label" data-copy="explainers.whatLabel"></h3>
@@ -138,15 +165,16 @@
       <div class="actions">
         <button type="button" class="btn btn-primary" id="btn-call-again" data-copy="debrief.callAgain"></button>
         <button type="button" class="btn" id="btn-new-exec" data-copy="debrief.newExec"></button>
+        <button type="button" class="btn" id="btn-debrief-past" data-copy="pastCalls.navLink"></button>
       </div>
     </section>
 
     <!-- Screen 4: past calls and the Record -->
     <section id="screen-past" class="screen" aria-labelledby="past-heading" hidden>
-      <h2 id="past-heading" data-copy="pastCalls.heading"></h2>
+      <h2 id="past-heading" tabindex="-1" data-copy="pastCalls.heading"></h2>
       <div id="past-body"></div>
       <div class="actions">
-        <button type="button" class="btn" id="btn-past-back" data-copy="pastCalls.back"></button>
+        <button type="button" class="btn btn-primary" id="btn-past-back" data-copy="pastCalls.back"></button>
       </div>
     </section>
 

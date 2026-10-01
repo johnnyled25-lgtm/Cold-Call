@@ -36,6 +36,8 @@ The repo is public, and that's safe: API keys are never saved in any file (see *
 
 ## Using it
 
+The app opens on **Home**, the introduction page: how it works and a "Before you start" check (API key, browser, voice). The header tabs (Home · Briefing · Past calls · Settings) and the browser's Back button move between screens; leaving a call in progress asks first and saves it.
+
 1. Click **Settings**, choose a provider (Anthropic or OpenAI), and paste an API key. Get one at [console.anthropic.com](https://console.anthropic.com/settings/keys) or [platform.openai.com](https://platform.openai.com/api-keys). A Claude Pro or ChatGPT Plus subscription is **not** an API key.
 2. Click **Test connection** to check the key. Use **Test microphone** to check voice input.
 3. Read the briefing, click **Call**, and talk (click to talk, click to send) or type.
