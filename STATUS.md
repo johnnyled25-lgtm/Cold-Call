@@ -1,5 +1,20 @@
 # Status
 
+## New look: warm palette + phone-style call screen (2026-10-01; done, not yet pushed)
+
+Approved by Johnny from a preview page (now removed, since it's built into the app).
+
+1. **Warm palette** (the `:root` block of `styles.css`, still the only place colors live): cream background, off-white cards, warm dark text, terracotta for actions (`#A3523A`; the illustration's lighter terracotta failed contrast for white text), teal for highlights and focus, mustard accents, softer shadows and rounder corners. Contrast checked: ink on cream 13.8:1, muted on card 6.2:1, white on terracotta 5.5:1, white on teal 5.7:1, white on red 5.9:1, green on card 5.1:1. A small phone logo, drawn in code, sits in the header.
+   - The debrief chart line is now a neutral warm gray (the colored triangles carry gain/drop). A terracotta line was too close to the red drop markers, and the chart-color validator also rejected teal as too close to the green markers.
+2. **Phone-style call screen:**
+   - **Calling…:** after you press Call, the exec's round portrait in a pulsing ring, their name and title, the goal chip, and a red hang-up button. The portrait is cropped in code from the same exec drawing (`buildExecPortraitSvg`).
+   - **During the call:** the exec at the desk with **Your briefing** as compact tiles (you are / calling / what you know / their setup / selling / key points / price). The phone panel has a portrait header with a live timer, **chat bubbles** (exec left, you right in terracotta, silences as a dashed bubble), "typing" dots while the exec replies, a round mic button, a rounded text box with a send button, and a red round end-call button.
+   - Icon-only buttons take their accessible name and tooltip from `copy.js` (`data-copy-label`).
+   - The pulse, dots, and timer blink stop under reduced motion.
+- **Fixed while building:** (a) the Calling panel didn't hide once the call started, because a `display` rule overrode the `hidden` attribute; a global `[hidden] { display: none !important; }` rule now guarantees it. (b) A style-name clash: the phone panel's class `phone` also matched the desk phone inside the drawing, which grew into a large dark block; the panel is now `phone-panel`.
+- **Checked:** screenshots of Calling…, a live call mid-conversation, the briefing, and the debrief. Accessibility check (axe-core): 0 issues on the briefing, Calling…, and the live call. **Tests: 123, all passing.**
+- Not changed this round (from the ideas list): the briefing-card redesign, the debrief outcome banner, Past calls as cards.
+
 ## Voice realism (2026-10-01; done, not yet pushed)
 
 Built-in browser speech only (`speechSynthesis`), no paid voices. The previous round was pushed as `0565bfd`.

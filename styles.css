@@ -2,16 +2,27 @@
    To re-brand, edit only the :root block below. Every color in the app comes from it. */
 
 :root {
-  --ink: #1F2933;          /* main text */
-  --muted: #52606D;        /* secondary text */
-  --surface: #F5F7FA;      /* page background */
-  --card: #FFFFFF;         /* cards and panels */
-  --border: #D9E2EC;       /* lines and outlines */
-  --accent: #2F6FEB;       /* buttons, links, focus */
+  /* App colors: warm, taken from the exec illustrations. Contrast checked:
+     ink on cream 13.8:1, muted on card 6.2:1, white on terracotta 5.5:1,
+     white on teal 5.7:1, white on red 5.9:1, green on card 5.1:1. */
+  --ink: #2A2320;          /* main text */
+  --muted: #6B5E55;        /* secondary text */
+  --surface: #F7F1E8;      /* page background (cream) */
+  --card: #FFFDF9;         /* cards and panels */
+  --border: #E8DDD0;       /* lines and outlines */
+  --accent: #A3523A;       /* terracotta: buttons, links */
   --accent-ink: #FFFFFF;   /* text on accent */
-  --outcome-booked: #1B7F4B;  /* Meeting booked — 5.0:1 on white */
-  --outcome-hungup: #B42318;  /* Hung up — 6.5:1 on white */
-  --focus-ring: #2F6FEB;
+  --accent-soft: #F4E2D8;  /* your chat bubbles */
+  --teal: #3F6F6D;         /* highlights, focus */
+  --teal-soft: #E3EEEC;
+  --gold: #D9A441;         /* small accents */
+  --end-red: #B23A2E;      /* end-call buttons */
+  --end-red-soft: rgba(178, 58, 46, 0.18);
+  --calling-top: #F3E6D6;  /* top of the "Calling…" panel and phone header */
+  --outcome-booked: #2F7A55;  /* Meeting booked: 5.1:1 on card */
+  --outcome-hungup: #B23A2E;  /* Hung up: 5.9:1 on card */
+  --focus-ring: #3F6F6D;
+  --shadow: 0 1px 2px rgba(58, 36, 24, 0.06), 0 6px 18px rgba(58, 36, 24, 0.08);
 
   /* The drawn exec: warm, slightly desaturated. Appearance values from
      personas.json map to these; shades and highlights are mixed from them. */
@@ -58,11 +69,14 @@
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: Consolas, Menlo, monospace;  /* debug panel only */
 
-  --radius: 10px;
+  --radius: 12px;
+  --radius-lg: 18px;
   --gap: 16px;
 }
 
 * { box-sizing: border-box; }
+/* Anything marked hidden stays hidden, even when a rule gives it display: grid or flex. */
+[hidden] { display: none !important; }
 
 body {
   margin: 0;
@@ -81,13 +95,18 @@ body {
   background: var(--card);
   border-bottom: 1px solid var(--border);
 }
-.app-name { font-size: 1.15rem; margin: 0; }
+.app-name { font-size: 1.15rem; margin: 0; display: inline-flex; align-items: center; gap: 10px; }
+.app-logo { width: 28px; height: 28px; flex: none; }
+.app-logo .logo-disc { fill: var(--accent); }
+.app-logo .logo-phone { fill: var(--card); }
+.app-logo .logo-dot { fill: var(--gold); }
 
 main { max-width: 1100px; margin: 0 auto; padding: 24px; }
 
 .card {
   background: var(--card);
   border: 1px solid var(--border);
+  box-shadow: var(--shadow);
   border-radius: var(--radius);
   padding: 20px 24px;
 }
@@ -97,35 +116,25 @@ main { max-width: 1100px; margin: 0 auto; padding: 24px; }
 .btn {
   font: inherit;
   padding: 10px 18px;
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--card);
   color: var(--ink);
   cursor: pointer;
+  font-weight: 600;
 }
 .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .btn-danger { border-color: var(--outcome-hungup); color: var(--outcome-hungup); }
-.link-button { font: inherit; background: none; border: none; color: var(--accent); cursor: pointer; }
+.link-button { font: inherit; background: none; border: none; color: var(--accent); cursor: pointer; font-weight: 600; }
 
 :focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 
-/* Call screen */
-.call-layout { display: grid; grid-template-columns: 2fr 1fr; gap: var(--gap); min-height: 420px; }
-.exec-stage { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); }
-.phone { display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); }
-.phone-header { padding: 12px 16px; border-bottom: 1px solid var(--border); }
-.transcript { list-style: none; margin: 0; padding: 12px 16px; overflow-y: auto; flex: 1; }
-.call-controls { display: flex; gap: 12px; margin-top: var(--gap); }
-.typed-input { flex: 1; font: inherit; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; }
 
 .visually-hidden {
   position: absolute; width: 1px; height: 1px; overflow: hidden;
   clip: rect(0 0 0 0); white-space: nowrap;
 }
 
-@media (max-width: 800px) {
-  .call-layout { grid-template-columns: 1fr; }
-}
 
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
@@ -140,15 +149,10 @@ main { max-width: 1100px; margin: 0 auto; padding: 24px; }
 .briefing-card h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin: 18px 0 4px; }
 .briefing-card h3:first-child { margin-top: 0; }
 
-/* Phone */
-.phone-name { font-weight: 600; }
-.phone-sub { color: var(--muted); font-size: 0.9rem; }
-.phone-timer { font-variant-numeric: tabular-nums; margin-top: 4px; }
-.live-dot { color: var(--outcome-booked); }
+/* Debrief transcript lines */
 .line { margin: 0 0 10px; }
 .line-who { font-weight: 600; }
 .line-student .line-who { color: var(--accent); }
-.call-status { padding: 6px 16px 12px; color: var(--muted); min-height: 2em; }
 
 /* Debrief preview */
 .outcome { font-size: 1.25rem; font-weight: 600; }
@@ -198,9 +202,6 @@ main { max-width: 1100px; margin: 0 auto; padding: 24px; }
 button:disabled, input:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* Voice */
-.btn-talk { min-width: 11em; touch-action: none; user-select: none; -webkit-user-select: none; }
-.btn-talk.is-recording { background: var(--outcome-hungup); border-color: var(--outcome-hungup); }
-.call-note { margin: var(--gap) 0 0; padding: 8px 12px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; color: var(--muted); }
 .mic { font-size: 0.85em; }
 .small-dialog { border: 1px solid var(--border); border-radius: var(--radius); max-width: 480px; width: calc(100% - 32px); background: var(--card); color: var(--ink); padding: 20px 24px; }
 .small-dialog::backdrop { background: rgba(31, 41, 51, 0.35); }
@@ -215,7 +216,6 @@ button:disabled, input:disabled { opacity: 0.6; cursor: not-allowed; }
      pose-ringing | pose-on-call | pose-hung-up | pose-booked,
      mood-engaged | mood-neutral | mood-impatient, is-skeptical, is-talking.
    --------------------------------------------------------------------------- */
-.exec-stage { display: flex; align-items: flex-end; justify-content: center; overflow: hidden; background: var(--stage-wall); }
 .exec { width: 100%; height: auto; display: block; }
 
 /* Appearance → base colors */
@@ -378,15 +378,6 @@ button:disabled, input:disabled { opacity: 0.6; cursor: not-allowed; }
   .exec.pose-ringing .ring-waves path { opacity: 0.9; }
 }
 
-/* ---------------------------------------------------------------------------
-   Call screen: the drawing with "Your briefing" underneath
-   --------------------------------------------------------------------------- */
-.call-left { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
-.call-brief { padding: 12px 18px; }
-.call-brief summary { cursor: pointer; font-weight: 600; }
-.call-brief .briefing-card { font-size: 0.92rem; }
-.call-brief .briefing-card h3 { margin-top: 12px; }
-.call-brief .briefing-card p, .call-brief .briefing-card ul { margin: 4px 0; }
 .app-nav { display: flex; gap: 16px; }
 
 /* ---------------------------------------------------------------------------
@@ -420,9 +411,9 @@ button:disabled, input:disabled { opacity: 0.6; cursor: not-allowed; }
 .chart-label { fill: var(--ink); font-size: 12px; font-weight: 600; font-family: var(--font-sans); }
 .chart-threshold { stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 5 4; }
 .chart-crosshair { stroke: var(--muted); stroke-width: 1; opacity: 0.5; }
-.chart-line { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart-line { fill: none; stroke: var(--muted); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .marker { stroke: var(--card); stroke-width: 2; }
-.marker-start { fill: var(--accent); }
+.marker-start { fill: var(--teal); }
 .marker-gain { fill: var(--outcome-booked); }
 .marker-drop { fill: var(--outcome-hungup); }
 .marker-flat { fill: var(--muted); }
@@ -438,11 +429,6 @@ button:disabled, input:disabled { opacity: 0.6; cursor: not-allowed; }
 .chart-tip div + div { margin-top: 3px; }
 .chart-tip .tip-strong { font-weight: 600; font-variant-numeric: tabular-nums; }
 
-/* Keep the whole call on one screen: drawing, briefing, transcript, and the typing box. */
-.exec-stage .exec { width: auto; max-width: 100%; max-height: 38vh; margin: 0 auto; }
-.call-brief { max-height: 30vh; overflow-y: auto; }
-.call-layout { min-height: 0; }
-.phone { max-height: calc(38vh + 30vh + var(--gap)); }
 
 /* "What is happening here" panels */
 .explainer { margin: 0 0 var(--gap); background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 16px; }
@@ -477,3 +463,115 @@ main:has(#screen-gallery:not([hidden])) { max-width: none; }
 #screen-gallery > .btn { margin: 0 0 12px; }
 .gallery-voice { margin-top: 4px; color: var(--ink); overflow-wrap: anywhere; }
 .gallery-grid { grid-template-columns: 210px repeat(var(--gallery-cols), minmax(120px, 1fr)); }
+
+/* ---------------------------------------------------------------------------
+   Call screen: a phone call. "Calling…" first, then the exec at the desk on the
+   left (with your briefing) and the phone on the right (chat bubbles, round buttons).
+   --------------------------------------------------------------------------- */
+
+/* Round portrait cropped from the same exec drawing */
+.avatar { border-radius: 50%; overflow: hidden; background: var(--stage-backdrop); flex: none; }
+.avatar svg { display: block; width: 100%; height: 100%; }
+.exec-portrait .layer-arms, .exec-portrait .layer-desk, .exec-portrait .layer-props, .exec-portrait .layer-backdrop { display: none; }
+
+/* Calling… */
+.calling {
+  display: grid; place-items: center; text-align: center; gap: 6px;
+  background: linear-gradient(180deg, var(--calling-top) 0%, var(--surface) 100%);
+  border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow);
+  padding: 40px 20px 32px;
+}
+.pulse { position: relative; width: 156px; height: 156px; margin-bottom: 14px; }
+.pulse .avatar { position: absolute; inset: 0; width: 156px; height: 156px; box-shadow: 0 0 0 6px var(--card); }
+.pulse::before, .pulse::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%; border: 3px solid var(--accent); opacity: 0;
+  animation: ring-out 2s ease-out infinite;
+}
+.pulse::after { animation-delay: 1s; }
+@keyframes ring-out { 0% { transform: scale(1); opacity: 0.55; } 100% { transform: scale(1.45); opacity: 0; } }
+.calling-status { color: var(--teal); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; font-size: 0.8rem; }
+.calling h3 { margin: 2px 0 0; font-size: 1.7rem; }
+.calling-sub { color: var(--muted); }
+.calling .goal-chip { margin-top: 10px; }
+.calling-actions { margin-top: 18px; }
+.btn-label { display: block; font-size: 0.78rem; color: var(--muted); margin-top: 6px; }
+
+.goal-chip {
+  display: inline-flex; align-items: center; gap: 8px; background: var(--teal-soft); color: var(--teal);
+  border-radius: 999px; padding: 6px 14px; font-weight: 600; font-size: 0.9rem;
+}
+.goal-chip svg { width: 16px; height: 16px; flex: none; }
+
+/* Round buttons */
+.round-btn {
+  width: 64px; height: 64px; border-radius: 50%; border: none; cursor: pointer;
+  display: inline-grid; place-items: center; color: var(--accent-ink); box-shadow: var(--shadow); flex: none;
+}
+.round-btn svg { width: 28px; height: 28px; }
+.round-btn.small { width: 48px; height: 48px; }
+.round-btn.small svg { width: 22px; height: 22px; }
+.round-btn.end { background: var(--end-red); }
+.round-btn.mic { background: var(--accent); touch-action: none; user-select: none; -webkit-user-select: none; }
+.round-btn.mic.is-recording { background: var(--end-red); box-shadow: 0 0 0 6px var(--end-red-soft); }
+.round-btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+
+/* The live call */
+.call-layout { display: grid; grid-template-columns: 1.55fr 1fr; gap: var(--gap); align-items: start; }
+.call-left { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.exec-stage {
+  background: var(--stage-wall); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow); display: flex; align-items: flex-end; justify-content: center; overflow: hidden;
+}
+.exec-stage .exec { width: auto; max-width: 100%; max-height: 40vh; margin: 0 auto; }
+
+.call-brief { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 12px 16px; box-shadow: var(--shadow); max-height: 30vh; overflow-y: auto; }
+.call-brief summary { cursor: pointer; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.call-brief summary svg { width: 16px; height: 16px; flex: none; }
+.brief-tiles { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.brief-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 6px 10px; font-size: 0.88rem; flex: 1 1 200px; }
+.brief-tile.wide { flex-basis: 100%; }
+.brief-tile b { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.brief-tile ul { margin: 2px 0 0; padding-left: 18px; }
+
+.phone-panel {
+  display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--border);
+  border-radius: 26px; box-shadow: var(--shadow); overflow: hidden;
+  height: clamp(440px, calc(100vh - 200px), 720px);
+}
+.phone-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, var(--calling-top), var(--card)); }
+.phone-header .avatar { width: 48px; height: 48px; }
+.phone-who { flex: 1; min-width: 0; }
+.phone-name { font-weight: 700; }
+.phone-sub { color: var(--muted); font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.phone-timer { display: inline-flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; font-weight: 600; font-size: 0.9rem; color: var(--outcome-booked); }
+.phone-timer::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--outcome-booked); animation: blink 1.6s ease-in-out infinite; }
+@keyframes blink { 50% { opacity: 0.35; } }
+
+.chat { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.transcript { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.bubble { max-width: 82%; padding: 9px 13px; border-radius: 16px; line-height: 1.4; font-size: 0.95rem; overflow-wrap: anywhere; }
+.bubble-exec { align-self: flex-start; background: var(--surface); border: 1px solid var(--border); border-bottom-left-radius: 5px; }
+.bubble-student { align-self: flex-end; background: var(--accent-soft); border-bottom-right-radius: 5px; }
+.bubble-silence { align-self: flex-end; background: transparent; border: 1px dashed var(--border); color: var(--muted); font-style: italic; }
+.bubble .meta { display: block; font-size: 0.72rem; color: var(--muted); margin-bottom: 2px; font-weight: 600; }
+.typing { align-self: flex-start; display: inline-flex; gap: 4px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; border-bottom-left-radius: 5px; }
+.typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); opacity: 0.5; animation: dot 1.2s ease-in-out infinite; }
+.typing i:nth-child(2) { animation-delay: 0.15s; }
+.typing i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes dot { 30% { transform: translateY(-4px); opacity: 1; } }
+.call-status { padding: 0 16px 6px; color: var(--muted); font-size: 0.85rem; min-height: 1.6em; }
+
+.dock { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-top: 1px solid var(--border); background: var(--card); }
+.pill-input { flex: 1; display: flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px 4px 4px 14px; min-width: 0; }
+.pill-input input { flex: 1; border: none; background: transparent; font: inherit; padding: 8px 0; outline: none; color: var(--ink); min-width: 0; }
+.pill-input:focus-within { border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-soft); }
+.send { width: 38px; height: 38px; border-radius: 50%; border: none; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; cursor: pointer; flex: none; }
+.send svg { width: 18px; height: 18px; }
+.send:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.call-note { margin: 12px 0 0; padding: 8px 12px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; color: var(--muted); }
+
+@media (max-width: 860px) {
+  .call-layout { grid-template-columns: 1fr; }
+  .phone-panel { height: 520px; }
+}

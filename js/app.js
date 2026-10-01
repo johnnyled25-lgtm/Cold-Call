@@ -23,7 +23,7 @@ import {
 } from "./voice.js";
 import { pickVoice, deliveryFor, voiceTierLabel } from "./voicePick.js";
 import { guardSpeech, createSilenceWatch, silenceTimeoutMs } from "./turnGate.js";
-import { mountExec } from "./exec-drawing.js";
+import { mountExec, buildExecPortraitSvg } from "./exec-drawing.js";
 import { renderGallery } from "./gallery.js";
 import { analyzeCall, formatTranscriptText } from "./debrief.js";
 import { renderDebrief as drawDebrief, renderPastCalls } from "./debrief-view.js";
@@ -82,7 +82,15 @@ function applyCopy() {
     const text = copyAt(node.dataset.copy);
     if (typeof text === "string") node.textContent = text;
   });
+  // Icon-only buttons: the words become the button's accessible name and tooltip.
+  document.querySelectorAll("[data-copy-label]").forEach((node) => setLabel(node, copyAt(node.dataset.copyLabel)));
   $("typed-input").placeholder = COPY.call.typePlaceholder;
+}
+
+function setLabel(node, text) {
+  if (typeof text !== "string") return;
+  node.setAttribute("aria-label", text);
+  node.title = text;
 }
 
 function showScreen(name) {
@@ -143,6 +151,21 @@ function briefingNodes({ persona, offer }) {
     el("p", { className: "muted", text: `${b.price}: ${offer.priceHint}` }),
     el("h3", { text: b.goalHeading }),
     el("p", { text: b.goal }),
+  ];
+}
+
+// The briefing as compact tiles, beside the exec during the call.
+function briefingTiles({ persona, offer }) {
+  const c = COPY.call;
+  const tile = (label, body, wide = false) => el("div", { className: `brief-tile${wide ? " wide" : ""}` }, [el("b", { text: label }), body]);
+  return [
+    tile(c.briefYouAre, fill(COPY.briefing.youAre, { name: COPY.student.name, role: COPY.student.role, company: offer.company })),
+    tile(c.briefCalling, `${persona.name}, ${persona.title}, ${persona.company}`),
+    tile(c.briefKnow, `${persona.industry} · ${persona.companySize}`),
+    tile(c.briefSetup, persona.currentSetup, true),
+    tile(c.briefSelling, `${offer.product}: ${offer.oneLiner}`, true),
+    tile(c.briefPoints, el("ul", {}, offer.valuePoints.map((t) => el("li", { text: t }))), true),
+    tile(c.briefPrice, offer.priceHint),
   ];
 }
 
@@ -226,7 +249,12 @@ async function startCall() {
 
   call?.drawing?.destroy?.();
   thisCall.drawing = mountExec($("exec-stage"), persona, COPY.exec.describe);
-  $("call-brief-body").replaceChildren(...briefingNodes(draw));
+  $("call-brief-body").replaceChildren(...briefingTiles(draw));
+  $("calling-avatar").innerHTML = buildExecPortraitSvg(persona.appearance, { idPrefix: "pc" }); // our own fixed markup
+  $("phone-avatar").innerHTML = buildExecPortraitSvg(persona.appearance, { idPrefix: "pp" });
+  $("calling-name").textContent = persona.name;
+  $("calling-sub").textContent = `${persona.title} · ${persona.company}`;
+  $("typing").setAttribute("aria-label", fill(COPY.call.execThinking, { first: persona.name.split(" ")[0] }));
   $("phone-name").textContent = persona.name;
   $("phone-sub").textContent = `${persona.title} · ${persona.company}`;
   $("phone-timer").textContent = "0:00";
@@ -314,14 +342,19 @@ const canAct = (c) => Boolean(c && c.phase === "live" && !c.state.ended && !c.bu
 function renderStatus() {
   if (!call) return;
   let status = "";
-  if (call.phase === "ringing") status = COPY.call.ringing;
+  if (call.phase === "ringing") status = "";
   else if (call.waitUntil && Date.now() < call.waitUntil) {
     status = fill(COPY.call.lineBusy, { seconds: Math.ceil((call.waitUntil - Date.now()) / 1000) });
   } else if (call.recording) status = call.interim ? `“${call.interim}”` : COPY.voice.recording;
-  else if (call.busy || call.transcribing) status = COPY.call.thinking;
-  else if (call.speaking || call.state?.ended) status = "";
+  else if (call.busy || call.transcribing || call.speaking || call.state?.ended) status = "";
   else status = COPY.call.listening;
   if ($("call-status").textContent !== status) $("call-status").textContent = status;
+  // The exec "typing" dots while the reply is on its way.
+  const thinking = call.phase === "live" && (call.busy || call.transcribing) && !(call.waitUntil && Date.now() < call.waitUntil);
+  if ($("typing").hidden === thinking) {
+    $("typing").hidden = !thinking;
+    if (thinking) $("chat").scrollTop = $("chat").scrollHeight;
+  }
 }
 
 function renderCall() {
@@ -336,26 +369,29 @@ function renderCall() {
     list.replaceChildren(
       ...turns.map((t) => {
         const who = t.speaker === "student" ? COPY.call.you : firstName;
-        const text = t.speaker === "student" && t.events.includes("silence") ? COPY.debrief.silence : t.text;
-        const parts = [];
-        if (t.inputMode === "voice") {
-          parts.push(el("span", { className: "mic", text: "🎤 " }));
-          parts.push(el("span", { className: "visually-hidden", text: `${COPY.voice.spoken} ` }));
+        if (t.speaker === "student" && t.events.includes("silence")) {
+          return el("li", { className: "bubble bubble-silence" }, [el("span", { className: "visually-hidden", text: `${who}: ` }), COPY.debrief.silence]);
         }
-        parts.push(el("span", { className: "line-who", text: `${who}: ` }), text);
-        return el("li", { className: `line line-${t.speaker}` }, parts);
+        const meta = el("span", { className: "meta" }, [
+          t.inputMode === "voice" ? el("span", { className: "mic", text: "🎤 ", attrs: { "aria-hidden": "true" } }) : null,
+          t.inputMode === "voice" ? el("span", { className: "visually-hidden", text: `${COPY.voice.spoken} ` }) : null,
+          `${who}`,
+        ]);
+        return el("li", { className: `bubble bubble-${t.speaker}` }, [meta, el("span", { className: "visually-hidden", text: ": " }), t.text]);
       }),
     );
-    list.scrollTop = list.scrollHeight;
+    $("chat").scrollTop = $("chat").scrollHeight;
   }
   renderStatus();
+  $("calling").hidden = c.phase !== "ringing";
+  $("call-live").hidden = c.phase === "ringing";
 
   const open = canAct(c);
   $("typed-input").disabled = !open;
   $("btn-send").disabled = !open;
   $("btn-talk").hidden = !c.voiceIn;
   $("btn-talk").disabled = (!open && !c.recording) || c.mic === "pending";
-  $("btn-talk").textContent = c.recording ? COPY.call.talkRelease : COPY.call.talkButton;
+  setLabel($("btn-talk"), c.recording ? COPY.call.talkRelease : COPY.call.talkButton);
   $("btn-talk").classList.toggle("is-recording", c.recording);
   if (c.state) $("phone-timer").textContent = formatTime(callDurationMs(c.state, Date.now()));
   c.drawing?.setPose(execPose({ phase: c.phase, state: c.state, speaking: c.speaking }));
@@ -858,6 +894,7 @@ async function init() {
   });
   wireTalkButton();
   $("btn-end").addEventListener("click", endCallByStudent);
+  $("btn-calling-end").addEventListener("click", endCallByStudent);
   $("btn-call-again").addEventListener("click", callAgain);
   $("btn-new-exec").addEventListener("click", () => { draw = newDraw(); call = null; showMessage(""); renderBriefing(); });
   $("open-past").addEventListener("click", showPastCalls);

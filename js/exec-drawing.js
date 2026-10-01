@@ -398,6 +398,16 @@ export function buildExecSvg(appearance, { label = "", idPrefix = "ex" } = {}) {
 </svg>`;
 }
 
+// A round portrait: the same drawing cropped to the head (arms, desk, props, and
+// backdrop hidden by the .exec-portrait rules in styles.css).
+export function buildExecPortraitSvg(appearance, { idPrefix = "pt" } = {}) {
+  return buildExecSvg(appearance, { idPrefix })
+    .replace('viewBox="0 0 480 360"', 'viewBox="170 42 140 140"')
+    .replace('class="exec ', 'class="exec exec-portrait ')
+    .replace("pose-ringing mood-neutral", "pose-on-call mood-neutral")
+    .replace('role="img" aria-label=""', 'aria-hidden="true"');
+}
+
 // ---------------------------------------------------------------------------
 // On the page
 // ---------------------------------------------------------------------------

@@ -8,7 +8,14 @@
 </head>
 <body>
   <header class="app-header">
-    <h1 class="app-name" data-copy="appName"></h1>
+    <h1 class="app-name">
+      <svg class="app-logo" viewBox="0 0 32 32" aria-hidden="true">
+        <circle class="logo-disc" cx="16" cy="16" r="15"/>
+        <path class="logo-phone" d="M10.5 9.5c1-1 2.4-.9 3 .3l1.2 2.3c.4.8.2 1.7-.5 2.2l-.9.7c.8 1.7 2.1 3 3.8 3.8l.7-.9c.5-.7 1.4-.9 2.2-.5l2.3 1.2c1.2.6 1.3 2 .3 3l-1 1c-1.2 1.2-3 1.5-4.5.8-3.4-1.6-6.1-4.3-7.7-7.7-.7-1.5-.4-3.3.8-4.5z"/>
+        <circle class="logo-dot" cx="23" cy="9" r="2.2"/>
+      </svg>
+      <span data-copy="appName"></span>
+    </h1>
     <nav class="app-nav" aria-label="App">
       <button type="button" class="link-button" id="open-past" data-copy="pastCalls.navLink"></button>
       <button type="button" class="link-button" id="open-settings" data-copy="settings.heading"></button>
@@ -45,32 +52,69 @@
         <h3 class="explainer-label" data-copy="explainers.whyLabel"></h3>
         <p data-copy="explainers.call.why"></p>
       </details>
-      <div class="call-layout">
+      <!-- While ringing: "Calling…" -->
+      <div class="calling" id="calling">
+        <div class="pulse"><div class="avatar" id="calling-avatar"></div></div>
+        <div class="calling-status" data-copy="call.calling"></div>
+        <h3 id="calling-name"></h3>
+        <div class="calling-sub" id="calling-sub"></div>
+        <span class="goal-chip">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="8" cy="8" r="2.5" fill="currentColor"/></svg>
+          <span data-copy="call.goalChip"></span>
+        </span>
+        <div class="calling-actions">
+          <button type="button" class="round-btn end" id="btn-calling-end" data-copy-label="call.hangUp">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M2 14.2c5.5-5.3 14.5-5.3 20 0l-2.6 2.7c-.5.5-1.4.6-2 .1l-2.3-1.6c-.5-.4-.7-1-.6-1.6l.4-1.6c-2.6-.8-5.3-.8-7.9 0l.4 1.6c.1.6-.1 1.2-.6 1.6L4.6 17c-.6.5-1.5.4-2-.1z"/></svg>
+          </button>
+          <span class="btn-label" data-copy="call.hangUp"></span>
+        </div>
+      </div>
+
+      <!-- After pickup: the exec at the desk, and the phone -->
+      <div class="call-layout" id="call-live" hidden>
         <div class="call-left">
           <div class="exec-stage" id="exec-stage"></div>
-          <details class="card call-brief" id="call-brief" open>
-            <summary data-copy="call.briefingToggle"></summary>
-            <div id="call-brief-body" class="briefing-card"></div>
+          <details class="call-brief" id="call-brief" open>
+            <summary>
+              <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2.5" y="1.5" width="11" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5 5.5h6M5 8h6M5 10.5h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              <span data-copy="call.briefingToggle"></span>
+            </summary>
+            <div id="call-brief-body" class="brief-tiles"></div>
           </details>
         </div>
-        <div class="phone">
+
+        <div class="phone-panel">
           <div class="phone-header">
-            <div class="phone-name" id="phone-name"></div>
-            <div class="phone-sub" id="phone-sub"></div>
-            <div class="phone-timer"><span class="live-dot" aria-hidden="true">●</span> <span id="phone-timer">0:00</span></div>
+            <div class="avatar" id="phone-avatar"></div>
+            <div class="phone-who">
+              <div class="phone-name" id="phone-name"></div>
+              <div class="phone-sub" id="phone-sub"></div>
+            </div>
+            <span class="phone-timer" id="phone-timer">0:00</span>
           </div>
-          <ol class="transcript" id="transcript" aria-live="polite"></ol>
+          <div class="chat" id="chat">
+            <ol class="transcript" id="transcript" aria-live="polite"></ol>
+            <div class="typing" id="typing" hidden><i></i><i></i><i></i></div>
+          </div>
           <div class="call-status" id="call-status" aria-live="polite"></div>
+          <form class="dock" id="typed-form">
+            <button type="button" class="round-btn mic small" id="btn-talk" data-copy-label="call.talkButton" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
+            <div class="pill-input">
+              <label for="typed-input" class="visually-hidden" data-copy="call.typePlaceholder"></label>
+              <input type="text" id="typed-input" autocomplete="off">
+              <button type="submit" class="send" id="btn-send" data-copy-label="call.send">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l15-7-5 15-3-6z" fill="currentColor"/></svg>
+              </button>
+            </div>
+            <button type="button" class="round-btn end small" id="btn-end" data-copy-label="call.endCall">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M2 14.2c5.5-5.3 14.5-5.3 20 0l-2.6 2.7c-.5.5-1.4.6-2 .1l-2.3-1.6c-.5-.4-.7-1-.6-1.6l.4-1.6c-2.6-.8-5.3-.8-7.9 0l.4 1.6c.1.6-.1 1.2-.6 1.6L4.6 17c-.6.5-1.5.4-2-.1z"/></svg>
+            </button>
+          </form>
         </div>
       </div>
       <p id="call-note" class="call-note" role="status" hidden></p>
-      <form class="call-controls" id="typed-form">
-        <button type="button" class="btn btn-primary btn-talk" id="btn-talk" data-copy="call.talkButton" hidden></button>
-        <label for="typed-input" class="visually-hidden" data-copy="call.typePlaceholder"></label>
-        <input type="text" id="typed-input" class="typed-input" autocomplete="off">
-        <button type="submit" class="btn" id="btn-send" data-copy="call.send"></button>
-        <button type="button" class="btn btn-danger" id="btn-end" data-copy="call.endCall"></button>
-      </form>
     </section>
 
     <!-- Screen 3: the debrief — the hidden state, revealed -->
