@@ -1,5 +1,16 @@
 # Status
 
+## Past calls as cards (2026-10-01; done, not yet pushed)
+
+The call-layout swap and outcome banner were pushed as `f2ca039`.
+
+- **One card per call** in a responsive grid. Each card has the exec's round portrait, name, and company; the outcome tag (icon + word); a **small patience line** (no axes, a faint dashed line at the meeting threshold, and an end dot in green for booked, red for hung up, gray otherwise); then the date, call length, pain points found, and **Open debrief**. A colored top edge marks booked (green) and hung-up (red) calls.
+- **The whole card opens the debrief:** the "Open debrief" button's click area covers the card, so there's one clear button for keyboard and screen-reader users. Its name includes the exec, outcome, and date, and screen readers also hear "Patience went from X to Y."
+- The **Record** tables (calls per outcome, pain points call by call) stay underneath, unchanged.
+- Pure helpers in `js/debrief.js`: `patienceSeries` (start plus each reaction) and `sparkline` (path, end point, threshold position; values kept inside 0–100).
+- **Fixed while building:** names were cut off ("Ann…") because the date sat beside them; the date moved to the facts row.
+- **Checked:** screenshots with six sample calls (built with the real engine; two of each kind of ending); clicking the middle of a card (on the patience line) opens that call's debrief; accessibility check: 0 issues. **Tests: 128, all passing** (1 new: series and sparkline geometry).
+
 ## Call layout swap + debrief outcome banner (2026-10-01; done, not yet pushed)
 
 The briefing redesign was pushed as `d9b2645`.

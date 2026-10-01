@@ -3,8 +3,8 @@
 
 import { COPY, fill } from "./copy.js";
 import { ACCEPTANCE_THRESHOLD, OUTCOMES } from "./constants.js";
-import { formatClock, formatDelta, recordSummary, askSummary } from "./debrief.js";
-import { mountExec } from "./exec-drawing.js";
+import { formatClock, formatDelta, recordSummary, askSummary, patienceSeries, sparkline } from "./debrief.js";
+import { mountExec, buildExecPortraitSvg } from "./exec-drawing.js";
 import { outcomePose } from "./pose.js";
 
 const d = COPY.debrief;
@@ -271,25 +271,51 @@ export function renderPastCalls(container, records, { onOpen, formatDate }) {
     return;
   }
 
-  const rows = records.map((r) => {
-    const open = el("button", { className: "link-button", text: p.open, attrs: { type: "button" } });
-    open.addEventListener("click", () => onOpen(r));
+  // One card per call: portrait, exec, date, outcome, a small patience line, and
+  // facts. The whole card opens the debrief (its "Open debrief" button stretches
+  // over the card, so keyboard and screen readers get one clear button).
+  const cards = records.map((r, i) => {
+    const persona = r.ctx.persona;
     const length = formatClock((r.state.endedAt ?? r.state.startedAt) - r.state.startedAt);
-    return el("tr", {}, [
-      el("td", { text: formatDate(r.state.startedAt) }),
-      el("td", { text: `${r.ctx.persona.name}, ${r.ctx.persona.company}` }),
-      el("td", {}, outcomeBadge(r.state.outcome)),
-      el("td", { className: "num", text: length }),
-      el("td", {}, open),
+    const series = patienceSeries(r.state);
+    const spark = sparkline(series, { width: 220, height: 44, reference: ACCEPTANCE_THRESHOLD });
+    const sparkSvg = svgEl("svg", { viewBox: "0 0 220 44", class: "spark", "aria-hidden": "true", preserveAspectRatio: "none" });
+    sparkSvg.append(
+      svgEl("line", { class: "spark-ref", x1: 0, x2: 220, y1: spark.referenceY, y2: spark.referenceY }),
+      svgEl("path", { class: "spark-line", d: spark.d }),
+      svgEl("circle", { class: `spark-end spark-end-${r.state.outcome}`, cx: spark.last.x, cy: spark.last.y, r: 3.5 }),
+    );
+    const portrait = el("div", { className: "avatar" });
+    portrait.innerHTML = buildExecPortraitSvg(persona.appearance, { idPrefix: `pk${i}` }); // our own fixed markup
+
+    const open = el("button", { className: "card-open", text: p.open, attrs: {
+      type: "button",
+      "aria-label": `${p.open}: ${fill(p.cardAria, { name: persona.name, outcome: COPY.outcomes[r.state.outcome] || "", date: formatDate(r.state.startedAt) })}`,
+    } });
+    open.addEventListener("click", () => onOpen(r));
+
+    return el("li", { className: `call-card call-card-${r.state.outcome}` }, [
+      el("div", { className: "call-card-head" }, [
+        portrait,
+        el("div", { className: "call-card-who" }, [
+          el("strong", { text: persona.name }),
+          el("span", { className: "muted small", text: persona.company }),
+        ]),
+      ]),
+      outcomeBadge(r.state.outcome),
+      el("div", { className: "spark-wrap" }, [
+        sparkSvg,
+        el("span", { className: "visually-hidden", text: fill(p.cardSpark, { start: series[0], end: series[series.length - 1] }) }),
+      ]),
+      el("div", { className: "call-card-facts" }, [
+        el("span", { className: "muted small call-card-date", text: formatDate(r.state.startedAt) }),
+        el("span", { className: "pill", text: length }),
+        el("span", { className: "pill", text: fill(p.cardPains, { found: r.state.revealedPainIds.length, total: persona.painPoints.length }) }),
+        open,
+      ]),
     ]);
   });
-  const list = el("div", { className: "table-wrap" }, el("table", { className: "turns" }, [
-    el("thead", {}, el("tr", {}, [
-      ...[p.colDate, p.colExec, p.colOutcome, p.colLength].map((h) => el("th", { text: h })),
-      el("th", {}, el("span", { className: "visually-hidden", text: p.colOpen })),
-    ])),
-    el("tbody", {}, rows),
-  ]));
+  const list = el("ul", { className: "call-cards" }, cards);
 
   const summary = recordSummary(records);
   const outcomeRows = Object.entries(summary.byOutcome).map(([outcome, count]) =>

@@ -177,3 +177,16 @@ test("every ask is listed in order with the exec's reply; the third is marked as
   assert.equal((askBlock.match(/Booked the meeting/g) || []).length, 1);
   assert.ok(askBlock.indexOf("Ask 3") < askBlock.indexOf("Booked the meeting"));
 });
+
+test("Past calls cards: the patience series and its small line", async () => {
+  const { patienceSeries, sparkline } = await import("../js/debrief.js");
+  const s = fixtureCall();
+  assert.deepEqual(patienceSeries(s), [40, 48, 28, 23]);
+  const spark = sparkline([0, 50, 100], { width: 100, height: 40, pad: 0, reference: 60 });
+  assert.equal(spark.d, "M0 40 L50 20 L100 0");
+  assert.deepEqual(spark.last, { x: 100, y: 0 });
+  assert.equal(spark.referenceY, 16);
+  // One point (no reactions yet) still draws, centered; values outside 0–100 are kept in the box.
+  assert.equal(sparkline([55], { width: 100, height: 40, pad: 0 }).last.x, 50);
+  assert.equal(sparkline([150, -20], { width: 100, height: 40, pad: 0 }).d, "M0 0 L100 40");
+});

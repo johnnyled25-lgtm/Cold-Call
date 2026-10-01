@@ -202,6 +202,28 @@ export function formatTranscriptText(a, { dateText = "" } = {}) {
   return lines.join("\n");
 }
 
+// Patience over a call, as numbers: the starting patience, then the value after each
+// of the exec's reactions. Used for the small line on each Past calls card.
+export function patienceSeries(state) {
+  return [state.startingPatience, ...state.turns.filter((t) => t.speaker === "exec" && t.index > 0).map((t) => t.patienceAfter)];
+}
+
+// A sparkline's geometry for values on a 0–100 scale: the SVG path, the last
+// point (for an end dot), and where a reference value (e.g. the meeting threshold)
+// sits. pad keeps the line and dot inside the box.
+export function sparkline(values, { width = 160, height = 40, pad = 3, reference = null } = {}) {
+  const pts = values.length ? values : [0];
+  const y = (v) => pad + ((100 - Math.max(0, Math.min(100, v))) / 100) * (height - 2 * pad);
+  const x = (i) => (pts.length === 1 ? width / 2 : pad + (i * (width - 2 * pad)) / (pts.length - 1));
+  const round = (n) => Math.round(n * 10) / 10;
+  const d = pts.map((v, i) => `${i ? "L" : "M"}${round(x(i))} ${round(y(v))}`).join(" ");
+  return {
+    d,
+    last: { x: round(x(pts.length - 1)), y: round(y(pts[pts.length - 1])) },
+    referenceY: reference == null ? null : round(y(reference)),
+  };
+}
+
 // The Record: calls per outcome (connection drops left out) and pain points
 // uncovered, call by call, oldest first. A table, not a score.
 // records: saved past calls ({ savedAt, state, ctx }), newest first.
