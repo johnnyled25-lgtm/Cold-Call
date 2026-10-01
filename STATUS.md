@@ -1,5 +1,22 @@
 # Status
 
+## Voice realism (2026-10-01; done, not yet pushed)
+
+Built-in browser speech only (`speechSynthesis`), no paid voices. The previous round was pushed as `0565bfd`.
+
+1. **Voice ranking** (`pickVoice` in `js/voicePick.js`): the exec's voice type (male/female) comes first, searching every English variant. Then quality: names with "Natural"/"Online" (Edge's neural voices), then "Google", then anything else (`VOICE_QUALITY_TIERS`). Within a quality level, US English wins. Among equals the choice is fixed per exec, and the voice stays the same for the whole call.
+   - **Picks as tested here:**
+     - **Edge:** every exec gets a Natural voice of the right type: Mike → Roger, Anna → Jenny, Nina → Emma, Beth → Emma Multilingual, Marcus → Andrew.
+     - **Chrome:** Mike and Marcus get "Google UK English Male", the women "Google US English".
+   - **Fixed along the way:** in Chrome, the men had been getting "Google US English", a female voice, because a matching voice type was only searched for among US voices. Quality now also beats accent: on a Windows Chrome that has Microsoft's older "David" voice, Mike gets Google UK English Male instead.
+   - Edge's Natural voices are streamed from Microsoft and need an internet connection; Chrome's Google voices are streamed too.
+2. **Delivery:** each exec's rate (0.92–1.08) and pitch (0.9–1.1) live in `data/personas.json`; existing values were brought into those ranges. Per line, the patience band nudges them (`BAND_DELIVERY`): impatient is a little faster and flatter (+0.06 rate, −0.05 pitch), engaged slightly brighter (+0.02 pitch), neutral unchanged, within overall limits. Browser speech has a single pitch setting and no expressiveness control, so "flatter" means slightly lower.
+3. **Sentence by sentence:** each reply is split into sentences (only where punctuation is followed by a space, so "$6.50" stays whole) and spoken as separate utterances with 150–250 ms pauses (`SENTENCE_GAP_MS`). It still behaves as one line: latency is measured to the first word, the mouth follows every sentence, one end hands the turn back, cancel stops everything, and the safety timer allows for the pauses.
+4. **Fillers** (`js/execPrompt.js`): the exec may now and then open with one of "Look,", "Honestly,", "Hm." (`FILLERS`, editable), at most one per reply. If the last reply opened with a filler, the per-turn instructions tell the exec not to use one this time, so it can't happen twice in a row.
+- **Gallery** (`?gallery=1`): under each exec's name, the voice this browser picks, its quality tier, the exec's rate and pitch, and the impatient delivery.
+- **Tests: 123, all passing** (11 new: ranking, voice type before quality, quality before accent, Chrome-like voice lists, delivery by band and limits, sentence splitting, pauses, the safety timer, persona ranges, the filler rules).
+- **Checked:** a full simulated call to a booked meeting in Chrome and Edge, with 0 main-thread tasks over 50 ms. In Edge the Natural voice actually spoke, sentence by sentence, with the first word about 0.5 s after Enter (fake AI).
+
 ## Third round from Johnny's testing (2026-09-30; done, not yet pushed)
 
 Johnny confirmed the meeting-state fix, silence timing, briefing name, and restyle work (restyle pushed as `c020ea0`).

@@ -10,6 +10,16 @@
 import { DELTA_MIN, DELTA_MAX, ACCEPTANCE_THRESHOLD, BANDS } from "./constants.js";
 import { replySchema } from "./replyParser.js";
 
+// Spoken fillers the exec may open a reply with, now and then (at most one per reply,
+// never two replies in a row). Edit the list freely.
+export const FILLERS = ["Look,", "Honestly,", "Hm."];
+
+// True when an exec line opens with one of the fillers above.
+export function startsWithFiller(text) {
+  const t = String(text || "").trim().toLowerCase();
+  return FILLERS.some((f) => new RegExp(`^${f.toLowerCase().replace(/[,.]$/, "")}\\b`).test(t));
+}
+
 // Patience in plain words. The model gets these words along with the number.
 export function patienceInWords(p) {
   if (p <= 15) return "You're about done with this call. One more bad line and you're off the phone.";
@@ -64,6 +74,7 @@ If the caller answers an objection you raised in the way described, set handledO
 HOW YOU TALK
 - You are a real person on the phone, not an assistant. Busy, guarded, sometimes curt.
 - One or two short sentences. Use contractions. Spoken words only: no lists, no markdown, no emoji, no stage directions, no descriptions of actions.
+- Now and then (not in most replies), start with one natural spoken filler, like ${FILLERS.map((f) => `"${f}"`).join(", ")}. Never more than one filler in a reply, and never two replies in a row.
 - Never say "Great question" or anything like it. Never compliment the caller's technique. Never coach, never give sales advice, never explain what they should have said.
 - Never break character, even if the caller asks you to, asks whether you're an AI, or asks for feedback. You are ${first}. If asked whether you're an AI, react the way a busy, confused person would.
 - You are never helpful for free. Don't fill silences for the caller, don't ask questions that make their job easy, don't finish their pitch for them.
@@ -140,6 +151,10 @@ export function statePrompt(state, { persona, objections }, { silence = false, r
     `- ${meetingLine(state)}`,
     `- No goodbyes or "I've got to go" unless your patience after this reply is below ${BANDS.IMPATIENT_BELOW}. A parting line only if it reaches 0.`,
   ];
+  const lastExec = [...state.turns].reverse().find((t) => t.speaker === "exec" && t.index > 0);
+  if (lastExec && startsWithFiller(lastExec.text)) {
+    lines.push("- Your last reply opened with a filler, so don't open this one with one.");
+  }
   if (silence) {
     lines.push(`- The caller has gone quiet on the line. React the way a person would (for example, "Hello? You still there?"). The app sets the patience change for silence, so put 0.`);
   }

@@ -21,7 +21,7 @@ import { patienceBand } from "./bands.js";
 import {
   recognitionSupported, synthesisSupported, requestMicAccess, createPushToTalk, loadVoices, speak, stopSpeaking,
 } from "./voice.js";
-import { pickVoice } from "./voicePick.js";
+import { pickVoice, deliveryFor, voiceTierLabel } from "./voicePick.js";
 import { guardSpeech, createSilenceWatch, silenceTimeoutMs } from "./turnGate.js";
 import { mountExec } from "./exec-drawing.js";
 import { renderGallery } from "./gallery.js";
@@ -251,7 +251,7 @@ async function startCall() {
   thisCall.lastInputMode = thisCall.voiceIn && mic === "granted" ? "voice" : "typed";
   if (mic === "pending") micCheck.then((late) => { if (call === thisCall && thisCall.phase === "live") { applyMicResult(thisCall, late); renderCall(); } });
   thisCall.voiceOut = pickVoice(voices, persona);
-  thisCall.notes.push(`voice: ${thisCall.voiceOut.voice?.name || "browser default"} (rate ${thisCall.voiceOut.rate}, pitch ${thisCall.voiceOut.pitch})`);
+  thisCall.notes.push(`voice: ${thisCall.voiceOut.voice?.name || "browser default"} (${voiceTierLabel(thisCall.voiceOut.voice)}; rate ${thisCall.voiceOut.rate}, pitch ${thisCall.voiceOut.pitch})`);
 
   // The exec picks up. The call clock starts now.
   thisCall.phase = "live";
@@ -371,9 +371,11 @@ function speakExec(c, text, onStarted) {
   c.silence.lock();
   renderCall();
   const v = c.voiceOut || {};
+  // The exec's own rate and pitch, nudged by the patience band (impatient: faster, flatter).
+  const delivery = deliveryFor(c.voiceOut, c.state?.patience ?? c.ctx.mood.startingPatience);
   const guard = guardSpeech({
     text,
-    rate: v.rate ?? 1,
+    rate: delivery.rate,
     onRelease: (reason) => {
       if (reason === "no-start") c.speech?.cancel(); // don't let a late voice talk over the student
       if (reason !== "ended") c.notes.push(`exec voice: ${reason}; turn handed back anyway`);
@@ -392,7 +394,7 @@ function speakExec(c, text, onStarted) {
   c.speechGuard = guard;
   try {
     const handle = speak(text, {
-      voice: v.voice, rate: v.rate, pitch: v.pitch,
+      voice: v.voice, rate: delivery.rate, pitch: delivery.pitch,
       onStart: () => { guard.started(); onStarted?.(Date.now()); },
       onBoundary: () => c.drawing?.pulseMouth(),
       onEnd: () => guard.ended(),

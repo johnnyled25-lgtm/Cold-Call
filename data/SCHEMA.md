@@ -11,7 +11,7 @@ Plain-language reference for the files in `data/` and the in-memory call data. B
 | `industry`, `companySize`, `currentSetup` | Shown on the briefing card ("what you know") |
 | `personality` | Given to the model. Not shown until the debrief |
 | `appearance` | `{ skinTone, hair, hairColor, attire, glasses }`. Values must come from `APPEARANCE_OPTIONS` in `js/constants.js` |
-| `voice` **(added beyond the brief)** | `{ type: "male" or "female", rate, pitch }`. Picks the browser voice and how it sounds. Rate and pitch are kept inside `VOICE_RATE_RANGE` / `VOICE_PITCH_RANGE` |
+| `voice` **(added beyond the brief)** | `{ type: "male" or "female", rate, pitch }`. Picks the browser voice and how it sounds. Rate (0.92–1.08) and pitch (0.9–1.1) are kept inside `VOICE_RATE_RANGE` / `VOICE_PITCH_RANGE`; the patience band nudges them per line (`BAND_DELIVERY`) |
 | `painPoints` | `[{ id, text, earnedBy, addressedBy }]`, hidden during the call |
 | `objections` | Ids from `objections.json` this exec may raise |
 | `moods` | Ids from `MOODS` in `js/constants.js` this exec can be in |

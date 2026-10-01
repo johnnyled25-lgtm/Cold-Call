@@ -127,8 +127,28 @@ export const MAX_TALK_SECONDS = 30;
 
 // The exec's speaking speed and pitch are set per exec in personas.json ("voice").
 // These keep them in a range that still sounds natural.
-export const VOICE_RATE_RANGE = [0.8, 1.3];
-export const VOICE_PITCH_RANGE = [0.7, 1.3];
+export const VOICE_RATE_RANGE = [0.92, 1.08];
+export const VOICE_PITCH_RANGE = [0.9, 1.1];
+
+// Voices are ranked by how natural they sound, from words in their names.
+// First: Edge's neural voices ("... Online (Natural)"). Then Google's. Then anything else.
+// The exec's voice type (male/female) still comes first where the browser has a match.
+export const VOICE_QUALITY_TIERS = [["natural", "online"], ["google"]];
+
+// How the patience band changes delivery, added to the exec's own rate and pitch.
+// Impatient: a little faster and flatter (lower pitch).
+export const BAND_DELIVERY = {
+  engaged: { rate: 0, pitch: 0.02 },
+  neutral: { rate: 0, pitch: 0 },
+  impatient: { rate: 0.06, pitch: -0.05 },
+};
+// Limits for the final rate and pitch after the band's change.
+export const DELIVERY_RATE_LIMITS = [0.88, 1.15];
+export const DELIVERY_PITCH_LIMITS = [0.85, 1.12];
+
+// Each reply is spoken sentence by sentence, with a pause of this many milliseconds
+// (somewhere in the range) between sentences.
+export const SENTENCE_GAP_MS = [150, 250];
 
 // Browsers don't label their voices as male or female, so the app looks for these
 // words in the voice's name. Add names here if your browser's voices aren't matched.

@@ -9,7 +9,7 @@
     "currentSetup": "A dispatch system for loads. Driver schedules live in a spreadsheet, and call-outs get covered by phone and group text.",
     "personality": "Blunt and fast. Former dispatcher who came up through the terminals. Respects people who get to the point and hates being sold to. Says 'Go ahead' when he means 'You have ten seconds.'",
     "appearance": { "skinTone": "dark", "hair": "side-part", "hairColor": "gray", "attire": "polo", "glasses": false },
-    "voice": { "type": "male", "rate": 1.1, "pitch": 0.9 },
+    "voice": { "type": "male", "rate": 1.06, "pitch": 0.92 },
     "painPoints": [
       {
         "id": "monday-callouts",
@@ -59,7 +59,7 @@
     "currentSetup": "Practice-management software at every office. Patient balances get paper statements and phone calls. New-patient forms are a PDF patients print or email back.",
     "personality": "Friendly but busy. Warm on the phone and polite, but she answers while doing three other things. She'll let a caller down gently rather than hang up, unless they waste her time.",
     "appearance": { "skinTone": "medium", "hair": "long", "hairColor": "black", "attire": "cardigan", "glasses": true },
-    "voice": { "type": "female", "rate": 1.05, "pitch": 1.05 },
+    "voice": { "type": "female", "rate": 1.04, "pitch": 1.05 },
     "painPoints": [
       {
         "id": "aging-balances",
@@ -111,7 +111,7 @@
     "currentSetup": "A core banking system plus a loan-origination system. Borrowers send financial documents by email or drop off paper at a branch.",
     "personality": "Analytical and careful. Asks precise questions, is wary of anything that touches customer data, and won't commit without a reason. Polite, never warm. Quiet pauses are her way of making you keep talking.",
     "appearance": { "skinTone": "medium-dark", "hair": "bun", "hairColor": "black", "attire": "blazer", "glasses": true },
-    "voice": { "type": "female", "rate": 0.95, "pitch": 1.0 },
+    "voice": { "type": "female", "rate": 0.94, "pitch": 1.0 },
     "painPoints": [
       {
         "id": "email-attachments",
@@ -161,7 +161,7 @@
     "currentSetup": "An ERP system for production. Shift schedules are built in a spreadsheet and posted on the break-room board. Call-outs go to the shift supervisor's cell phone.",
     "personality": "Analytical and dry. A mechanical engineer by training. Wants numbers, not adjectives. Isn't rude, but goes silent and flat when bored, and the word 'solution' makes her wince.",
     "appearance": { "skinTone": "light", "hair": "bob", "hairColor": "blonde", "attire": "button-down", "glasses": true },
-    "voice": { "type": "female", "rate": 0.95, "pitch": 0.95 },
+    "voice": { "type": "female", "rate": 0.95, "pitch": 0.94 },
     "painPoints": [
       {
         "id": "second-shift-coverage",
@@ -212,7 +212,7 @@
     "currentSetup": "Invoices go out from the accounting software. The founder follows up on late payments himself, by email and the occasional uncomfortable phone call.",
     "personality": "Friendly and fast-talking, easily distracted, likes a good idea. Will chat for a moment, then remember he's busy. Sniffs out a script right away and gets bored if the caller sounds like one.",
     "appearance": { "skinTone": "dark", "hair": "curly", "hairColor": "black", "attire": "sweater", "glasses": false },
-    "voice": { "type": "male", "rate": 1.12, "pitch": 1.0 },
+    "voice": { "type": "male", "rate": 1.08, "pitch": 1.0 },
     "painPoints": [
       {
         "id": "late-client-payments",

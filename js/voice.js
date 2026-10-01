@@ -8,7 +8,7 @@
 // createPushToTalk with continuous listening; premium provider voices would replace speak().
 
 import { SPEECH_LANG } from "./constants.js";
-import { estimatedSpeechMs } from "./voicePick.js";
+import { estimatedSpeechMs, splitSentences, sentenceGapMs } from "./voicePick.js";
 
 const Recognition = globalThis.SpeechRecognition || globalThis.webkitSpeechRecognition;
 
@@ -137,10 +137,13 @@ export function loadVoices(timeoutMs = 1500) {
 
 let currentUtterance = null; // kept so the browser doesn't discard it mid-sentence (a Chrome quirk)
 
-// Says one line. onStart fires when the voice actually begins (used for latency),
-// onBoundary on each word where the browser supports it (for the mouth, Phase 4),
-// onEnd when finished. Returns { cancel } which stops speech without calling onEnd.
-// Without speech support, onStart and onEnd fire right away.
+// Says one exec line, sentence by sentence, with a short pause between sentences
+// (150–250 ms) so it doesn't sound like one block read aloud.
+// onStart fires when the first sentence actually begins (used for latency),
+// onBoundary on each word where the browser supports it (for the mouth),
+// onEnd once, after the last sentence (or on an error). Returns { cancel }, which
+// stops speech without calling onEnd. Without speech support, onStart and onEnd
+// fire right away.
 export function speak(text, { voice = null, rate = 1, pitch = 1, onStart, onBoundary, onEnd } = {}) {
   if (!synthesisSupported()) {
     onStart?.();
@@ -149,14 +152,12 @@ export function speak(text, { voice = null, rate = 1, pitch = 1, onStart, onBoun
   }
   // Cancel only if something is playing: Chrome can drop a line spoken right after a cancel.
   if (speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  if (voice) u.voice = voice;
-  u.lang = voice?.lang || SPEECH_LANG;
-  u.rate = rate;
-  u.pitch = pitch;
+  const sentences = splitSentences(text);
+  if (!sentences.length) sentences.push(String(text || ""));
 
   let started = false;
   let finished = false;
+  let gapTimer = null;
   // A problem in onStart (e.g. while recording latency) must never stop onEnd from
   // running, or the student's input would stay locked.
   const begin = () => {
@@ -168,22 +169,37 @@ export function speak(text, { voice = null, rate = 1, pitch = 1, onStart, onBoun
     if (finished) return;
     finished = true;
     clearTimeout(safety);
+    clearTimeout(gapTimer);
     onEnd?.();
   };
-  u.onstart = begin;
-  u.onboundary = (e) => onBoundary?.(e);
-  u.onend = finish;
-  u.onerror = finish;
-  // Safety net in case the browser never reports the end.
-  const safety = setTimeout(finish, estimatedSpeechMs(text, rate) + 3000);
 
-  currentUtterance = u;
-  speechSynthesis.speak(u);
+  const sayNext = (i) => {
+    if (finished) return;
+    const u = new SpeechSynthesisUtterance(sentences[i]);
+    if (voice) u.voice = voice;
+    u.lang = voice?.lang || SPEECH_LANG;
+    u.rate = rate;
+    u.pitch = pitch;
+    u.onstart = begin;
+    u.onboundary = (e) => onBoundary?.(e);
+    u.onerror = finish;
+    u.onend = () => {
+      if (i + 1 >= sentences.length) finish();
+      else gapTimer = setTimeout(() => sayNext(i + 1), sentenceGapMs(i));
+    };
+    currentUtterance = u;
+    speechSynthesis.speak(u);
+  };
+
+  // Safety net in case the browser never reports the end (covers every sentence and pause).
+  const safety = setTimeout(finish, estimatedSpeechMs(text, rate) + 3000);
+  sayNext(0);
   return {
     cancel() {
       if (finished) return;
       finished = true;
       clearTimeout(safety);
+      clearTimeout(gapTimer);
       speechSynthesis.cancel();
     },
   };
