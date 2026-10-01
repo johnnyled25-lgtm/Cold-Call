@@ -1,6 +1,20 @@
 # Status
 
-## Home page + navigation (2026-10-01; done, not yet pushed)
+## Settings, dialogs, messages, empty state, Record (2026-10-01; done, not yet pushed)
+
+The Home page and navigation were pushed as `0dfd18e`.
+
+- **Settings drawer in numbered steps:** 1 Choose your AI provider (two selectable cards, each showing its default model), 2 Paste your API key (the key help as an info card, a green **✓ Added** badge once a key is in, updated as you type and when you switch provider), 3 Model (model name and temperature), Voice (optional) with the mic test, and **Clear everything** as a separate danger section. Save / Cancel stay pinned at the bottom of the drawer.
+- **Test results with icons:** Test connection and the mic test show a green check when they work, a red cross when they don't, and a neutral icon while waiting.
+- **Styled questions instead of the browser's own pop-up:** leaving a call in progress (a tab, the logo, or Back) asks **End this call?** with **Keep calling** (the default) and **End & save**. Clear everything asks the same way. Esc means Keep / Cancel. If two navigations ask at once, they share one question.
+- **Messages by type, each with an icon:** errors in red (warning triangle), the Settings prompt in gold (key), and call notes in neutral (info). Color is never the only sign.
+- **The one-time voice note** has a microphone header and a centered layout like the other dialogs.
+- **Past calls, empty:** an illustration, "No calls yet", one line about what appears here, and **Make your first call** (goes to a new briefing).
+- **The Record** sits in two cards that match the call cards: outcome counts, and pain points uncovered call by call. Still counts in tables, never a score.
+- **Fixed while building:** the drawer's general label style put the provider cards' text on one line, and the test result crowded the button; both now stack.
+- **Checked:** the click-through in Chrome using the new question (Keep calling, then End & save; browser Back during a call, both answers), screenshots of the drawer, the clear question, the empty state, and the Record, and the accessibility check (0 issues on the drawer, the question, empty Past calls, and Past calls with the Record). **Tests: 130, all passing.**
+
+## Home page + navigation (2026-10-01; pushed as `0dfd18e`)
 
 The debrief restyle was pushed as `3a85bb0`.
 

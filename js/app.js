@@ -80,6 +80,10 @@ const median = (xs) => {
 };
 const errorMessage = (kind) => COPY.errors[kind] || COPY.errors.other;
 
+function applyIcons() {
+  document.querySelectorAll("[data-icon]").forEach((node) => node.replaceChildren(iconEl(node.dataset.icon)));
+}
+
 function applyCopy() {
   document.querySelectorAll("[data-copy]").forEach((node) => {
     const text = copyAt(node.dataset.copy);
@@ -155,10 +159,10 @@ function renderRoute(route) {
 }
 
 // Go to a screen: asks before leaving a call, then shows it and records the address.
-function goTo(route) {
+async function goTo(route) {
   if (callInProgress() && route !== "call") {
-    if (!window.confirm(COPY.nav.leaveCall)) return;
-    leaveCall();
+    if (!(await confirmLeaveCall())) return;
+    if (callInProgress()) leaveCall(); // (it may have ended on its own while the question was open)
   }
   if (route !== "debrief") debriefFromPast = false;
   renderRoute(route);
@@ -166,11 +170,13 @@ function goTo(route) {
 }
 
 // Back and Forward.
-function onPopState() {
+async function onPopState() {
   const route = parseRoute(location.hash);
   if (callInProgress() && route !== "call") {
-    if (!window.confirm(COPY.nav.leaveCall)) { history.pushState(null, "", "#call"); return; }
-    leaveCall();
+    history.pushState(null, "", "#call"); // stay on the call's address while we ask
+    if (!(await confirmLeaveCall())) return;
+    if (callInProgress()) leaveCall();
+    history.replaceState(null, "", `#${route}`);
   }
   if (route !== "debrief") debriefFromPast = false;
   // A finished call can't be re-entered: show its debrief (or home) and fix the address to match.
@@ -219,10 +225,38 @@ function renderHome() {
 
 
 
-function showMessage(text) {
-  $("app-message").textContent = text || "";
-  $("app-message").hidden = !text;
+// Messages with an icon: errors (red), warnings (gold), and notes (neutral).
+function setNotice(node, text, icon) {
+  node.replaceChildren(...(text ? [iconEl(icon), el("span", { text })] : []));
+  node.hidden = !text;
 }
+function showMessage(text) {
+  setNotice($("app-message"), text, "alert");
+}
+
+// A styled yes/no question. Resolves true for the main (OK) button, false for Cancel or Esc.
+// Only one at a time: asking again while one is open returns the same answer.
+let openQuestion = null;
+function confirmDialog({ title, body, ok, cancel, icon = "alert" }) {
+  if (openQuestion) return openQuestion;
+  const dialog = $("confirm-dialog");
+  $("confirm-title").textContent = title;
+  $("confirm-body").textContent = body;
+  $("confirm-ok").textContent = ok;
+  $("confirm-cancel").textContent = cancel;
+  $("confirm-icon").replaceChildren(iconEl(icon));
+  dialog.returnValue = "";
+  openQuestion = new Promise((resolve) => {
+    dialog.addEventListener("close", () => { openQuestion = null; resolve(dialog.returnValue === "ok"); }, { once: true });
+  });
+  dialog.showModal();
+  $("confirm-cancel").focus();
+  return openQuestion;
+}
+
+const confirmLeaveCall = () => confirmDialog({
+  title: COPY.nav.leaveTitle, body: COPY.nav.leaveBody, ok: COPY.nav.leaveEnd, cancel: COPY.nav.leaveKeep, icon: "phone",
+});
 
 // ---------------------------------------------------------------------------
 // Data and the current draw
@@ -463,7 +497,7 @@ function applyMicResult(c, mic) {
   if (mic === "denied") switchToTyping(c, COPY.voice.micBlocked);
   else if (mic === "no-mic") switchToTyping(c, COPY.voice.noMic);
   else if (mic === "pending") setCallNote(COPY.voice.micPending);
-  else if ($("call-note").textContent === COPY.voice.micPending) setCallNote("");
+  else if ($("call-note").textContent.trim() === COPY.voice.micPending) setCallNote("");
 }
 
 let micGranted = false;
@@ -486,8 +520,7 @@ function voiceErrorMessage(kind, mic) {
 }
 
 function setCallNote(text) {
-  $("call-note").textContent = text || "";
-  $("call-note").hidden = !text;
+  setNotice($("call-note"), text, "info");
 }
 
 function tick() {
@@ -865,6 +898,7 @@ function showPastCalls() {
   showMessage("");
   renderPastCalls($("past-body"), loadPastCalls(), {
     formatDate,
+    onStart: () => { draw = newDraw(); goTo("briefing"); },
     onOpen: (record) => {
       call = null;
       debriefFromPast = true;
@@ -882,13 +916,26 @@ function showPastCalls() {
 let draft = null;
 let testAbort = null;
 
+// A test result with an icon: "ok" (green check), "fail" (red cross), "wait" (neutral).
+function setResult(node, kind, text) {
+  node.className = `test-result${kind ? ` result-${kind}` : ""}`;
+  const icon = { ok: "check", fail: "cross", wait: "info" }[kind];
+  node.replaceChildren(...(text ? [icon ? iconEl(icon) : null, el("span", { text })].filter(Boolean) : []));
+}
+
+function updateKeyBadge() {
+  const has = Boolean($("set-key").value.trim());
+  $("key-badge").textContent = COPY.settings.keyAdded;
+  $("key-badge").hidden = !has;
+}
+
 function openSettings(alertText = "") {
   const saved = loadSettings();
   draft = { ...saved, models: { ...saved.models }, keys: { anthropic: getKey("anthropic"), openai: getKey("openai") } };
-  $("settings-alert").textContent = alertText;
-  $("settings-alert").hidden = !alertText;
-  $("test-result").textContent = "";
-  $("mic-test-result").textContent = "";
+  setNotice($("settings-alert"), alertText, "key");
+  setResult($("test-result"), null, "");
+  for (const p of ["anthropic", "openai"]) $(`pc-sub-${p}`).textContent = fill(COPY.settings.providerSub[p], { model: DEFAULT_MODELS[p] });
+  setResult($("mic-test-result"), null, "");
   document.querySelector(`input[name="provider"][value="${draft.provider}"]`).checked = true;
   $("set-temp").value = String(draft.temperature);
   showDraftProvider();
@@ -914,6 +961,7 @@ function showDraftProvider() {
   $("set-key").type = "password";
   $("btn-show-key").textContent = COPY.settings.showKey;
   $("set-model").value = draft.models[p];
+  updateKeyBadge();
   $("btn-model-reset").textContent = fill(COPY.settings.modelReset, { model: DEFAULT_MODELS[p] });
   $("test-result").textContent = "";
   renderTemperature();
@@ -933,16 +981,15 @@ async function runTest() {
   testAbort = new AbortController();
   const button = $("btn-test");
   button.disabled = true;
-  $("test-result").textContent = COPY.settings.testing;
+  setResult($("test-result"), "wait", COPY.settings.testing);
   const settings = { provider: draft.provider, key: draft.keys[draft.provider], model: draft.models[draft.provider], temperature: draft.temperature };
   try {
     const result = await testConnection(settings, {
       signal: testAbort.signal,
-      onWait: (seconds) => { $("test-result").textContent = fill(COPY.call.lineBusy, { seconds }); },
+      onWait: (seconds) => setResult($("test-result"), "wait", fill(COPY.call.lineBusy, { seconds })),
     });
-    $("test-result").textContent = result.ok
-      ? fill(COPY.settings.testOk, { provider: COPY.settings.providerNames[settings.provider], seconds: (result.ms / 1000).toFixed(1) })
-      : fill(COPY.settings.testFailed, { message: errorMessage(result.kind) });
+    if (result.ok) setResult($("test-result"), "ok", fill(COPY.settings.testOk, { provider: COPY.settings.providerNames[settings.provider], seconds: (result.ms / 1000).toFixed(1) }));
+    else setResult($("test-result"), "fail", fill(COPY.settings.testFailed, { message: errorMessage(result.kind) }));
     if (DEBUG && !result.ok) $("test-result").append(el("code", { className: "debug-detail", text: ` [${result.status ?? "-"} ${result.detail}]` }));
     renderTemperature(); // the test may have found that this model rejects temperature
   } catch {
@@ -961,29 +1008,29 @@ async function runMicTest() {
   const out = $("mic-test-result");
   const button = $("btn-mic-test");
   if (micTest) { micTest.ptt.stop(); return; } // second click: stop early
-  if (!recognitionSupported()) { out.textContent = COPY.voice.unavailable; return; }
+  if (!recognitionSupported()) { setResult(out, "fail", COPY.voice.unavailable); return; }
 
-  out.textContent = COPY.voice.testAsking;
+  setResult(out, "wait", COPY.voice.testAsking);
   const mic = await micAccess();
   if (mic !== "granted") {
-    out.textContent = mic === "no-mic" ? COPY.voice.noMic : COPY.voice.micBlocked;
+    setResult(out, "fail", mic === "no-mic" ? COPY.voice.noMic : COPY.voice.micBlocked);
     return;
   }
-  const finish = (text) => {
+  const finish = (kind, text) => {
     if (!micTest) return;
     clearTimeout(micTest.timer);
     micTest = null;
-    out.textContent = text;
+    setResult(out, kind, text);
     button.textContent = COPY.voice.test;
   };
   const ptt = createPushToTalk({
-    onInterim: (t) => { if (t) out.textContent = `“${t}”`; },
-    onDone: ({ text }) => finish(text ? fill(COPY.voice.testHeard, { text }) : COPY.voice.testNothing),
-    onError: (kind) => finish(voiceErrorMessage(kind, mic) + (DEBUG ? ` [${kind}]` : "")),
+    onInterim: (t) => { if (t) setResult(out, "wait", `“${t}”`); },
+    onDone: ({ text }) => (text ? finish("ok", fill(COPY.voice.testHeard, { text })) : finish("fail", COPY.voice.testNothing)),
+    onError: (kind) => finish("fail", voiceErrorMessage(kind, mic) + (DEBUG ? ` [${kind}]` : "")),
   });
   micTest = { ptt, timer: null };
-  if (!ptt.start()) { finish(COPY.voice.didntCatch); return; }
-  out.textContent = fill(COPY.voice.testListening, { seconds: MIC_TEST_SECONDS });
+  if (!ptt.start()) { finish("fail", COPY.voice.didntCatch); return; }
+  setResult(out, "wait", fill(COPY.voice.testListening, { seconds: MIC_TEST_SECONDS }));
   button.textContent = COPY.voice.testStop;
   micTest.timer = setTimeout(() => micTest?.ptt.stop(), MIC_TEST_SECONDS * 1000);
 }
@@ -1024,18 +1071,22 @@ function wireSettings() {
     renderTemperature();
   });
   $("set-model").addEventListener("input", renderTemperature);
+  $("set-key").addEventListener("input", updateKeyBadge);
   $("set-temp").addEventListener("input", renderTemperature);
   $("btn-test").addEventListener("click", runTest);
   $("btn-mic-test").addEventListener("click", runMicTest);
-  $("btn-clear").addEventListener("click", () => {
-    if (!window.confirm(COPY.settings.clearConfirm)) return;
+  $("btn-clear").addEventListener("click", async () => {
+    const yes = await confirmDialog({
+      title: COPY.settings.clearTitle, body: COPY.settings.clearConfirm, ok: COPY.settings.clearOk, cancel: COPY.settings.clearKeep, icon: "alert",
+    });
+    if (!yes) return;
     clearEverything();
     const fresh = loadSettings();
     draft = { ...fresh, models: { ...fresh.models }, keys: { anthropic: "", openai: "" } };
     document.querySelector(`input[name="provider"][value="${draft.provider}"]`).checked = true;
     $("set-temp").value = String(draft.temperature);
     showDraftProvider();
-    $("test-result").textContent = COPY.settings.cleared;
+    setResult($("test-result"), "ok", COPY.settings.cleared);
     if (!$("screen-past").hidden) showPastCalls();
   });
 }
@@ -1072,6 +1123,7 @@ function renderDebug() {
 // ---------------------------------------------------------------------------
 async function init() {
   applyCopy();
+  applyIcons();
   wireSettings();
   $("btn-call").addEventListener("click", startCall);
   $("btn-random").addEventListener("click", () => { draw = newDraw(); renderBriefing(); });

@@ -338,10 +338,20 @@ export function renderDebrief(container, a, { onCallAgain, onNewExec, onPastCall
 // Past calls and the Record
 // ---------------------------------------------------------------------------
 // records: newest first. onOpen(record) reopens a debrief. formatDate(ms) → text.
-export function renderPastCalls(container, records, { onOpen, formatDate }) {
+export function renderPastCalls(container, records, { onOpen, formatDate, onStart }) {
   const p = COPY.pastCalls;
   if (!records.length) {
-    container.replaceChildren(el("p", { className: "muted", text: p.note }), el("p", { className: "card", text: p.empty }));
+    const start = el("button", { className: "btn btn-primary btn-big", attrs: { type: "button" } }, [iconEl("phone"), el("span", { text: p.emptyStart })]);
+    start.addEventListener("click", onStart);
+    container.replaceChildren(
+      el("div", { className: "empty-state" }, [
+        el("div", { className: "empty-icon" }, iconEl("chat")),
+        el("h3", { text: p.emptyTitle }),
+        el("p", { className: "muted", text: p.emptyText }),
+        start,
+      ]),
+      el("p", { className: "muted small empty-note", text: p.note }),
+    );
     return;
   }
 
@@ -397,19 +407,24 @@ export function renderPastCalls(container, records, { onOpen, formatDate }) {
   const painRows = summary.painRows.map((r) =>
     el("tr", {}, [el("td", { text: formatDate(r.startedAt) }), el("td", { text: r.exec }), el("td", { className: "num", text: fill(p.painsCell, { found: r.found, total: r.total }) })]));
 
+  // The Record: counts only, as tables (never a score), in two matching cards.
   container.replaceChildren(
     el("p", { className: "muted", text: p.note }),
     list,
-    el("h3", { text: p.recordHeading }),
+    el("h3", { className: "record-head" }, [iconEl("list"), p.recordHeading]),
     el("p", { className: "muted small", text: p.recordNote }),
-    el("div", { className: "table-wrap" }, el("table", { className: "turns record-table" }, [
-      el("thead", {}, el("tr", {}, [p.colOutcome, p.colCalls].map((h) => el("th", { text: h })))),
-      el("tbody", {}, outcomeRows),
-    ])),
-    el("h3", { text: p.painsHeading }),
-    el("div", { className: "table-wrap" }, el("table", { className: "turns record-table" }, [
-      el("thead", {}, el("tr", {}, [p.colDate, p.colExec, p.colPains].map((h) => el("th", { text: h })))),
-      el("tbody", {}, painRows),
-    ])),
+    el("div", { className: "record-grid" }, [
+      el("div", { className: "record-card" }, el("table", { className: "record-table" }, [
+        el("thead", {}, el("tr", {}, [p.colOutcome, p.colCalls].map((h) => el("th", { text: h })))),
+        el("tbody", {}, outcomeRows),
+      ])),
+      el("div", { className: "record-card" }, [
+        el("h4", { text: p.painsHeading }),
+        el("table", { className: "record-table" }, [
+          el("thead", {}, el("tr", {}, [p.colDate, p.colExec, p.colPains].map((h) => el("th", { text: h })))),
+          el("tbody", {}, painRows),
+        ]),
+      ]),
+    ]),
   );
 }

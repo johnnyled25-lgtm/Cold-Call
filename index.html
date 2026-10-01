@@ -29,7 +29,7 @@
   </header>
 
   <main>
-    <p id="app-message" class="app-message" role="alert" hidden></p>
+    <div id="app-message" class="notice notice-error app-message" role="alert" hidden></div>
 
     <!-- Home: the introduction page -->
     <section id="screen-home" class="screen" aria-labelledby="home-heading" hidden>
@@ -140,7 +140,7 @@
           <div id="call-brief-body" class="brief-tiles"></div>
         </section>
       </div>
-      <p id="call-note" class="call-note" role="status" hidden></p>
+      <div id="call-note" class="notice notice-info call-note" role="status" hidden></div>
       <details class="explainer explainer-below">
         <summary data-copy="explainers.toggle"></summary>
         <h3 class="explainer-label" data-copy="explainers.whatLabel"></h3>
@@ -186,12 +186,26 @@
   </main>
 
   <!-- One-time note about browser speech recognition (brief lesson e) -->
-  <dialog id="privacy-dialog" class="small-dialog" aria-labelledby="privacy-heading">
+  <dialog id="privacy-dialog" class="small-dialog" aria-labelledby="privacy-heading" aria-describedby="privacy-body">
     <form method="dialog">
+      <div class="dialog-icon dialog-icon-teal" data-icon="mic"></div>
       <h2 id="privacy-heading" data-copy="voice.privacyTitle"></h2>
-      <p data-copy="voice.privacyBody"></p>
-      <div class="actions">
+      <p id="privacy-body" data-copy="voice.privacyBody"></p>
+      <div class="dialog-actions">
         <button type="submit" class="btn btn-primary" value="ok" data-copy="voice.privacyOk"></button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- A styled yes/no question (instead of the browser's own confirm box) -->
+  <dialog id="confirm-dialog" class="small-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-body">
+    <form method="dialog">
+      <div class="dialog-icon" id="confirm-icon"></div>
+      <h2 id="confirm-title"></h2>
+      <p id="confirm-body"></p>
+      <div class="dialog-actions">
+        <button type="submit" class="btn" value="cancel" id="confirm-cancel" autofocus></button>
+        <button type="submit" class="btn btn-danger-solid" value="ok" id="confirm-ok"></button>
       </div>
     </form>
   </dialog>
@@ -203,57 +217,80 @@
         <h2 id="settings-heading" data-copy="settings.heading"></h2>
         <button type="button" class="link-button" id="btn-close-settings" data-copy="settings.close"></button>
       </div>
-      <p id="settings-alert" class="app-message" role="alert" hidden></p>
+      <div id="settings-alert" class="notice notice-warn" role="alert" hidden></div>
 
-      <fieldset class="provider-choice">
-        <legend data-copy="settings.provider"></legend>
-        <label class="radio"><input type="radio" name="provider" value="anthropic"> <span data-copy="settings.providerNames.anthropic"></span></label>
-        <label class="radio"><input type="radio" name="provider" value="openai"> <span data-copy="settings.providerNames.openai"></span></label>
-      </fieldset>
+      <section class="set-section" aria-labelledby="set-provider-head">
+        <h3 class="set-head" id="set-provider-head"><span class="set-num" aria-hidden="true">1</span><span data-copy="settings.sectionProvider"></span></h3>
+        <div class="provider-cards" role="radiogroup" aria-labelledby="set-provider-head">
+          <label class="provider-card">
+            <input type="radio" name="provider" value="anthropic">
+            <span class="pc-name" data-copy="settings.providerNames.anthropic"></span>
+            <span class="pc-sub" id="pc-sub-anthropic"></span>
+          </label>
+          <label class="provider-card">
+            <input type="radio" name="provider" value="openai">
+            <span class="pc-name" data-copy="settings.providerNames.openai"></span>
+            <span class="pc-sub" id="pc-sub-openai"></span>
+          </label>
+        </div>
+      </section>
 
-      <div class="key-help">
-        <p data-copy="settings.keyWhat"></p>
-        <p data-copy="settings.keyNotSubscription"></p>
-        <p><span data-copy="settings.keyWhere"></span> <a id="key-link" target="_blank" rel="noopener noreferrer"></a></p>
-        <p data-copy="settings.keyPrivacy"></p>
-      </div>
+      <section class="set-section" aria-labelledby="set-key-head">
+        <h3 class="set-head" id="set-key-head">
+          <span class="set-num" aria-hidden="true">2</span><span data-copy="settings.sectionKey"></span>
+          <span class="key-badge" id="key-badge" hidden></span>
+        </h3>
+        <div class="info-card">
+          <div class="info-card-icon" data-icon="key"></div>
+          <div>
+            <p data-copy="settings.keyWhat"></p>
+            <p data-copy="settings.keyNotSubscription"></p>
+            <p><span data-copy="settings.keyWhere"></span> <a id="key-link" target="_blank" rel="noopener noreferrer"></a></p>
+            <p class="muted" data-copy="settings.keyPrivacy"></p>
+          </div>
+        </div>
+        <label for="set-key" class="field-label" data-copy="settings.apiKey"></label>
+        <div class="key-row">
+          <input type="password" id="set-key" autocomplete="off" spellcheck="false">
+          <button type="button" class="btn" id="btn-show-key" aria-controls="set-key" data-copy="settings.showKey"></button>
+        </div>
+        <div class="test-row">
+          <button type="button" class="btn" id="btn-test" data-copy="settings.test"></button>
+          <div id="test-result" class="test-result" role="status" aria-live="polite"></div>
+        </div>
+      </section>
 
-      <label for="set-key" data-copy="settings.apiKey"></label>
-      <div class="key-row">
-        <input type="password" id="set-key" autocomplete="off" spellcheck="false">
-        <button type="button" class="btn" id="btn-show-key" aria-controls="set-key" data-copy="settings.showKey"></button>
-      </div>
+      <section class="set-section" aria-labelledby="set-model-head">
+        <h3 class="set-head" id="set-model-head"><span class="set-num" aria-hidden="true">3</span><span data-copy="settings.sectionModel"></span></h3>
+        <label for="set-model" class="field-label" data-copy="settings.model"></label>
+        <input type="text" id="set-model" autocomplete="off" spellcheck="false">
+        <p class="muted small" data-copy="settings.modelNote"></p>
+        <button type="button" class="link-button small" id="btn-model-reset"></button>
+        <div id="temp-field">
+          <label for="set-temp" class="field-label"><span data-copy="settings.temperature"></span>: <output id="temp-value" for="set-temp"></output></label>
+          <input type="range" id="set-temp" min="0" max="1" step="0.1" aria-describedby="temp-note">
+          <p class="muted small" id="temp-note"></p>
+        </div>
+      </section>
 
-      <label for="set-model" data-copy="settings.model"></label>
-      <input type="text" id="set-model" autocomplete="off" spellcheck="false">
-      <p class="muted small" data-copy="settings.modelNote"></p>
-      <button type="button" class="link-button small" id="btn-model-reset"></button>
+      <section class="set-section" aria-labelledby="set-voice-head">
+        <h3 class="set-head" id="set-voice-head"><span class="set-num set-num-plain" aria-hidden="true" data-icon="mic"></span><span data-copy="settings.sectionVoice"></span></h3>
+        <div class="test-row">
+          <button type="button" class="btn" id="btn-mic-test" data-copy="voice.test"></button>
+          <div id="mic-test-result" class="test-result" role="status" aria-live="polite"></div>
+        </div>
+      </section>
 
-      <div id="temp-field">
-        <label for="set-temp"><span data-copy="settings.temperature"></span>: <output id="temp-value" for="set-temp"></output></label>
-        <input type="range" id="set-temp" min="0" max="1" step="0.1" aria-describedby="temp-note">
-        <p class="muted small" id="temp-note"></p>
-      </div>
+      <section class="set-section danger-zone" aria-labelledby="set-clear-head">
+        <h3 class="set-head" id="set-clear-head" data-copy="settings.clearEverything"></h3>
+        <p class="muted small" data-copy="settings.clearNote"></p>
+        <button type="button" class="btn btn-danger" id="btn-clear" data-copy="settings.clearEverything"></button>
+      </section>
 
-      <div class="actions">
-        <button type="button" class="btn" id="btn-test" data-copy="settings.test"></button>
-      </div>
-      <p id="test-result" class="test-result" role="status" aria-live="polite"></p>
-
-      <div class="actions">
+      <div class="drawer-footer">
         <button type="submit" class="btn btn-primary" value="save" data-copy="settings.save"></button>
         <button type="submit" class="btn" value="cancel" data-copy="settings.cancel"></button>
       </div>
-
-      <h3 class="drawer-subhead" data-copy="voice.testHeading"></h3>
-      <div class="actions">
-        <button type="button" class="btn" id="btn-mic-test" data-copy="voice.test"></button>
-      </div>
-      <p id="mic-test-result" class="test-result" role="status" aria-live="polite"></p>
-
-      <hr>
-      <button type="button" class="btn btn-danger" id="btn-clear" data-copy="settings.clearEverything"></button>
-      <p class="muted small" data-copy="settings.clearNote"></p>
     </form>
   </dialog>
 

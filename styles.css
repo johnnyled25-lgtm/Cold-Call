@@ -35,6 +35,7 @@
   /* Debrief outcome banner tints (contrast checked: green word 4.5:1, red word 4.8:1, muted 5.1:1+) */
   --booked-tint: #E6F2EB;
   --hungup-tint: #F7E4E0;
+  --warn-tint: #FBF0DA;   /* warnings (gold) */
 
   /* The drawn exec: warm, slightly desaturated. Appearance values from
      personas.json map to these; shades and highlights are mixed from them. */
@@ -845,3 +846,89 @@ h2[tabindex="-1"]:focus { outline: none; }
   .home-hero h2 { font-size: 1.5rem; }
   .app-header { flex-wrap: wrap; gap: 6px; }
 }
+
+/* ---------------------------------------------------------------------------
+   Notices: errors, warnings, and notes, each with an icon (color is never alone)
+   --------------------------------------------------------------------------- */
+.notice { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); margin: 0 0 var(--gap); }
+.notice svg { width: 20px; height: 20px; flex: none; margin-top: 1px; }
+.notice-error { background: var(--hungup-tint); border-color: var(--outcome-hungup); }
+.notice-error svg { color: var(--outcome-hungup); }
+.notice-warn { background: var(--warn-tint); border-color: var(--gold); }
+.notice-warn svg { color: var(--accent-deep); }
+.notice-info svg { color: var(--teal); }
+.call-note { margin: 12px 0 0; color: var(--ink); }
+
+/* ---------------------------------------------------------------------------
+   Dialogs: the voice note and the styled yes/no question
+   --------------------------------------------------------------------------- */
+.small-dialog { border: none; border-radius: var(--radius-lg); box-shadow: 0 20px 60px rgba(58, 36, 24, 0.25); padding: 28px 28px 22px; max-width: 440px; text-align: center; }
+.small-dialog h2 { font-size: 1.3rem; margin: 8px 0 8px; }
+.small-dialog p { color: var(--muted); margin: 0 0 18px; }
+.dialog-icon { width: 52px; height: 52px; margin: 0 auto; border-radius: 50%; display: grid; place-items: center; background: var(--hungup-tint); color: var(--outcome-hungup); }
+.dialog-icon svg { width: 26px; height: 26px; }
+.dialog-icon-teal { background: var(--teal-soft); color: var(--teal); }
+.dialog-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.btn-danger-solid { background: var(--end-red); border-color: var(--end-red); color: var(--accent-ink); }
+
+/* ---------------------------------------------------------------------------
+   Settings drawer: numbered sections, provider cards, results with icons
+   --------------------------------------------------------------------------- */
+.drawer { padding: 0; }
+.drawer form { display: flex; flex-direction: column; min-height: 100%; }
+.drawer-head { padding: 20px 24px 8px; }
+.drawer #settings-alert { margin: 8px 24px 0; }
+.set-section { padding: 16px 24px; border-bottom: 1px solid var(--border); }
+.set-head { display: flex; align-items: center; gap: 10px; font-size: 1rem; margin: 0 0 12px; }
+.set-num { width: 26px; height: 26px; border-radius: 50%; display: inline-grid; place-items: center; background: var(--accent); color: var(--accent-ink); font-size: 0.85rem; font-weight: 800; flex: none; }
+.set-num-plain { background: var(--teal-soft); color: var(--teal); }
+.set-num-plain svg { width: 15px; height: 15px; }
+.key-badge { margin-left: auto; font-size: 0.8rem; font-weight: 700; color: var(--outcome-booked); background: var(--booked-tint); padding: 2px 10px; border-radius: 999px; }
+.provider-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.provider-card { position: relative; display: flex; flex-direction: column; gap: 2px; padding: 12px 14px 12px 40px; border: 2px solid var(--border); border-radius: 12px; cursor: pointer; background: var(--card); font-weight: 400; margin: 0; }
+.provider-card input { position: absolute; left: 14px; top: 15px; margin: 0; accent-color: var(--accent); width: 16px; height: 16px; }
+.provider-card:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.provider-card:has(input:focus-visible) { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+.pc-name { font-weight: 700; }
+.pc-sub { font-size: 0.8rem; color: var(--muted); }
+.provider-card:has(input:checked) .pc-sub { color: var(--accent-deep); }
+.info-card { display: flex; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; font-size: 0.88rem; margin-bottom: 12px; }
+.info-card p { margin: 0 0 6px; }
+.info-card p:last-child { margin: 0; }
+.info-card-icon svg { width: 20px; height: 20px; color: var(--accent); }
+.field-label { display: block; font-weight: 600; margin: 10px 0 2px; }
+.drawer label.provider-card { display: flex; margin: 0; }
+.drawer .field-label { margin-top: 10px; }
+.test-row { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-top: 12px; }
+.test-result { display: flex; align-items: flex-start; gap: 8px; margin: 0; font-size: 0.9rem; }
+.test-result:empty { display: none; }
+.test-result svg { width: 20px; height: 20px; flex: none; }
+.result-ok svg { color: var(--outcome-booked); }
+.result-ok { color: var(--outcome-booked); font-weight: 600; }
+.result-fail svg { color: var(--outcome-hungup); }
+.result-wait svg { color: var(--teal); }
+.danger-zone .set-head { color: var(--outcome-hungup); }
+.danger-zone p { margin: 0 0 10px; }
+.drawer-footer { position: sticky; bottom: 0; margin-top: auto; display: flex; gap: 10px; padding: 14px 24px; background: var(--card); border-top: 1px solid var(--border); box-shadow: 0 -6px 16px rgba(58, 36, 24, 0.06); }
+.drawer-footer .btn { flex: 1; }
+
+/* ---------------------------------------------------------------------------
+   Past calls: empty state and the Record
+   --------------------------------------------------------------------------- */
+.empty-state { text-align: center; padding: 40px 20px; background: var(--card); border: 1px dashed var(--border); border-radius: var(--radius-lg); }
+.empty-icon { width: 72px; height: 72px; margin: 0 auto 12px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
+.empty-icon svg { width: 34px; height: 34px; }
+.empty-state h3 { margin: 0 0 6px; font-size: 1.3rem; }
+.empty-state p { margin: 0 auto 18px; max-width: 46ch; }
+.empty-note { margin-top: 10px; text-align: center; }
+.record-head { display: flex; align-items: center; gap: 10px; margin: 28px 0 4px; }
+.record-head svg { width: 20px; height: 20px; color: var(--accent); }
+.record-grid { display: grid; grid-template-columns: minmax(240px, 1fr) 2fr; gap: var(--gap); align-items: start; margin-top: 10px; }
+.record-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow); padding: 12px 16px; overflow-x: auto; }
+.record-card h4 { margin: 2px 0 8px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.record-table { width: 100%; border-collapse: collapse; max-width: none; }
+.record-table th { text-align: left; font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.record-table td { padding: 8px; border-bottom: 1px solid var(--border); }
+.record-table tr:last-child td { border-bottom: none; }
+.record-table td.num { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+@media (max-width: 760px) { .record-grid, .provider-cards { grid-template-columns: 1fr; } }
