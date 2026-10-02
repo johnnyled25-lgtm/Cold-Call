@@ -1,11 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  addStudentTurn, addSilenceTurn, applyExecTurn, recordRetry, endByStudent, endIfTimeUp, dropCall,
+  addStudentTurn, addSilenceTurn, applyExecTurn, recordRetry, endByStudent, endIfTimeUp, dropCall, B2B_RULES, B2C_RULES,
 } from "../js/callState.js";
-import { DELTA_MIN, DELTA_MAX, ACCEPTANCE_THRESHOLD, SILENCE_COST, CALL_TIME_CAP_MINUTES, OUTCOMES } from "../js/constants.js";
+import {
+  DELTA_MIN, DELTA_MAX, ACCEPTANCE_THRESHOLD, B2C_ACCEPTANCE_THRESHOLD, SILENCE_COST, CALL_TIME_CAP_MINUTES, OUTCOMES,
+} from "../js/constants.js";
 import { COPY } from "../js/copy.js";
-import { ctx, newCall, reply } from "./helpers.js";
+import { ctx, newCall, reply, ctxB2C, newCallB2C } from "./helpers.js";
 
 const say = (state, text = "Hi, quick question about your drivers.") => addStudentTurn(state, { text, at: 1 });
 const lastTurn = (s) => s.turns[s.turns.length - 1];
@@ -161,4 +163,36 @@ test("state is never changed in place", () => {
   const snapshot = JSON.stringify(before);
   applyExecTurn(before, reply({ patienceDelta: -20, revealPainId: "overtime-creep", raiseObjectionId: "no-time" }), ctx);
   assert.equal(JSON.stringify(before), snapshot);
+});
+
+// --- B2B_RULES / B2C_RULES: every function above takes an optional last "rules"
+// argument, defaulting to B2B_RULES, so all the tests above (which never pass one)
+// prove the default reproduces today's exact behavior. These confirm the override.
+test("omitting rules keeps today's B2B behavior", () => {
+  const asked = addStudentTurn(newCall(ACCEPTANCE_THRESHOLD + 5), { text: "Could we find 15 minutes next week?" });
+  assert.equal(asked.askMade, true);
+  const booked = applyExecTurn(asked, reply({ acceptsMeeting: true, patienceDelta: 2 }), ctx);
+  assert.equal(booked.outcome, OUTCOMES.MEETING_BOOKED);
+});
+
+test("B2C_RULES: a clear ask at or above the B2C threshold closes the sale", () => {
+  const asked = addStudentTurn(newCallB2C(B2C_ACCEPTANCE_THRESHOLD - 1), { text: "Can we go ahead and set you up?" }, B2C_RULES);
+  assert.equal(asked.askMade, true);
+  const closed = applyExecTurn(asked, reply({ acceptsMeeting: true, patienceDelta: 5 }), ctxB2C, {}, B2C_RULES);
+  assert.equal(closed.outcome, OUTCOMES.SALE_CLOSED);
+  assert.equal(closed.meetingBooked, true);
+});
+
+test("B2C_RULES: below the B2C threshold, acceptance is ignored just like B2B", () => {
+  const asked = addStudentTurn(newCallB2C(B2C_ACCEPTANCE_THRESHOLD - 10), { text: "Can we go ahead and set you up?" }, B2C_RULES);
+  const result = applyExecTurn(asked, reply({ acceptsMeeting: true, patienceDelta: 0 }), ctxB2C, {}, B2C_RULES);
+  assert.equal(result.ended, false);
+  assert.equal(result.meetingBooked, false);
+});
+
+test("B2C_RULES: ending by student uses the B2C outcome words", () => {
+  const noAsk = endByStudent(newCallB2C(50), 5, B2C_RULES);
+  assert.equal(noAsk.outcome, OUTCOMES.NO_ASK); // shared across both modes
+  const asked = addStudentTurn(newCallB2C(50), { text: "Can we go ahead and set you up?" }, B2C_RULES);
+  assert.equal(endByStudent(asked, 5, B2C_RULES).outcome, OUTCOMES.ASKED_NO_SALE);
 });

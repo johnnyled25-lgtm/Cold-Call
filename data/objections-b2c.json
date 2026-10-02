@@ -1,0 +1,42 @@
+[
+  {
+    "id": "already-have-provider",
+    "line": "We already have someone who does that.",
+    "whatHandlesIt": "Asks what they're currently paying or how it's working, rather than just badmouthing the competitor, and offers one concrete reason to compare."
+  },
+  {
+    "id": "cant-afford",
+    "line": "I really can't afford anything extra right now.",
+    "whatHandlesIt": "Acknowledges the cost concern and offers a specific, smaller number or a way to see the price before asking again, instead of just repeating the pitch."
+  },
+  {
+    "id": "ask-spouse",
+    "line": "I'd need to talk to my husband about this first.",
+    "whatHandlesIt": "Treats it as reasonable, not a brush-off, and offers something concrete she can bring back to that conversation, like a price or a one-line summary."
+  },
+  {
+    "id": "not-interested",
+    "line": "We're not interested, but thanks anyway.",
+    "whatHandlesIt": "Asks one specific question about their situation instead of repeating the pitch, to find out whether 'not interested' means 'not a fit' or 'not convinced yet.'"
+  },
+  {
+    "id": "how-did-you-get-number",
+    "line": "How did you even get this number?",
+    "whatHandlesIt": "Answers plainly and briefly, then gets back to a real reason for the call instead of getting defensive."
+  },
+  {
+    "id": "sounds-like-scam",
+    "line": "This sounds like one of those scam calls.",
+    "whatHandlesIt": "Doesn't get flustered or pushy; offers something verifiable, like a company name or a callback number, instead of just insisting it's legitimate."
+  },
+  {
+    "id": "tried-before",
+    "line": "We tried something like this before and it wasn't worth it.",
+    "whatHandlesIt": "Asks what went wrong last time instead of assuming this time is different, and only then explains what's actually different."
+  },
+  {
+    "id": "send-info",
+    "line": "Just mail me some information.",
+    "whatHandlesIt": "Agrees to send something, then asks one short question so the follow-up can be about something they actually care about."
+  }
+]

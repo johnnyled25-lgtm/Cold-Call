@@ -9,7 +9,8 @@ export const COPY = {
   // Header tabs and moving around the app.
   nav: {
     home: "Home",
-    briefing: "Briefing",
+    briefing: "B2B",
+    b2c: "B2C",
     backToPast: "← Back to Past calls",
     leaveTitle: "End this call?",
     leaveBody: "It will be saved to Past calls, where you can read its debrief.",
@@ -21,6 +22,7 @@ export const COPY = {
   titles: {
     home: "Cold Call Lab",
     briefing: "Briefing · Cold Call Lab",
+    b2c: "B2C Briefing · Cold Call Lab",
     call: "On a call · Cold Call Lab",
     debrief: "Debrief · Cold Call Lab",
     past: "Past calls · Cold Call Lab",
@@ -272,6 +274,7 @@ export const COPY = {
   pastCalls: {
     navLink: "Past calls",
     heading: "Past calls",
+    modeGroup: "Show calls from",
     note: "Your last 20 calls, saved in this browser only. Audio is never saved.",
     empty: "No calls yet. Your calls will appear here after you make them.",
     emptyTitle: "No calls yet",
@@ -387,6 +390,81 @@ export const COPY = {
     other: "Something went wrong with the provider. Try again in a moment.",
   },
 };
+
+// Only the leaf strings that genuinely differ for B2C: the goal is closing a sale on
+// the call, not booking a future meeting. Everything not listed here (patience,
+// pain points, objections, the transcript, plain facts, Settings, errors…) reads
+// exactly the same for both modes, so it isn't repeated. Merged over COPY by
+// copyFor(mode) below — never read directly.
+export const B2C_COPY = {
+  briefing: {
+    goal: "Close the sale today. There's no following up next week.",
+    knowSize: "Household",
+    knowSetup: "Their situation today",
+  },
+  call: {
+    goalChip: "Goal: close the sale",
+    briefSetup: "Their situation",
+  },
+  exec: {
+    describe: {
+      ringing: "{first}'s phone is ringing. {first} glances at the screen.",
+    },
+  },
+  notReadyLine: "I'm not buying anything right now.",
+  pickupLines: ["Hello?", "Yeah, hello?", "{first} here.", "Hello, this is {first}."],
+  debrief: {
+    outcomeLines: {
+      saleClosed: "Sale closed after {time}.",
+      askedNoSale: "You asked, and ended the call after {time} without a sale.",
+      noAsk: "You ended the call after {time} without asking for the sale.",
+    },
+    chartThreshold: "Sale possible ({value}+)",
+    askHeading: "The ask",
+    askNone: "You didn't ask for the sale. The goal of the call is to close the sale today.",
+    askCountOne: "You asked for the sale once.",
+    askCountMany: "You asked for the sale {n} times.",
+    askBookedBy: "Ask {n} closed the sale.",
+    askNoneBooked: "None of your asks closed the sale.",
+    askBooked: "Closed the sale",
+    askNotBooked: "No sale",
+  },
+  outcomes: {
+    saleClosed: "Sale closed",
+    askedNoSale: "Asked, no sale",
+  },
+  explainers: {
+    briefing: {
+      what: "This card is everything you know before you dial: who you're calling, their situation, and what you're selling. They have problems your offer could help with, but they won't mention them unless you ask the right kind of question. Your goal is to close the sale on this call.",
+      why: "Real sales calls start with a little homework. Knowing their situation lets you open with a reason that matters to them instead of a script. Read the card, pick one question you'd ask, then call.",
+    },
+    call: {
+      what: "The person has a patience level you can't see. Every line you say moves it up or down. After the call, the debrief shows you the whole thing, line by line, so you can see exactly where you won or lost them.",
+      why: "On a real call you can't see what the other person is thinking; you only get their words and their manner. Here, body language is your only clue. Leaning in means it's landing. Looking away means you're losing them. Keep it short, ask about their situation, and ask for the sale when it makes sense.",
+    },
+    debrief: {
+      what: "This is the call again, with the other side's hidden half shown: how their patience moved after each of your lines and why, which problems you uncovered, and which objections came up. The reasons are the AI's judgment of how this person would react, not a verdict on you.",
+      why: "One call teaches more when you can see where it turned. Find the line that cost the most, think about what you'd say instead, and call again to test it. There's no score here on purpose: the skill is reading the person, not chasing a number.",
+    },
+  },
+};
+
+// Merges B2C_COPY's overrides over COPY, section by section, for mode "b2c". Mode
+// "b2b" (the default) returns COPY itself, untouched.
+export function copyFor(mode) {
+  if (mode !== "b2c") return COPY;
+  const out = { ...COPY };
+  for (const [key, value] of Object.entries(B2C_COPY)) out[key] = deepMergeSection(COPY[key], value);
+  return out;
+}
+
+// Replaces strings and arrays wholesale; merges plain objects key by key, recursively.
+function deepMergeSection(base, overrides) {
+  if (Array.isArray(overrides) || typeof overrides !== "object" || overrides === null) return overrides;
+  const out = { ...base };
+  for (const [key, value] of Object.entries(overrides)) out[key] = deepMergeSection(base?.[key], value);
+  return out;
+}
 
 // Fill {placeholders} in a copy string: fill("Hi {name}", { name: "Mike" }) → "Hi Mike".
 export function fill(template, values) {

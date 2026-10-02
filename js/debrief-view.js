@@ -8,12 +8,20 @@ import { mountExec, buildExecPortraitSvg } from "./exec-drawing.js";
 import { iconEl } from "./icons.js";
 import { outcomePose } from "./pose.js";
 
-const d = COPY.debrief;
+// c: the resolved copy for the call currently being drawn (copyFor(mode)), d: its
+// "debrief" section. Both default to COPY (B2B) and are reassigned at the top of
+// renderDebrief/renderPastCalls, before any of the helper functions below run — so
+// every helper in this file sees the right mode's words without taking its own
+// "copy" parameter.
+let c = COPY;
+let d = COPY.debrief;
+let threshold = ACCEPTANCE_THRESHOLD; // the chart/sparkline's dashed line; B2C uses its own number
 
 // Outcomes carry an icon AND a word, so they never depend on color alone.
 export const OUTCOME_ICON = {
   [OUTCOMES.MEETING_BOOKED]: "✓", [OUTCOMES.HUNG_UP]: "✕", [OUTCOMES.ASKED_NO_MEETING]: "–",
   [OUTCOMES.NO_ASK]: "–", [OUTCOMES.TIMES_UP]: "⏱", [OUTCOMES.DROPPED]: "!",
+  [OUTCOMES.SALE_CLOSED]: "✓", [OUTCOMES.ASKED_NO_SALE]: "–",
 };
 
 function el(tag, props = {}, children = []) {
@@ -36,7 +44,7 @@ function svgEl(tag, attrs = {}, text = null) {
 function outcomeBadge(outcome) {
   return el("span", { className: `outcome-badge outcome-${outcome}` }, [
     el("span", { className: "outcome-icon", text: OUTCOME_ICON[outcome] || "", attrs: { "aria-hidden": "true" } }),
-    ` ${COPY.outcomes[outcome] || ""}`,
+    ` ${c.outcomes[outcome] || ""}`,
   ]);
 }
 
@@ -58,7 +66,7 @@ function portraitOf(persona, idPrefix, size = "") {
   return box;
 }
 
-const quoteLine = (change) => (change.silence ? d.silence : change.studentText != null ? `${COPY.call.you}: “${change.studentText}”` : null);
+const quoteLine = (change) => (change.silence ? d.silence : change.studentText != null ? `${c.call.you}: “${change.studentText}”` : null);
 
 // ---------------------------------------------------------------------------
 // The patience chart: one line, hand-drawn SVG, with a tooltip per point.
@@ -82,8 +90,8 @@ export function buildPatienceChart(a) {
   svg.append(svgEl("text", { class: "chart-axis", x: x(0), y: H - 8, "text-anchor": n <= 1 ? "middle" : "start" }, d.chartStart));
 
   // Where a meeting becomes possible.
-  svg.append(svgEl("line", { class: "chart-threshold", x1: m.l, x2: W - m.r, y1: y(ACCEPTANCE_THRESHOLD), y2: y(ACCEPTANCE_THRESHOLD) }));
-  svg.append(svgEl("text", { class: "chart-axis", x: W - m.r, y: y(ACCEPTANCE_THRESHOLD) - 6, "text-anchor": "end" }, fill(d.chartThreshold, { value: ACCEPTANCE_THRESHOLD })));
+  svg.append(svgEl("line", { class: "chart-threshold", x1: m.l, x2: W - m.r, y1: y(threshold), y2: y(threshold) }));
+  svg.append(svgEl("text", { class: "chart-axis", x: W - m.r, y: y(threshold) - 6, "text-anchor": "end" }, fill(d.chartThreshold, { value: threshold })));
 
   const crosshair = svgEl("line", { class: "chart-crosshair", x1: 0, x2: 0, y1: m.t, y2: H - m.b, visibility: "hidden" });
   svg.append(crosshair);
@@ -161,7 +169,13 @@ export function buildPatienceChart(a) {
 // The debrief, in the brief's order
 // ---------------------------------------------------------------------------
 // handlers: { onCallAgain, onCopy } ; transcriptText: the plain-text version.
-export function renderDebrief(container, a, { onCallAgain, onNewExec, onPastCalls, onCopy, transcriptText }) {
+// copy: the resolved copy for this call's mode (copyFor(mode)); acceptanceThreshold:
+// that mode's threshold (ACCEPTANCE_THRESHOLD or B2C_ACCEPTANCE_THRESHOLD). Both
+// default to B2B so existing callers are unaffected.
+export function renderDebrief(container, a, { onCallAgain, onNewExec, onPastCalls, onCopy, transcriptText, copy = COPY, acceptanceThreshold = ACCEPTANCE_THRESHOLD }) {
+  c = copy;
+  d = copy.debrief;
+  threshold = acceptanceThreshold;
   const first = a.firstName;
 
   // What to do next, right in the banner (no scrolling to the bottom).
@@ -170,7 +184,7 @@ export function renderDebrief(container, a, { onCallAgain, onNewExec, onPastCall
     again.addEventListener("click", onCallAgain);
     const fresh = el("button", { className: "btn", text: d.newExec, attrs: { type: "button" } });
     fresh.addEventListener("click", onNewExec);
-    const past = el("button", { className: "btn", text: COPY.pastCalls.navLink, attrs: { type: "button" } });
+    const past = el("button", { className: "btn", text: c.pastCalls.navLink, attrs: { type: "button" } });
     past.addEventListener("click", onPastCalls);
     return el("div", { className: "banner-actions" }, [again, fresh, past]);
   }
@@ -178,7 +192,7 @@ export function renderDebrief(container, a, { onCallAgain, onNewExec, onPastCall
   // 1. Outcome: a banner with the exec in their final pose (writing the note, or the
   // phone back on the desk), the outcome word with its icon, and three plain facts.
   const art = el("div", { className: "outcome-art" });
-  mountExec(art, a.persona, COPY.exec.describe).setPose(outcomePose(a.outcome, a.finalPatience));
+  mountExec(art, a.persona, c.exec.describe).setPose(outcomePose(a.outcome, a.finalPatience));
   const outcome = el("section", { className: `outcome-banner outcome-${a.outcome}`, attrs: { "aria-label": d.outcomeEyebrow } }, [
     art,
     el("div", { className: "outcome-text" }, [
@@ -225,7 +239,7 @@ export function renderDebrief(container, a, { onCallAgain, onNewExec, onPastCall
     ? el("div", { className: "turn-grid" }, [
         el("figure", { className: "turn-quote" }, [
           el("blockquote", { text: t.silence ? d.silence : `“${t.studentText ?? ""}”` }),
-          el("figcaption", { className: "muted small", text: COPY.call.you }),
+          el("figcaption", { className: "muted small", text: c.call.you }),
         ]),
         el("div", { className: "turn-side" }, [
           el("div", { className: "turn-react" }, [
@@ -280,14 +294,14 @@ export function renderDebrief(container, a, { onCallAgain, onNewExec, onPastCall
   const ask = a.ask;
   const askSection = section(d.askHeading, ask.made
     ? [
-        el("p", { text: askSummary(a) }),
+        el("p", { text: askSummary(a, c) }),
         el("ol", { className: "ask-list" }, ask.asks.map((x) =>
           el("li", { className: x.booked ? "ask-booked" : "" }, [
             el("div", {}, [el("strong", { text: fill(d.askItem, { n: x.number, time: formatClock(x.atMs), line: x.lineNumber, total: ask.totalLines }) }), `: “${x.text}”`]),
             el("div", { className: "muted small", text: x.detectedBy === "phrase" && x.phrase ? fill(d.askByPhrase, { phrase: x.phrase }) : d.askByModel }),
             x.responseText != null ? el("div", { text: fill(d.askReply, { first, text: x.responseText }) }) : null,
             x.booked
-              ? el("div", { className: "outcome-badge outcome-meetingBooked" }, [el("span", { className: "outcome-icon", text: "✓", attrs: { "aria-hidden": "true" } }), ` ${d.askBooked}`])
+              ? el("div", { className: `outcome-badge outcome-${a.outcome}` }, [el("span", { className: "outcome-icon", text: "✓", attrs: { "aria-hidden": "true" } }), ` ${d.askBooked}`])
               : el("div", { className: "muted small", text: d.askNotBooked }),
           ]))),
       ]
@@ -338,8 +352,12 @@ export function renderDebrief(container, a, { onCallAgain, onNewExec, onPastCall
 // Past calls and the Record
 // ---------------------------------------------------------------------------
 // records: newest first. onOpen(record) reopens a debrief. formatDate(ms) → text.
-export function renderPastCalls(container, records, { onOpen, formatDate, onStart }) {
-  const p = COPY.pastCalls;
+// copy/acceptanceThreshold: the one mode these records belong to (Past calls shows
+// one mode at a time); both default to B2B.
+export function renderPastCalls(container, records, { onOpen, formatDate, onStart, copy = COPY, acceptanceThreshold = ACCEPTANCE_THRESHOLD, outcomeKeys }) {
+  c = copy;
+  threshold = acceptanceThreshold;
+  const p = c.pastCalls;
   if (!records.length) {
     const start = el("button", { className: "btn btn-primary btn-big", attrs: { type: "button" } }, [iconEl("phone"), el("span", { text: p.emptyStart })]);
     start.addEventListener("click", onStart);
@@ -362,7 +380,7 @@ export function renderPastCalls(container, records, { onOpen, formatDate, onStar
     const persona = r.ctx.persona;
     const length = formatClock((r.state.endedAt ?? r.state.startedAt) - r.state.startedAt);
     const series = patienceSeries(r.state);
-    const spark = sparkline(series, { width: 220, height: 44, reference: ACCEPTANCE_THRESHOLD });
+    const spark = sparkline(series, { width: 220, height: 44, reference: threshold });
     const sparkSvg = svgEl("svg", { viewBox: "0 0 220 44", class: "spark", "aria-hidden": "true", preserveAspectRatio: "none" });
     sparkSvg.append(
       svgEl("line", { class: "spark-ref", x1: 0, x2: 220, y1: spark.referenceY, y2: spark.referenceY }),
@@ -374,7 +392,7 @@ export function renderPastCalls(container, records, { onOpen, formatDate, onStar
 
     const open = el("button", { className: "card-open", text: p.open, attrs: {
       type: "button",
-      "aria-label": `${p.open}: ${fill(p.cardAria, { name: persona.name, outcome: COPY.outcomes[r.state.outcome] || "", date: formatDate(r.state.startedAt) })}`,
+      "aria-label": `${p.open}: ${fill(p.cardAria, { name: persona.name, outcome: c.outcomes[r.state.outcome] || "", date: formatDate(r.state.startedAt) })}`,
     } });
     open.addEventListener("click", () => onOpen(r));
 
@@ -401,7 +419,7 @@ export function renderPastCalls(container, records, { onOpen, formatDate, onStar
   });
   const list = el("ul", { className: "call-cards" }, cards);
 
-  const summary = recordSummary(records);
+  const summary = recordSummary(records, outcomeKeys);
   const outcomeRows = Object.entries(summary.byOutcome).map(([outcome, count]) =>
     el("tr", {}, [el("td", {}, outcomeBadge(outcome)), el("td", { className: "num", text: String(count) })]));
   const painRows = summary.painRows.map((r) =>

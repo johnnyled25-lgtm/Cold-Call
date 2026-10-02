@@ -7,14 +7,32 @@
 // The student line that caused the change is the student turn right before it.
 
 import {
-  PATIENCE_MIN, PATIENCE_MAX, DELTA_MIN, DELTA_MAX, ACCEPTANCE_THRESHOLD,
-  SILENCE_COST, CALL_TIME_CAP_MINUTES, OUTCOMES,
+  PATIENCE_MIN, PATIENCE_MAX, DELTA_MIN, DELTA_MAX, ACCEPTANCE_THRESHOLD, B2C_ACCEPTANCE_THRESHOLD,
+  SILENCE_COST, CALL_TIME_CAP_MINUTES, OUTCOMES, CLOSE_PHRASES,
 } from "./constants.js";
 import { COPY, fill } from "./copy.js";
 import { detectAsk } from "./askDetect.js";
 
 // Which event goes in a turn's single "event" field when several happen at once.
 const EVENT_PRIORITY = ["meeting_accepted", "retry", "silence", "objection_handled", "pain_revealed", "objection_raised", "ask_made"];
+
+// The rules that decide whether an ask can be won, and which outcome words apply.
+// Every function below takes this as an optional last argument, defaulting to
+// today's B2B rules, so no existing caller or test needs to change. B2C calls pass
+// B2C_RULES (below) instead.
+export const B2B_RULES = {
+  acceptanceThreshold: ACCEPTANCE_THRESHOLD,
+  askPhrases: undefined, // undefined => detectAsk's own default (ASK_PHRASES)
+  wonOutcome: OUTCOMES.MEETING_BOOKED,
+  askedNoWinOutcome: OUTCOMES.ASKED_NO_MEETING,
+};
+
+export const B2C_RULES = {
+  acceptanceThreshold: B2C_ACCEPTANCE_THRESHOLD,
+  askPhrases: CLOSE_PHRASES,
+  wonOutcome: OUTCOMES.SALE_CLOSED,
+  askedNoWinOutcome: OUTCOMES.ASKED_NO_SALE,
+};
 
 export const clampPatience = (p) => Math.min(PATIENCE_MAX, Math.max(PATIENCE_MIN, Math.round(p)));
 export const clampDelta = (d) => Math.min(DELTA_MAX, Math.max(DELTA_MIN, Math.round(d)));
@@ -78,10 +96,10 @@ export function createCallState({ seed, persona, offer, mood, pickupLine, starte
 // The student said (or typed) something. Detects the ask; never changes patience.
 // EVERY asking line is marked (event "ask_made", with the phrase that caught it), so
 // the debrief can list them all. The state's askTurnIndex/askPhrase keep the first.
-export function addStudentTurn(state, { text, inputMode = "typed", at = null }) {
+export function addStudentTurn(state, { text, inputMode = "typed", at = null }, rules = B2B_RULES) {
   if (state.ended) return state;
   const clean = String(text || "").trim();
-  const ask = detectAsk(clean);
+  const ask = rules.askPhrases ? detectAsk(clean, rules.askPhrases) : detectAsk(clean);
   const events = ask.asked ? ["ask_made"] : [];
   const turn = makeTurn(state, { speaker: "student", text: clean, inputMode, events, at, extra: ask.asked ? { askPhrase: ask.phrase } : {} });
   const next = { ...state, turns: [...state.turns, turn] };
@@ -101,7 +119,7 @@ export function addSilenceTurn(state, { at = null } = {}) {
 
 // Applies the exec's (already shape-checked) reply. ctx = { persona }.
 // opts = { silence, latencyMs, at }.
-export function applyExecTurn(state, reply, ctx, opts = {}) {
+export function applyExecTurn(state, reply, ctx, opts = {}, rules = B2B_RULES) {
   if (state.ended) return state;
   const { persona } = ctx;
   const events = [];
@@ -163,10 +181,10 @@ export function applyExecTurn(state, reply, ctx, opts = {}) {
     if (reply.acceptsMeeting) ignored.push("acceptance_ignored_hung_up");
   } else if (reply.acceptsMeeting) {
     if (!ask.askMade) ignored.push("acceptance_ignored_no_ask");
-    else if (after < ACCEPTANCE_THRESHOLD) ignored.push("acceptance_ignored_below_threshold");
+    else if (after < rules.acceptanceThreshold) ignored.push("acceptance_ignored_below_threshold");
     else {
       events.push("meeting_accepted");
-      ending = { ended: true, meetingBooked: true, outcome: OUTCOMES.MEETING_BOOKED, endedAt: opts.at ?? null };
+      ending = { ended: true, meetingBooked: true, outcome: rules.wonOutcome, endedAt: opts.at ?? null };
     }
   }
 
@@ -196,9 +214,9 @@ export function recordRetry(state, { at = null, latencyMs = null } = {}) {
 }
 
 // The student pressed End call. Never "Hung up": that word means the exec hung up.
-export function endByStudent(state, now) {
+export function endByStudent(state, now, rules = B2B_RULES) {
   if (state.ended) return state;
-  return { ...state, ended: true, endedAt: now, outcome: state.askMade ? OUTCOMES.ASKED_NO_MEETING : OUTCOMES.NO_ASK };
+  return { ...state, ended: true, endedAt: now, outcome: state.askMade ? rules.askedNoWinOutcome : OUTCOMES.NO_ASK };
 }
 
 // Ends the call if it has reached the time cap. Returns the state unchanged otherwise.

@@ -32,9 +32,28 @@ Without it, the rule "every drawn persona/offer pair is a real fit (≥ 2 addres
 
 `{ id, line, whatHandlesIt }`. `whatHandlesIt` is used by the model to judge whether the objection was handled, and by the debrief.
 
+## B2C: personas-b2c.json, offers-b2c.json, objections-b2c.json
+
+Same three schemas above, exactly, for the B2C tab (ringing up a random consumer
+instead of a business exec). The fields are just **reinterpreted** so no rendering
+code has to branch by mode:
+
+| Field | B2B meaning | B2C meaning |
+|---|---|---|
+| `title` | Job title | A short descriptor ("Homeowner", "Retiree") |
+| `company` | Employer | Neighborhood or town |
+| `industry` | Line of business | Household / life-stage description |
+| `companySize` | Headcount | Household composition |
+
+Everything else (`currentSetup`, `personality`, `appearance`, `voice`, `painPoints`,
+`objections`, `moods`) means exactly what it does for B2B. B2C personas draw their
+`moods` from `MOODS_B2C` (`js/constants.js`), not `MOODS` — a person at home doesn't
+have "meetings," so the wording is its own small set with the same starting-patience
+values. The "real fit" rule (`MIN_FIT_PAIN_POINTS`) applies identically.
+
 ## Moods (in `js/constants.js`)
 
-`{ id, label, startingPatience, note }`. Drawn at call start, shown only in the debrief.
+`{ id, label, startingPatience, note }`. Drawn at call start, shown only in the debrief. `MOODS` is B2B; `MOODS_B2C` is its B2C counterpart.
 
 ## Call state (in memory during a call)
 

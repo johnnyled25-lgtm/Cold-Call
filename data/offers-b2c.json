@@ -1,0 +1,44 @@
+[
+  {
+    "id": "northgate-shield",
+    "company": "Northgate Home Security",
+    "product": "Northgate Shield",
+    "oneLiner": "A self-install wireless home security system with 24/7 professional monitoring and no long-term contract.",
+    "valuePoints": [
+      "Professional monitoring around the clock, with a call to you first before anyone's dispatched.",
+      "Self-install in under an hour — no technician visit required, though one's available if you want it.",
+      "A battery backup and cellular connection, so it still works if the power or the wifi goes out.",
+      "No long-term contract; cancel any time with 30 days' notice."
+    ],
+    "priceHint": "About $35 a month after a $99 one-time equipment fee. No contract required.",
+    "fitsPersonaIds": ["ruiz-household", "chen-household"]
+  },
+  {
+    "id": "greenline-care",
+    "company": "Greenline Pest Solutions",
+    "product": "Greenline Quarterly Care",
+    "oneLiner": "A quarterly pest control visit that covers ants, spiders, rodents, and seasonal pests, with free re-treats between visits.",
+    "valuePoints": [
+      "A licensed technician visits every quarter and treats for ants, spiders, rodents, and seasonal pests.",
+      "Free re-treats between visits if anything comes back — just call.",
+      "Covers the inside and outside of the home, plus the crawl space and attic on request.",
+      "A written report after every visit, so you know exactly what was found and treated."
+    ],
+    "priceHint": "About $45 per quarterly visit. No contract; cancel after any visit.",
+    "fitsPersonaIds": ["chen-household", "whitfield-household"]
+  },
+  {
+    "id": "trustworth-complete",
+    "company": "Trustworth Home Warranty",
+    "product": "Trustworth Complete",
+    "oneLiner": "A home warranty plan that covers repair or replacement of major appliances and home systems when they break down from normal wear.",
+    "valuePoints": [
+      "Covers repair or replacement of major appliances and home systems — furnace, water heater, AC, and more.",
+      "One flat service call fee per repair, no matter what the part or labor actually costs.",
+      "A technician is dispatched within 48 hours of a claim, day or night.",
+      "Transfers to a new owner for free if the house is sold."
+    ],
+    "priceHint": "About $55 a month, plus a $75 service call fee per repair. No home inspection required to start.",
+    "fitsPersonaIds": ["higgins-household", "delgado-household"]
+  }
+]

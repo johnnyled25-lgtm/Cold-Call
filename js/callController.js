@@ -4,13 +4,22 @@
 // send(request) must return the model's raw text, or throw a ProviderError.
 // Provider errors are NOT caught here; the screen decides how to end the call.
 
-import { buildExecRequest } from "./execPrompt.js";
+import { buildExecRequest as buildExecRequestB2B } from "./execPrompt.js";
 import { parseExecReply } from "./replyParser.js";
-import { applyExecTurn, recordRetry } from "./callState.js";
+import { applyExecTurn, recordRetry, B2B_RULES } from "./callState.js";
 import { meetingDecision } from "./meetingCheck.js";
 import { COPY } from "./copy.js";
 
-export async function runExecTurn(state, ctx, sendToProvider, { silence = false, now = () => Date.now() } = {}) {
+// opts may override the engine for a different mode (B2C): buildExecRequest builds
+// the provider request, closeDecision checks the reply against the rules (shaped
+// like meetingCheck.js's meetingDecision), notReadyLine replaces a line that
+// wrongly agreed, and rules picks the acceptance threshold and outcome words
+// (callState.js's B2B_RULES/B2C_RULES). All default to today's B2B behavior, so no
+// existing caller needs to change.
+export async function runExecTurn(state, ctx, sendToProvider, {
+  silence = false, now = () => Date.now(),
+  buildExecRequest = buildExecRequestB2B, closeDecision = meetingDecision, notReadyLine = COPY.notReadyLine, rules = B2B_RULES,
+} = {}) {
   const startedAt = now();
   const attempts = [];
 
@@ -41,17 +50,18 @@ export async function runExecTurn(state, ctx, sendToProvider, { silence = false,
   const fixes = [];
 
   if (reply) {
-    // The exec's words must never contradict the call state about the meeting.
-    let decision = meetingDecision(state, reply, { silence });
+    // The exec's words must never contradict the call state about the meeting (or,
+    // in B2C, the sale).
+    let decision = closeDecision(state, reply, { silence });
 
-    // Agreed to a meeting the rules don't allow: ask once for a line that doesn't agree.
+    // Agreed the rules don't allow: ask once for a line that doesn't agree.
     if (decision.contradiction === "accept_not_allowed") {
       raw = await send(buildExecRequest(state, ctx, { silence, meetingRepair: true, now: startedAt }));
       const again = parseExecReply(raw);
       attempts.push({ raw, error: again.ok ? null : again.error, repair: "meeting" });
       if (again.ok) {
         reply = again.reply;
-        decision = meetingDecision(state, reply, { silence });
+        decision = closeDecision(state, reply, { silence });
       }
       fixes.push("meeting_repair_requested");
     }
@@ -59,7 +69,7 @@ export async function runExecTurn(state, ctx, sendToProvider, { silence = false,
     // Still agreeing: keep the reply's patience change and reason, but replace the
     // line with one that doesn't agree, and don't book.
     if (decision.contradiction === "accept_not_allowed") {
-      reply = { ...reply, acceptsMeeting: false, say: COPY.notReadyLine };
+      reply = { ...reply, acceptsMeeting: false, say: notReadyLine };
       fixes.push("line_replaced_not_ready");
     }
     // The rules allow it and the words agree, but the flag was left off: the exec
@@ -73,7 +83,7 @@ export async function runExecTurn(state, ctx, sendToProvider, { silence = false,
   const at = now();
   const latencyMs = at - startedAt;
   const next = reply
-    ? applyExecTurn(state, reply, ctx, { silence, latencyMs, at, fixes })
+    ? applyExecTurn(state, reply, ctx, { silence, latencyMs, at, fixes }, rules)
     : recordRetry(state, { at, latencyMs });
 
   return { state: next, reply, attempts, latencyMs, fixes };

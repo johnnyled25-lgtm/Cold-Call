@@ -1,0 +1,228 @@
+[
+  {
+    "id": "ruiz-household",
+    "name": "Dana Ruiz",
+    "title": "Homeowner",
+    "company": "Fairwood Heights",
+    "industry": "Young family, both parents work full time",
+    "companySize": "Married, two kids under 10, one dog",
+    "currentSetup": "A doorbell camera she bought and installed herself about two years ago; no other security system, no monitoring.",
+    "personality": "Practical and a little guarded with sales calls, but genuinely rattled by the porch thefts. Juggling two kids and a full-time job, so she wants the short version. Warms up fast to anyone who sounds like they've actually thought about her specific situation.",
+    "appearance": {
+      "skinTone": "medium",
+      "hair": "long",
+      "hairColor": "brown",
+      "attire": "sweater",
+      "glasses": false
+    },
+    "voice": {
+      "type": "female",
+      "rate": 1.0,
+      "pitch": 1.0
+    },
+    "painPoints": [
+      {
+        "id": "porch-theft",
+        "text": "Two packages have been stolen off the porch in the last few months, and she only found out when the delivery app said \"delivered.\"",
+        "earnedBy": "asks what happens with packages when nobody's home, or whether anything's gone missing",
+        "addressedBy": ["northgate-shield"]
+      },
+      {
+        "id": "no-visibility",
+        "text": "She has no idea what's happening at the house during the work day — the dog walker, a contractor, the kids coming home from school.",
+        "earnedBy": "asks how she knows what's going on at the house while she's at work",
+        "addressedBy": ["northgate-shield"]
+      },
+      {
+        "id": "flaky-camera",
+        "text": "The doorbell camera she bought herself keeps losing its wifi connection and missing exactly the moments that matter.",
+        "earnedBy": "asks about any camera or security setup she already has and how well it actually works",
+        "addressedBy": ["northgate-shield"]
+      }
+    ],
+    "objections": ["already-have-provider", "cant-afford", "ask-spouse", "sounds-like-scam"],
+    "moods": ["mid-dinner", "half-watching-tv", "normal-evening", "bored-weekend"]
+  },
+  {
+    "id": "higgins-household",
+    "name": "Walt Higgins",
+    "title": "Retiree",
+    "company": "Birchmont",
+    "industry": "Retired, lives alone",
+    "companySize": "Widower, one adult daughter nearby",
+    "currentSetup": "Fixes things himself when he can; calls a repairman out of the phone book when he can't, with no plan or warranty of any kind.",
+    "personality": "Retired and set in his ways, skeptical of anything that sounds like an upsell. Doesn't like being rushed, and will talk your ear off about a repair job once he trusts you're not just trying to sell him junk. Respects someone who's straight with him about the price.",
+    "appearance": {
+      "skinTone": "light",
+      "hair": "bald",
+      "hairColor": "gray",
+      "attire": "cardigan",
+      "glasses": true
+    },
+    "voice": {
+      "type": "male",
+      "rate": 0.94,
+      "pitch": 0.92
+    },
+    "painPoints": [
+      {
+        "id": "aging-furnace",
+        "text": "The furnace is original to the house from 1998, and he's been nursing it along himself for two winters.",
+        "earnedBy": "asks about the age of his major appliances or systems, or whether anything's been acting up",
+        "addressedBy": ["trustworth-complete"]
+      },
+      {
+        "id": "surprise-repair-bill",
+        "text": "A surprise $1,800 water heater repair last year came straight out of his retirement savings, with no warning it was coming.",
+        "earnedBy": "asks how he's handled a big, unexpected repair bill before",
+        "addressedBy": ["trustworth-complete"]
+      },
+      {
+        "id": "fixes-it-himself",
+        "text": "He fixes what he can himself, but admits he's starting to run into jobs he can't safely do anymore.",
+        "earnedBy": "asks what he does now when something breaks",
+        "addressedBy": ["trustworth-complete"]
+      }
+    ],
+    "objections": ["tried-before", "cant-afford", "not-interested", "send-info"],
+    "moods": ["mid-dinner", "half-watching-tv", "normal-evening", "bored-weekend"]
+  },
+  {
+    "id": "chen-household",
+    "name": "Priya Chen",
+    "title": "Homeowner",
+    "company": "Oakdale Crossing",
+    "industry": "First-time homeowners, new to the neighborhood",
+    "companySize": "Married, one-year-old at home, husband travels for work",
+    "currentSetup": "No pest control plan and no security system — both have been on the to-do list since they closed on the house six months ago.",
+    "personality": "New homeowner, still figuring out who to trust with home stuff. Polite but busy, with a one-year-old and a husband who travels for work. Takes things seriously once she understands they're a real problem and not just a sales pitch.",
+    "appearance": {
+      "skinTone": "medium-light",
+      "hair": "bob",
+      "hairColor": "black",
+      "attire": "button-down",
+      "glasses": false
+    },
+    "voice": {
+      "type": "female",
+      "rate": 1.05,
+      "pitch": 1.04
+    },
+    "painPoints": [
+      {
+        "id": "first-house-ants",
+        "text": "Their first house came with an ant problem in the kitchen that gets worse every summer.",
+        "earnedBy": "asks whether they've had any pest problems since moving in",
+        "addressedBy": ["greenline-care"]
+      },
+      {
+        "id": "found-mouse-droppings",
+        "text": "She found mouse droppings in the garage last month and hasn't told her husband yet because she doesn't want him to panic.",
+        "earnedBy": "asks about anything they've noticed in the garage, attic, or basement",
+        "addressedBy": ["greenline-care"]
+      },
+      {
+        "id": "new-neighborhood-unease",
+        "text": "It's their first house in a new neighborhood, and she doesn't know anyone yet, which makes her more careful about who's around when her husband's traveling.",
+        "earnedBy": "asks how safe she feels in the new neighborhood, or whether her husband travels",
+        "addressedBy": ["northgate-shield"]
+      },
+      {
+        "id": "no-security-yet",
+        "text": "They haven't set up any kind of security system yet — it's been on the list since they moved in six months ago.",
+        "earnedBy": "asks whether they have any security system in place",
+        "addressedBy": ["northgate-shield"]
+      }
+    ],
+    "objections": ["ask-spouse", "how-did-you-get-number", "cant-afford", "not-interested"],
+    "moods": ["mid-dinner", "half-watching-tv", "normal-evening", "bored-weekend"]
+  },
+  {
+    "id": "delgado-household",
+    "name": "Marcus Delgado",
+    "title": "Homeowner",
+    "company": "Pinehurst",
+    "industry": "Owns a fixer-upper, still renovating",
+    "companySize": "Single, lives alone, just bought his first house",
+    "currentSetup": "No warranty or service plan on anything; calls whichever repair company has availability when something breaks, and it's never cheap.",
+    "personality": "Frugal and a little defensive about money after sinking his savings into the renovation. Blunt, doesn't like small talk, and will push back hard on price before he pushes back on anything else. Comes around when the numbers actually make sense to him.",
+    "appearance": {
+      "skinTone": "medium-dark",
+      "hair": "curly",
+      "hairColor": "black",
+      "attire": "polo",
+      "glasses": false
+    },
+    "voice": {
+      "type": "male",
+      "rate": 1.02,
+      "pitch": 0.96
+    },
+    "painPoints": [
+      {
+        "id": "fixer-upper-appliances",
+        "text": "The house was a fixer-upper and most of the appliances came with it — nobody knows how old the dishwasher actually is.",
+        "earnedBy": "asks about the age or condition of his major appliances",
+        "addressedBy": ["trustworth-complete"]
+      },
+      {
+        "id": "tight-budget-after-reno",
+        "text": "Money's tight after the renovation, and one more big repair bill this year would really hurt.",
+        "earnedBy": "asks how a big unplanned expense would hit his budget right now",
+        "addressedBy": ["trustworth-complete"]
+      },
+      {
+        "id": "ac-already-acting-up",
+        "text": "The air conditioner has already started making a noise he's pretty sure means trouble.",
+        "earnedBy": "asks if anything's already showing signs of trouble",
+        "addressedBy": ["trustworth-complete"]
+      }
+    ],
+    "objections": ["cant-afford", "tried-before", "sounds-like-scam", "not-interested"],
+    "moods": ["mid-dinner", "half-watching-tv", "normal-evening", "bored-weekend"]
+  },
+  {
+    "id": "whitfield-household",
+    "name": "Grace Whitfield",
+    "title": "Homeowner",
+    "company": "Millbrook",
+    "industry": "Long-time homeowner, thinking about selling in a few years",
+    "companySize": "Married, grown kids who've moved out",
+    "currentSetup": "Handles pests herself with store-bought sprays and traps; no professional pest control plan.",
+    "personality": "Warm but anxious once pests come up — a termite scare last spring really shook her. Not naturally a pushover, though: she's been burned by a home-repair scam before and double-checks everything. Appreciates someone patient and specific rather than salesy.",
+    "appearance": {
+      "skinTone": "dark",
+      "hair": "short",
+      "hairColor": "gray",
+      "attire": "cardigan",
+      "glasses": true
+    },
+    "voice": {
+      "type": "female",
+      "rate": 0.96,
+      "pitch": 1.0
+    },
+    "painPoints": [
+      {
+        "id": "termites-found",
+        "text": "A termite inspector found early damage in the crawl space last spring, and she's been anxious about it since.",
+        "earnedBy": "asks whether they've ever had termites or other pest damage",
+        "addressedBy": ["greenline-care"]
+      },
+      {
+        "id": "diy-not-working",
+        "text": "She's been buying pest sprays from the hardware store herself, and the ants keep coming back within a couple of weeks.",
+        "earnedBy": "asks what she's already tried for pests",
+        "addressedBy": ["greenline-care"]
+      },
+      {
+        "id": "worried-about-resale",
+        "text": "She and her husband are thinking about selling in a few years, and she worries pest damage could hurt what the house is worth.",
+        "earnedBy": "asks whether they have any plans to sell, or worries about the house's value",
+        "addressedBy": ["greenline-care"]
+      }
+    ],
+    "objections": ["send-info", "ask-spouse", "not-interested", "sounds-like-scam"],
+    "moods": ["mid-dinner", "half-watching-tv", "normal-evening", "bored-weekend"]
+  }
+]

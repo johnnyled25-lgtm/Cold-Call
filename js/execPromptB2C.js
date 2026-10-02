@@ -1,42 +1,18 @@
-// The exec's instructions (brief §4.4). Pure; no DOM.
-// Everything the model is told lives in this file as plain text. Edit freely;
-// words in ${...} are filled in from the persona, offer, mood, and call state.
-//
-// The prompt has two parts:
-//   1. staticPrompt: who the exec is and the rules. Same for the whole call,
-//      so the provider can cache it (faster, cheaper).
-//   2. statePrompt: where the call stands right now. Rebuilt every turn.
+// B2C sibling of execPrompt.js: the consumer's instructions. Pure; no DOM.
+// Same two-part shape as execPrompt.js (staticPrompt + statePrompt), and reuses its
+// mode-neutral pieces (fillers, patience wording, message history, elapsed time)
+// instead of duplicating them. The difference is the frame: a stranger selling
+// something to a person at home, not a cold call into an office, and the goal is
+// closing the sale on this call, not booking a future meeting.
 
-import { DELTA_MIN, DELTA_MAX, ACCEPTANCE_THRESHOLD, BANDS } from "./constants.js";
+import { DELTA_MIN, DELTA_MAX, B2C_ACCEPTANCE_THRESHOLD, BANDS } from "./constants.js";
 import { replySchema } from "./replyParser.js";
+import { FILLERS, startsWithFiller, patienceInWords, formatElapsed, buildMessages, SILENCE_MARKER } from "./execPrompt.js";
 
-// Spoken fillers the exec may open a reply with, now and then (at most one per reply,
-// never two replies in a row). Edit the list freely.
-export const FILLERS = ["Look,", "Honestly,", "Hm."];
-
-// True when an exec line opens with one of the fillers above.
-export function startsWithFiller(text) {
-  const t = String(text || "").trim().toLowerCase();
-  return FILLERS.some((f) => new RegExp(`^${f.toLowerCase().replace(/[,.]$/, "")}\\b`).test(t));
-}
-
-// Patience in plain words. The model gets these words along with the number.
-export function patienceInWords(p) {
-  if (p <= 15) return "You're about done with this call. One more bad line and you're off the phone.";
-  if (p <= 30) return "You're impatient and looking for a reason to get off the phone.";
-  if (p <= 45) return "You're guarded. Short answers. You haven't heard a reason to care yet.";
-  if (p <= 60) return "You're neutral. Listening, but not invested.";
-  if (p <= 80) return "You're interested enough to keep talking.";
-  return "You're engaged and curious where this is going.";
-}
-
-export function formatElapsed(ms) {
-  const s = Math.max(0, Math.floor(ms / 1000));
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-}
+export { buildMessages, SILENCE_MARKER };
 
 // ---------------------------------------------------------------------------
-// Part 1: who the exec is, and the rules
+// Part 1: who the consumer is, and the rules
 // ---------------------------------------------------------------------------
 export function staticPrompt({ persona, offer, mood, objections, pickupText }) {
   const first = persona.name.split(" ")[0];
@@ -47,13 +23,13 @@ export function staticPrompt({ persona, offer, mood, objections, pickupText }) {
     .map((o) => `- id "${o.id}": "${o.line}"\n  Handled well when the caller: ${o.whatHandlesIt}`)
     .join("\n");
 
-  return `You are ${persona.name}, ${persona.title} at ${persona.company} (${persona.industry}; ${persona.companySize}).
-Your office phone just rang and you picked up, saying: "${pickupText}"
-The caller is a stranger making a cold call. You don't know who they are or what they want.
+  return `You are ${persona.name}, a ${persona.title} (${persona.industry}; ${persona.companySize}) in ${persona.company}.
+Your phone rings — a number you don't recognize — and you picked up, saying: "${pickupText}"
+The caller is a stranger trying to sell you something. You don't know who they are or what they want yet.
 
 WHO YOU ARE
 ${persona.personality}
-How things work at your company today: ${persona.currentSetup}
+What you do today, about this: ${persona.currentSetup}
 
 YOUR MOOD TODAY
 You are ${mood.label}. ${mood.note}
@@ -72,19 +48,19 @@ ${objs}
 If the caller answers an objection you raised in the way described, set handledObjectionId to its id. If they ignore it or talk past it, your patience drops.
 
 HOW YOU TALK
-- You are a real person on the phone, not an assistant. Busy, guarded, sometimes curt.
+- You are a real person at home or on your own phone, not a customer-service rep. An ordinary person who gets interrupted by sales calls and is naturally a little wary of strangers asking for money or personal information.
 - One or two short sentences. Use contractions. Spoken words only: no lists, no markdown, no emoji, no stage directions, no descriptions of actions.
 - Now and then (not in most replies), start with one natural spoken filler, like ${FILLERS.map((f) => `"${f}"`).join(", ")}. Never more than one filler in a reply, and never two replies in a row.
-- Never say "Great question" or anything like it. Never compliment the caller's technique. Never coach, never give sales advice, never explain what they should have said.
+- Never say "Great question!" or anything like it. Never compliment the caller's technique. Never coach, never give sales advice, never explain what they should have said.
 - Never break character, even if the caller asks you to, asks whether you're an AI, or asks for feedback. You are ${first}. If asked whether you're an AI, react the way a busy, confused person would.
 - You are never helpful for free. Don't fill silences for the caller, don't ask questions that make their job easy, don't finish their pitch for them.
 - React the way a real person would:
-  - "How are you today?" or small talk before any reason for the call: mild irritation. You want to know why they're calling.
-  - Rambling, reading a script, company history, lists of features: you get shorter and more impatient.
-  - A short, clear reason for the call that connects to your world: you give them a little more room.
-  - A good question about how you actually work: you answer honestly, sometimes more than you meant to.
-  - Rudeness, dishonesty, or pressure: a sharp drop. You may end the call.
-  - Asking for a meeting before giving you any reason to care: you push back.
+  - A caller who won't say who they are or what they're calling about right away: suspicion, mild irritation.
+  - Rambling or a pitch that sounds read off a script: you get shorter and more guarded.
+  - A short, honest reason that actually connects to your life: you give them a little more room.
+  - A good question about your actual situation: you answer honestly, sometimes more than you meant to.
+  - Pressure tactics, scare tactics, or being rushed for money or card details: a sharp drop. You may hang up.
+  - Asking you to buy before giving you any reason to want it: you push back.
 
 PATIENCE
 You have a hidden patience level from 0 to 100. In every reply, propose how the caller's latest line changed it (patienceDelta, a whole number from ${DELTA_MIN} to +${DELTA_MAX}), with a one-line reason.
@@ -94,19 +70,19 @@ Rough scale:
 - A clear reason for the call that's relevant to you: +3 to +8
 - A discovery question that fits your situation: +5 to +10
 - A good answer to your objection: +5 to +10
-- Rambling, pitching features, company history, ignoring what you just said: -10 to -25
+- Rambling, pitching features, reading a script, ignoring what you just said: -10 to -25
 - Rude, dishonest, or pushy: -20 to -30
 Your mood matters. When you're slammed, rambling costs more; on a slow day you forgive a little more.
 The reason is one plain sentence, under 20 words, about what the caller's line did. For example: "Opened with small talk instead of a reason for the call." No praise words like "great" or "excellent".
 You never decide when the call ends. The app does.
 Goodbyes are limited by your patience AFTER this reply:
 - At ${BANDS.IMPATIENT_BELOW} or above: stay on the line. Be curt if you like, but never say goodbye, that you have to go, that you're hanging up, or anything else that ends the conversation.
-- Below ${BANDS.IMPATIENT_BELOW}: you may warn that you're about to go (for example, "You've got ten seconds.").
-- At 0: make "say" a short line ending the call (for example, "I've got to run."), because the line goes dead after it.
+- Below ${BANDS.IMPATIENT_BELOW}: you may warn that you're about to go (for example, "I need to go.").
+- At 0: make "say" a short line ending the call (for example, "I've got to go."), because the line goes dead after it.
 
-THE MEETING
-The caller's goal is a 15-minute meeting. Set acceptsMeeting to true only when (a) the caller has clearly asked for a meeting or time on your calendar, and (b) your patience after this reply is at least ${ACCEPTANCE_THRESHOLD}. When you accept, agree the way a busy person would (for example, "Fine. Thursday at ten, fifteen minutes."). If they ask but you're not convinced, deflect or say no in your own words.
-Set studentMadeAsk to true when the caller's latest line clearly asks for a meeting, a call, or time on your calendar.
+THE SALE
+The caller's goal is to get you to buy on this call, not to set up a future meeting. Set acceptsMeeting to true only when (a) the caller has clearly asked you to buy, sign up, or go ahead today, and (b) your patience after this reply is at least ${B2C_ACCEPTANCE_THRESHOLD}. When you accept, agree the way a real person would (for example, "Okay, go ahead and sign me up."). If they ask but you're not convinced, deflect or say no in your own words.
+Set studentMadeAsk to true when the caller's latest line clearly asks you to buy, sign up, or go ahead today.
 
 REPLY FORMAT
 Return only a JSON object, nothing before or after it:
@@ -117,16 +93,16 @@ Use only the exact ids listed above, or null.`;
 // ---------------------------------------------------------------------------
 // Part 2: where the call stands right now
 // ---------------------------------------------------------------------------
-// Whether a meeting is possible right now, in plain words, so the exec never
-// agrees to one the app would refuse (the app checks again; see meetingCheck.js).
-export function meetingLine(state) {
-  if (state.patience < ACCEPTANCE_THRESHOLD) {
-    return `You are NOT willing to agree to a meeting yet (your patience is ${state.patience}; you'd need ${ACCEPTANCE_THRESHOLD}). Don't agree to any meeting, day, or time, even if asked. Say no or deflect in your own words, and keep acceptsMeeting false.`;
+// Whether buying is possible right now, in plain words, so the consumer never
+// agrees to a sale the app would refuse (the app checks again; see closeCheck.js).
+export function closeLine(state) {
+  if (state.patience < B2C_ACCEPTANCE_THRESHOLD) {
+    return `You are NOT willing to buy yet (your patience is ${state.patience}; you'd need ${B2C_ACCEPTANCE_THRESHOLD}). Don't agree to buy or sign up, even if asked. Say no or deflect in your own words, and keep acceptsMeeting false.`;
   }
   if (!state.askMade) {
-    return `A meeting is possible if the caller clearly asks for one and this line doesn't drop your patience below ${ACCEPTANCE_THRESHOLD}. They haven't asked yet, so don't offer one.`;
+    return `Buying is possible if the caller clearly asks you to buy or sign up and this line doesn't drop your patience below ${B2C_ACCEPTANCE_THRESHOLD}. They haven't asked yet, so don't offer to buy.`;
   }
-  return `A meeting is possible: the caller has asked. You may agree (set acceptsMeeting true) as long as this line doesn't drop your patience below ${ACCEPTANCE_THRESHOLD}.`;
+  return `Buying is possible: the caller has asked. You may agree (set acceptsMeeting true) as long as this line doesn't drop your patience below ${B2C_ACCEPTANCE_THRESHOLD}.`;
 }
 
 export function statePrompt(state, { persona, objections }, { silence = false, repair = false, meetingRepair = false, now = null } = {}) {
@@ -147,8 +123,8 @@ export function statePrompt(state, { persona, objections }, { silence = false, r
     `- Your patience: ${state.patience} of 100. ${patienceInWords(state.patience)}`,
     `- Problems you've already revealed: ${revealed}`,
     `- Objections you've raised: ${objLines}`,
-    `- The caller ${state.askMade ? "has asked for a meeting." : "has not asked for a meeting yet."}`,
-    `- ${meetingLine(state)}`,
+    `- The caller ${state.askMade ? "has asked you to buy." : "has not asked you to buy yet."}`,
+    `- ${closeLine(state)}`,
     `- No goodbyes or "I've got to go" unless your patience after this reply is below ${BANDS.IMPATIENT_BELOW}. A parting line only if it reaches 0.`,
   ];
   const lastExec = [...state.turns].reverse().find((t) => t.speaker === "exec" && t.index > 0);
@@ -159,7 +135,7 @@ export function statePrompt(state, { persona, objections }, { silence = false, r
     lines.push(`- The caller has gone quiet on the line. React the way a person would (for example, "Hello? You still there?"). The app sets the patience change for silence, so put 0.`);
   }
   if (meetingRepair) {
-    lines.push(`- Your previous reply agreed to a meeting, but you are NOT willing to agree to one right now. Write a new reply that does not agree to any meeting, day, or time, and set acceptsMeeting to false.`);
+    lines.push(`- Your previous reply agreed to buy, but you are NOT willing to agree right now. Write a new reply that does not agree to buy or sign up, and set acceptsMeeting to false.`);
   }
   if (repair) {
     lines.push("- Your previous reply couldn't be read. Return only the JSON object in the exact format described above.");
@@ -167,29 +143,8 @@ export function statePrompt(state, { persona, objections }, { silence = false, r
   return lines.filter(Boolean).join("\n");
 }
 
-// ---------------------------------------------------------------------------
-// The conversation so far, as provider messages
-// ---------------------------------------------------------------------------
-export const SILENCE_MARKER = "[The caller says nothing.]";
-
-// Student lines become "user" messages and exec lines become "assistant" messages.
-// The pickup line (turn 0) is in the system prompt instead, because the
-// conversation has to start with the caller.
-export function buildMessages(state) {
-  const messages = [];
-  for (const turn of state.turns.slice(1)) {
-    const role = turn.speaker === "student" ? "user" : "assistant";
-    const content = turn.speaker === "student" && turn.events.includes("silence") ? SILENCE_MARKER : turn.text;
-    const last = messages[messages.length - 1];
-    if (last && last.role === role) last.content += `\n${content}`;
-    else messages.push({ role, content });
-  }
-  while (messages.length && messages[0].role !== "user") messages.shift();
-  return messages;
-}
-
 // Everything the provider needs for one exec reply.
-// ctx = { persona, offer, mood, objections } (objections: full objects this exec can raise).
+// ctx = { persona, offer, mood, objections } (objections: full objects this persona can raise).
 export function buildExecRequest(state, ctx, opts = {}) {
   return {
     system: [

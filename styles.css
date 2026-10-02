@@ -170,7 +170,7 @@ main { max-width: 1100px; margin: 0 auto; padding: 24px; }
 /* Debrief preview */
 .outcome { font-size: 1.25rem; font-weight: 600; }
 .outcome-icon { display: inline-block; width: 1.2em; }
-.outcome-meetingBooked { color: var(--outcome-booked); }
+.outcome-meetingBooked, .outcome-saleClosed { color: var(--outcome-booked); }
 .outcome-hungUp { color: var(--outcome-hungup); }
 .table-wrap { overflow-x: auto; }
 .turns { width: 100%; border-collapse: collapse; background: var(--card); }
@@ -400,10 +400,10 @@ button:disabled, input:disabled { opacity: 0.6; cursor: not-allowed; }
 .debrief-section h3 { margin: 0 0 8px; font-size: 1.05rem; }
 .outcome-block .outcome { margin: 0 0 4px; }
 .outcome-block p:last-child { margin: 0; }
-.outcome-block.outcome-meetingBooked { border-left: 6px solid var(--outcome-booked); }
+.outcome-block.outcome-meetingBooked, .outcome-block.outcome-saleClosed { border-left: 6px solid var(--outcome-booked); }
 .outcome-block.outcome-hungUp { border-left: 6px solid var(--outcome-hungup); }
 .outcome-badge { font-weight: 600; }
-.outcome-badge.outcome-meetingBooked { color: var(--outcome-booked); }
+.outcome-badge.outcome-meetingBooked, .outcome-badge.outcome-saleClosed { color: var(--outcome-booked); }
 .outcome-badge.outcome-hungUp { color: var(--outcome-hungup); }
 .plain-list { margin: 0; padding-left: 20px; }
 .plain-list li { margin: 6px 0; }
@@ -679,7 +679,7 @@ main:has(#screen-gallery:not([hidden])) { max-width: none; }
   background: linear-gradient(135deg, var(--calling-top) 0%, var(--card) 75%);
   border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden;
 }
-.outcome-banner.outcome-meetingBooked { background: linear-gradient(135deg, var(--booked-tint) 0%, var(--card) 80%); border-color: var(--outcome-booked); }
+.outcome-banner.outcome-meetingBooked, .outcome-banner.outcome-saleClosed { background: linear-gradient(135deg, var(--booked-tint) 0%, var(--card) 80%); border-color: var(--outcome-booked); }
 .outcome-banner.outcome-hungUp { background: linear-gradient(135deg, var(--hungup-tint) 0%, var(--card) 80%); border-color: var(--outcome-hungup); }
 .outcome-art { align-self: stretch; display: flex; align-items: flex-end; contain: layout paint; }
 .outcome-art .exec { width: 100%; height: auto; display: block; }
@@ -707,7 +707,7 @@ main:has(#screen-gallery:not([hidden])) { max-width: none; }
   background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow);
   border-top: 4px solid var(--border); transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
-.call-card-meetingBooked { border-top-color: var(--outcome-booked); }
+.call-card-meetingBooked, .call-card-saleClosed { border-top-color: var(--outcome-booked); }
 .call-card-hungUp { border-top-color: var(--outcome-hungup); }
 .call-card:hover { transform: translateY(-2px); box-shadow: 0 2px 4px rgba(58, 36, 24, 0.08), 0 10px 24px rgba(58, 36, 24, 0.12); }
 .call-card-head { display: flex; align-items: center; gap: 10px; }
@@ -720,7 +720,7 @@ main:has(#screen-gallery:not([hidden])) { max-width: none; }
 .spark-line { fill: none; stroke: var(--muted); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
 .spark-ref { stroke: var(--border); stroke-width: 1.5; stroke-dasharray: 4 4; vector-effect: non-scaling-stroke; }
 .spark-end { fill: var(--muted); stroke: var(--surface); stroke-width: 2; }
-.spark-end-meetingBooked { fill: var(--outcome-booked); }
+.spark-end-meetingBooked, .spark-end-saleClosed { fill: var(--outcome-booked); }
 .spark-end-hungUp { fill: var(--outcome-hungup); }
 .call-card-facts { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 /* The button's click area covers the whole card. */
@@ -814,6 +814,16 @@ main:has(#screen-gallery:not([hidden])) { max-width: none; }
 .nav-tab:hover { color: var(--ink); background: var(--surface); }
 .nav-tab[aria-current="page"] { color: var(--accent-deep); background: var(--accent-soft); }
 .back-link { display: inline-block; margin: 0 0 6px; padding: 4px 0; }
+
+/* The B2B / B2C toggle on Past calls: a small segmented control, same pill
+   language as the header tabs. */
+.mode-toggle { display: inline-flex; gap: 4px; background: var(--surface); border-radius: 999px; padding: 4px; margin: 4px 0 18px; }
+.mode-toggle-btn {
+  font: inherit; font-weight: 600; color: var(--muted); background: none; border: none;
+  padding: 7px 16px; border-radius: 999px; cursor: pointer;
+}
+.mode-toggle-btn:hover { color: var(--ink); }
+.mode-toggle-btn[aria-pressed="true"] { color: var(--accent-deep); background: var(--accent-soft); }
 h2[tabindex="-1"]:focus { outline: none; }
 .banner-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 

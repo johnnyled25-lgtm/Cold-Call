@@ -1,18 +1,20 @@
 // Cold Call Lab — the screens. This is the only file that touches the page.
 // All model text is shown with textContent, never as HTML.
 
-import { COPY, fill } from "./copy.js";
+import { COPY, B2C_COPY, fill, copyFor } from "./copy.js";
 import {
-  MOODS, DEFAULT_MODELS, MODELS_WITHOUT_TEMPERATURE, OUTCOMES, RING_SECONDS, SILENCE_TIMEOUT_SECONDS, STORAGE_KEYS,
-  MAX_TALK_SECONDS, MIC_WAIT_SECONDS,
+  MOODS, MOODS_B2C, DEFAULT_MODELS, MODELS_WITHOUT_TEMPERATURE, OUTCOMES, ACCEPTANCE_THRESHOLD, B2C_ACCEPTANCE_THRESHOLD,
+  RING_SECONDS, SILENCE_TIMEOUT_SECONDS, STORAGE_KEYS, MAX_TALK_SECONDS, MIC_WAIT_SECONDS,
 } from "./constants.js";
 import { newSeed } from "./rng.js";
 import { drawCall } from "./draw.js";
 import {
   createCallState, addStudentTurn, addSilenceTurn, endByStudent, endIfTimeUp, dropCall, callDurationMs,
-  setTurnLatency, latenciesByInputMode,
+  setTurnLatency, latenciesByInputMode, B2B_RULES, B2C_RULES,
 } from "./callState.js";
 import { runExecTurn } from "./callController.js";
+import { buildExecRequest as buildExecRequestB2C } from "./execPromptB2C.js";
+import { closeDecision as closeDecisionB2C } from "./closeCheck.js";
 import { createSender, testConnection, droppedParamsFor } from "./provider.js";
 import {
   getKey, setKey, loadSettings, saveSettings, currentCallSettings, clearEverything, loadPastCalls, savePastCall,
@@ -34,6 +36,22 @@ import { execPose } from "./pose.js";
 
 const $ = (id) => document.getElementById(id);
 const DEBUG = new URLSearchParams(location.search).get("debug") === "1";
+
+// Everything that differs between B2B and B2C: which moods and rules a draw uses,
+// the acceptance threshold the chart's dashed line shows, and (for B2C) the engine
+// overrides runExecTurn needs (js/callController.js defaults to B2B, so "b2b" here
+// needs none).
+const ENGINE = {
+  b2b: {
+    moods: MOODS, rules: B2B_RULES, threshold: ACCEPTANCE_THRESHOLD, runOpts: {},
+    outcomeKeys: [OUTCOMES.MEETING_BOOKED, OUTCOMES.HUNG_UP, OUTCOMES.ASKED_NO_MEETING, OUTCOMES.NO_ASK, OUTCOMES.TIMES_UP],
+  },
+  b2c: {
+    moods: MOODS_B2C, rules: B2C_RULES, threshold: B2C_ACCEPTANCE_THRESHOLD,
+    runOpts: { buildExecRequest: buildExecRequestB2C, closeDecision: closeDecisionB2C, notReadyLine: B2C_COPY.notReadyLine, rules: B2C_RULES },
+    outcomeKeys: [OUTCOMES.SALE_CLOSED, OUTCOMES.HUNG_UP, OUTCOMES.ASKED_NO_SALE, OUTCOMES.NO_ASK, OUTCOMES.TIMES_UP],
+  },
+};
 
 // Debug only: a record of main-thread tasks over 50 ms (and, in Chrome, long frames),
 // so the "no task over 200 ms during a call" target can be checked on a real machine.
@@ -102,14 +120,19 @@ function setLabel(node, text) {
 
 // Shows one screen, marks the matching header tab, names the browser tab, and moves
 // keyboard focus to the screen's heading (so screen readers announce the change).
-function showScreen(name) {
+// The briefing screen is shared by both nav tabs; when currentMode is "b2c" it's
+// treated as the "b2c" route for tab-highlighting purposes. fromTab (for the call
+// and debrief screens, which have no address of their own) says which tab started
+// them; it defaults to "briefing" (today's B2B behavior) when not given.
+function showScreen(name, { title, fromTab } = {}) {
   for (const id of ["home", "briefing", "call", "debrief", "past", "gallery"]) $(`screen-${id}`).hidden = id !== name;
-  const tab = activeTab(name, { debriefFromPast });
+  const route = name === "briefing" && currentMode === "b2c" ? "b2c" : name;
+  const tab = activeTab(route, { debriefFromPast, fromTab });
   document.querySelectorAll("[data-tab]").forEach((a) => {
     if (a.dataset.tab === tab) a.setAttribute("aria-current", "page");
     else a.removeAttribute("aria-current");
   });
-  document.title = COPY.titles[name] || COPY.titles.home;
+  document.title = title || COPY.titles[name] || COPY.titles.home;
   window.scrollTo(0, 0);
   const heading = $(`screen-${name}`).querySelector("h2[tabindex]");
   if (heading && name !== "call") heading.focus({ preventScroll: true });
@@ -143,7 +166,7 @@ function leaveCall() {
   }
   if (!c.state.ended) {
     stopEverything(c);
-    c.state = endByStudent(c.state, Date.now());
+    c.state = endByStudent(c.state, Date.now(), ENGINE[c.mode].rules);
   }
   finishCall({ show: false });
 }
@@ -151,10 +174,11 @@ function leaveCall() {
 // Shows a screen for a route, without touching the address.
 function renderRoute(route) {
   showMessage("");
-  if (route === "briefing") { draw ??= newDraw(); renderBriefing(); }
+  if (route === "briefing") { setMode("b2b"); renderBriefing(); }
+  else if (route === "b2c") { setMode("b2c"); renderBriefing(); }
   else if (route === "past") showPastCalls();
   else if (route === "debrief" && currentDebrief) renderDebrief(currentDebrief);
-  else if (route === "call" && callInProgress()) showScreen("call");
+  else if (route === "call" && callInProgress()) showScreen("call", { fromTab: call.mode });
   else renderHome();
 }
 
@@ -192,7 +216,7 @@ function renderHome() {
   const h = COPY.home;
   // The five execs, as a row of portraits.
   if (data && !$("home-faces").childElementCount) {
-    $("home-faces").replaceChildren(...data.personas.map((p, i) => {
+    $("home-faces").replaceChildren(...data.b2b.personas.map((p, i) => {
       const face = el("div", { className: "avatar" });
       face.innerHTML = buildExecPortraitSvg(p.appearance, { idPrefix: `hf${i}` }); // our own fixed markup
       return face;
@@ -261,29 +285,44 @@ const confirmLeaveCall = () => confirmDialog({
 // ---------------------------------------------------------------------------
 // Data and the current draw
 // ---------------------------------------------------------------------------
-let data = null;   // { personas, offers, objections }
-let draw = null;   // { seed, persona, offer, mood, pickupLine }
-let call = null;   // the call in progress (or just finished)
+let data = null;        // { b2b: { personas, offers, objections }, b2c: { ... } }
+let drawByMode = { b2b: null, b2c: null }; // each tab remembers its own last-drawn pick
+let currentMode = "b2b"; // the briefing tab currently active ("b2b" or "b2c")
+let draw = null;        // drawByMode[currentMode] — { seed, persona, offer, mood, pickupLine, mode }
+let call = null;        // the call in progress (or just finished)
 
 async function loadData() {
   const get = (p) => fetch(p).then((r) => { if (!r.ok) throw new Error(p); return r.json(); });
-  const [personas, offers, objections] = await Promise.all([
+  const [personas, offers, objections, personasB2C, offersB2C, objectionsB2C] = await Promise.all([
     get("data/personas.json"), get("data/offers.json"), get("data/objections.json"),
+    get("data/personas-b2c.json"), get("data/offers-b2c.json"), get("data/objections-b2c.json"),
   ]);
-  return { personas, offers, objections };
+  return {
+    b2b: { personas, offers, objections },
+    b2c: { personas: personasB2C, offers: offersB2C, objections: objectionsB2C },
+  };
 }
 
-function makeDraw(seed) {
-  return drawCall(seed, { ...data, moods: MOODS, pickupLines: COPY.pickupLines });
+function makeDraw(seed, mode = currentMode) {
+  return { ...drawCall(seed, { ...data[mode], moods: ENGINE[mode].moods, pickupLines: copyFor(mode).pickupLines }), mode };
 }
 
-// A new random draw, with a different exec from the current one when possible.
-function newDraw() {
+// A new random draw, with a different exec from the current one in that mode when possible.
+function newDraw(mode = currentMode) {
+  const current = drawByMode[mode];
   for (let i = 0; i < 20; i++) {
-    const d = makeDraw(newSeed());
-    if (!draw || d.persona.id !== draw.persona.id) return d;
+    const d = makeDraw(newSeed(), mode);
+    if (!current || d.persona.id !== current.persona.id) return d;
   }
-  return makeDraw(newSeed());
+  return makeDraw(newSeed(), mode);
+}
+
+// Switches the active briefing tab, drawing a first pick for it if it doesn't have
+// one yet (each tab keeps its own draw, so switching tabs and back doesn't lose it).
+function setMode(mode) {
+  currentMode = mode;
+  drawByMode[mode] ??= newDraw(mode);
+  draw = drawByMode[mode];
 }
 
 // ---------------------------------------------------------------------------
@@ -296,8 +335,8 @@ const icon = iconEl;
 const monogramBadge = (company, size = "") =>
   el("span", { className: `monogram mono-${monogramColor(company)} ${size}`.trim(), text: monogramInitials(company), attrs: { "aria-hidden": "true" } });
 
-function briefingDossier({ persona, offer }) {
-  const b = COPY.briefing;
+function briefingDossier({ persona, offer }, copy = COPY) {
+  const b = copy.briefing;
   const portrait = el("div", { className: "avatar" });
   portrait.innerHTML = buildExecPortraitSvg(persona.appearance, { idPrefix: "pb" }); // our own fixed markup
 
@@ -346,13 +385,13 @@ function briefingDossier({ persona, offer }) {
 }
 
 // The briefing as compact tiles, beside the exec during the call.
-function briefingTiles({ persona, offer }) {
-  const c = COPY.call;
+function briefingTiles({ persona, offer }, copy = COPY) {
+  const c = copy.call;
   const tile = (label, body, wide = false) => el("div", { className: `brief-tile${wide ? " wide" : ""}` }, [el("b", { text: label }), body]);
   // No "Calling" tile: the exec's name and title are on the phone right beside it.
   return [
-    el("span", { className: "goal-chip" }, [icon("goal"), COPY.call.goalChip]),
-    tile(c.briefYouAre, fill(COPY.briefing.youAre, { name: COPY.student.name, role: COPY.student.role, company: offer.company })),
+    el("span", { className: "goal-chip" }, [icon("goal"), c.goalChip]),
+    tile(c.briefYouAre, fill(copy.briefing.youAre, { name: COPY.student.name, role: COPY.student.role, company: offer.company })),
     tile(c.briefKnow, `${persona.industry} · ${persona.companySize}`),
     tile(c.briefSetup, persona.currentSetup, true),
     tile(c.briefSelling, `${offer.product}: ${offer.oneLiner}`, true),
@@ -361,15 +400,28 @@ function briefingTiles({ persona, offer }) {
   ];
 }
 
+// Refreshes the static explainer panels (and the ringing screen's goal chip), which
+// are plain [data-copy] nodes filled once at startup — they need redoing whenever
+// the active mode changes, since they're the only static text that's mode-specific.
+function applyModeCopy(copy) {
+  const at = (path) => path.split(".").reduce((o, k) => (o ? o[k] : undefined), copy);
+  document.querySelectorAll('[data-copy^="explainers."], [data-copy="call.goalChip"]').forEach((node) => {
+    const text = at(node.dataset.copy);
+    if (typeof text === "string") node.textContent = text;
+  });
+}
+
 let briefingActions = null;
 function renderBriefing() {
   // The Call buttons sit in the hero, so they're on screen without scrolling. Keep
   // our own reference: the hero is rebuilt each time, which takes them off the page.
   briefingActions ??= $("briefing-actions");
-  $("briefing-card").replaceChildren(...briefingDossier(draw));
+  const copy = copyFor(currentMode);
+  $("briefing-card").replaceChildren(...briefingDossier(draw, copy));
   $("briefing-card").querySelector(".dossier-hero").append(briefingActions);
-  $("btn-call-label").textContent = fill(COPY.briefing.callButtonName, { first: draw.persona.name.split(" ")[0] });
-  showScreen("briefing");
+  $("btn-call-label").textContent = fill(copy.briefing.callButtonName, { first: draw.persona.name.split(" ")[0] });
+  applyModeCopy(copy);
+  showScreen("briefing", { title: copy.titles[currentMode === "b2c" ? "b2c" : "briefing"] });
 }
 
 // ---------------------------------------------------------------------------
@@ -429,12 +481,15 @@ async function startCall() {
   if (recognitionSupported() && !micTutorialHidden()) await showMicTutorial();
   setAddress("call");
 
+  const mode = draw.mode;
+  const copy = copyFor(mode);
   const { persona, offer, mood } = draw;
   const ctx = {
     persona, offer, mood,
-    objections: data.objections.filter((o) => persona.objections.includes(o.id)),
+    objections: data[mode].objections.filter((o) => persona.objections.includes(o.id)),
   };
   const thisCall = {
+    mode,
     phase: "ringing",
     state: null,
     ctx,
@@ -467,8 +522,8 @@ async function startCall() {
   if (thisCall.voiceIn) thisCall.ptt = makePushToTalk(thisCall);
 
   call?.drawing?.destroy?.();
-  thisCall.drawing = mountExec($("exec-stage"), persona, COPY.exec.describe);
-  $("call-brief-body").replaceChildren(...briefingTiles(draw));
+  thisCall.drawing = mountExec($("exec-stage"), persona, copy.exec.describe);
+  $("call-brief-body").replaceChildren(...briefingTiles(draw, copy));
   $("calling-avatar").innerHTML = buildExecPortraitSvg(persona.appearance, { idPrefix: "pc" }); // our own fixed markup
   $("phone-avatar").innerHTML = buildExecPortraitSvg(persona.appearance, { idPrefix: "pp" });
   $("calling-name").textContent = persona.name;
@@ -479,7 +534,8 @@ async function startCall() {
   $("phone-timer").textContent = "0:00";
   setCallNote(thisCall.voiceIn ? "" : COPY.voice.unavailable);
   $("typed-input").value = "";
-  showScreen("call"); // scrolls to the top
+  applyModeCopy(copy); // the ringing screen's goal chip
+  showScreen("call", { fromTab: mode }); // scrolls to the top
   renderCall();
 
   // Ring while the browser's voices load and the microphone permission is asked,
@@ -775,7 +831,7 @@ async function takeTurn(c, { text = "", inputMode = "typed", silence = false, re
 
   let result;
   try {
-    result = await runExecTurn(c.state, c.ctx, send, { silence });
+    result = await runExecTurn(c.state, c.ctx, send, { silence, ...ENGINE[c.mode].runOpts });
   } catch (err) {
     c.busy = false;
     c.waitUntil = null;
@@ -824,13 +880,14 @@ function endCallByStudent() {
     stopEverything(c);
     call = null;
     setCallNote("");
+    setMode(c.mode);
     renderBriefing();
-    setAddress("briefing", { replace: true });
+    setAddress(c.mode === "b2c" ? "b2c" : "briefing", { replace: true });
     return;
   }
   if (c.state.ended) return;
   stopEverything(c);
-  c.state = endByStudent(c.state, Date.now());
+  c.state = endByStudent(c.state, Date.now(), ENGINE[c.mode].rules);
   finishCall();
 }
 
@@ -843,9 +900,9 @@ function finishCall({ show = true } = {}) {
   disarmSilence(c);
   setCallNote("");
   // Show the debrief first; save the call a moment later so the two never share one long task.
-  currentDebrief = { state: c.state, ctx: c.ctx };
+  currentDebrief = { state: c.state, ctx: c.ctx, mode: c.mode };
   debriefFromPast = false;
-  const save = () => savePastCall(c.state, { persona: c.ctx.persona, offer: c.ctx.offer, mood: c.ctx.mood, objections: c.ctx.objections });
+  const save = () => savePastCall(c.state, { persona: c.ctx.persona, offer: c.ctx.offer, mood: c.ctx.mood, objections: c.ctx.objections }, c.mode);
   if (show) {
     renderDebrief(currentDebrief);
     setAddress("debrief", { replace: true }); // Back from the debrief skips the finished call
@@ -883,50 +940,73 @@ async function copyText(text) {
 }
 
 // Shows the debrief for a call (just finished, or reopened from Past calls).
-function renderDebrief({ state, ctx }) {
-  const analysis = analyzeCall(state, ctx);
-  const transcriptText = formatTranscriptText(analysis, { dateText: formatDate(state.startedAt) });
+// mode defaults to "b2b" for safety, though every record passed in carries its own.
+function renderDebrief({ state, ctx, mode = "b2b" }) {
+  const copy = copyFor(mode);
+  const analysis = analyzeCall(state, ctx, copy);
+  const transcriptText = formatTranscriptText(analysis, { dateText: formatDate(state.startedAt), copy });
   drawDebrief($("debrief-body"), analysis, {
     onCallAgain: callAgain,
     onNewExec: newExecFromDebrief,
     onPastCalls: () => goTo("past"),
     onCopy: () => copyText(transcriptText),
     transcriptText,
+    copy,
+    acceptanceThreshold: ENGINE[mode].threshold,
   });
   debriefSeed = state.seed;
-  currentDebrief = { state, ctx };
+  currentDebrief = { state, ctx, mode };
   $("btn-debrief-back").hidden = !debriefFromPast;
-  showScreen("debrief");
+  showScreen("debrief", { fromTab: mode, title: copy.titles.debrief });
   renderDebug();
 }
 
-// "Call again": same exec, offer, and mood (same seed) as the debrief on screen.
+// "Call again": same exec, offer, and mood (same seed), in the same mode, as the debrief on screen.
 let debriefSeed = null;
 function newExecFromDebrief() {
-  draw = newDraw();
+  const mode = currentDebrief?.mode || "b2b";
+  setMode(mode);
+  drawByMode[mode] = newDraw(mode);
+  draw = drawByMode[mode];
   call = null;
-  goTo("briefing");
+  goTo(mode === "b2c" ? "b2c" : "briefing");
 }
 
 function callAgain() {
   if (debriefSeed == null) return;
-  draw = makeDraw(debriefSeed);
+  const mode = currentDebrief?.mode || "b2b";
+  setMode(mode);
+  draw = makeDraw(debriefSeed, mode);
+  drawByMode[mode] = draw;
   startCall();
 }
 
+let pastCallsMode = "b2b"; // which tab's calls and Record are shown
 function showPastCalls() {
   showMessage("");
-  renderPastCalls($("past-body"), loadPastCalls(), {
+  const copy = copyFor(pastCallsMode);
+  const records = loadPastCalls().filter((r) => (r.mode || "b2b") === pastCallsMode);
+  renderPastCalls($("past-body"), records, {
     formatDate,
-    onStart: () => { draw = newDraw(); goTo("briefing"); },
+    onStart: () => { setMode(pastCallsMode); goTo(pastCallsMode === "b2c" ? "b2c" : "briefing"); },
     onOpen: (record) => {
       call = null;
       debriefFromPast = true;
       renderDebrief(record);
       setAddress("debrief");
     },
+    copy,
+    acceptanceThreshold: ENGINE[pastCallsMode].threshold,
+    outcomeKeys: ENGINE[pastCallsMode].outcomeKeys,
   });
+  updatePastModeToggle();
   showScreen("past");
+}
+
+function updatePastModeToggle() {
+  document.querySelectorAll("[data-past-mode]").forEach((btn) => {
+    btn.setAttribute("aria-pressed", String(btn.dataset.pastMode === pastCallsMode));
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -1146,7 +1226,7 @@ async function init() {
   applyIcons();
   wireSettings();
   $("btn-call").addEventListener("click", startCall);
-  $("btn-random").addEventListener("click", () => { draw = newDraw(); renderBriefing(); });
+  $("btn-random").addEventListener("click", () => { draw = drawByMode[currentMode] = newDraw(); renderBriefing(); });
   $("typed-form").addEventListener("submit", (e) => {
     e.preventDefault();
     const text = $("typed-input").value;
@@ -1161,9 +1241,14 @@ async function init() {
   $("btn-new-exec").addEventListener("click", newExecFromDebrief);
   $("btn-debrief-past").addEventListener("click", () => goTo("past"));
   $("btn-debrief-back").addEventListener("click", () => goTo("past"));
-  $("btn-past-back").addEventListener("click", () => goTo("briefing"));
-  $("btn-home-start").addEventListener("click", () => { draw = newDraw(); goTo("briefing"); });
+  $("btn-past-back").addEventListener("click", () => goTo(pastCallsMode === "b2c" ? "b2c" : "briefing"));
+  $("btn-home-start").addEventListener("click", () => { currentMode = "b2b"; draw = drawByMode.b2b = newDraw("b2b"); goTo("briefing"); });
   $("btn-home-past").addEventListener("click", () => goTo("past"));
+  document.querySelectorAll("[data-past-mode]").forEach((btn) => btn.addEventListener("click", () => {
+    if (btn.dataset.pastMode === pastCallsMode) return;
+    pastCallsMode = btn.dataset.pastMode;
+    showPastCalls();
+  }));
   // Header tabs and the logo: same-page addresses, handled here so leaving a call asks first.
   document.querySelectorAll("[data-route]").forEach((link) => link.addEventListener("click", (e) => {
     e.preventDefault();
@@ -1183,7 +1268,7 @@ async function init() {
   if (new URLSearchParams(location.search).get("gallery") === "1") {
     // Add &only=<persona id> (e.g. &only=kettle-creek-dental) to see one exec large.
     const only = new URLSearchParams(location.search).get("only");
-    renderGallery($("screen-gallery"), data.personas.filter((p) => !only || p.id === only), COPY.exec.describe);
+    renderGallery($("screen-gallery"), data.b2b.personas.filter((p) => !only || p.id === only), COPY.exec.describe);
     if (only) $("screen-gallery").classList.add("gallery-large");
     showScreen("gallery");
     return;

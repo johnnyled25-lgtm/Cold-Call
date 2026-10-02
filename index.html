@@ -23,6 +23,7 @@
     <nav class="app-nav" aria-label="App">
       <a href="#home" class="nav-tab" data-route="home" data-tab="home" data-copy="nav.home"></a>
       <a href="#briefing" class="nav-tab" data-route="briefing" data-tab="briefing" data-copy="nav.briefing"></a>
+      <a href="#b2c" class="nav-tab" data-route="b2c" data-tab="b2c" data-copy="nav.b2c"></a>
       <a href="#past" class="nav-tab" data-route="past" data-tab="past" id="open-past" data-copy="pastCalls.navLink"></a>
       <button type="button" class="nav-tab nav-settings" id="open-settings" data-copy="settings.heading"></button>
     </nav>
@@ -172,6 +173,10 @@
     <!-- Screen 4: past calls and the Record -->
     <section id="screen-past" class="screen" aria-labelledby="past-heading" hidden>
       <h2 id="past-heading" tabindex="-1" data-copy="pastCalls.heading"></h2>
+      <div class="mode-toggle" role="group" aria-label="" data-copy-label="pastCalls.modeGroup">
+        <button type="button" class="mode-toggle-btn" data-past-mode="b2b" data-copy="nav.briefing" aria-pressed="true"></button>
+        <button type="button" class="mode-toggle-btn" data-past-mode="b2c" data-copy="nav.b2c" aria-pressed="false"></button>
+      </div>
       <div id="past-body"></div>
       <div class="actions">
         <button type="button" class="btn btn-primary" id="btn-past-back" data-copy="pastCalls.back"></button>

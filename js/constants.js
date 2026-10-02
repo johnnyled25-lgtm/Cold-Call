@@ -172,6 +172,9 @@ export const OUTCOMES = {
   NO_ASK: "noAsk",
   TIMES_UP: "timesUp",
   DROPPED: "dropped",
+  // B2C: the sale is won or lost on the call itself, not a future meeting.
+  SALE_CLOSED: "saleClosed",
+  ASKED_NO_SALE: "askedNoSale",
 };
 
 // An offer "fits" an exec only if it could help with at least this many of their pain points.
@@ -186,6 +189,16 @@ export const MOODS = [
   { id: "between-meetings", label: "between meetings and distracted", startingPatience: 45, note: "Half-reading email while listening." },
   { id: "normal-day", label: "having a normal day", startingPatience: 55, note: "Busy, but will hear a good reason out." },
   { id: "slow-friday", label: "on a slow Friday afternoon", startingPatience: 70, note: "Has a little time and a little curiosity." },
+];
+
+// B2C: a person at home doesn't have "meetings," so this is its own small set rather
+// than reusing MOODS's office-flavored wording. Same starting-patience values, for
+// the same difficulty spread.
+export const MOODS_B2C = [
+  { id: "mid-dinner", label: "in the middle of making dinner", startingPatience: 35, note: "Phone wedged under one ear, hands full." },
+  { id: "half-watching-tv", label: "half-watching TV and a little annoyed", startingPatience: 45, note: "Would rather not be interrupted, but isn't in a rush." },
+  { id: "normal-evening", label: "having an ordinary evening at home", startingPatience: 55, note: "Not doing much, willing to hear someone out." },
+  { id: "bored-weekend", label: "bored on a slow weekend afternoon", startingPatience: 70, note: "Has time, and is a little curious who's calling." },
 ];
 
 // ---------------------------------------------------------------------------
@@ -203,6 +216,21 @@ export const ASK_PHRASES = [
   "would you be open to a meeting", "open to a meeting", "open to a call", "open to meeting",
   "does tuesday work", "does wednesday work", "does thursday work", "does monday work", "does friday work",
 ];
+
+// B2C: a student line that counts as asking the person to buy, right now (not a
+// future meeting). The model can also flag it; the debrief records which one caught it.
+export const CLOSE_PHRASES = [
+  "sign you up", "sign up today", "get you started", "get started today", "go ahead and set you up",
+  "set you up with", "get you a plan", "can i get your card", "your card number", "charge your card",
+  "put you down for", "take care of that today", "lock in that price today", "lock in this rate",
+  "want to move forward", "move forward with this", "would you like to go ahead", "go ahead with this",
+  "should we get that started", "let's get you set up", "i can set that up right now",
+];
+
+// The exec/consumer can agree to the meeting or the sale only when patience is at or
+// above this number AND the student has clearly asked. B2C has its own threshold so
+// it can be tuned without touching the B2B number above.
+export const B2C_ACCEPTANCE_THRESHOLD = 55;
 
 // ---------------------------------------------------------------------------
 // The exec's appearance — the only allowed values (the drawing supports each one)

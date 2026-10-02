@@ -1,6 +1,6 @@
 # Cold Call Lab
 
-A practice lab where a student cold-calls an AI executive, drawn on screen, who answers the phone and reacts to exactly what the student says. The goal of every call is a booked 15-minute meeting. Afterward, a debrief shows how the exec's hidden patience moved line by line and why.
+A practice lab where a student calls an AI person, drawn on screen, who answers the phone and reacts to exactly what the student says. Two tabs: **B2B** (a business exec; the goal is a booked 15-minute meeting) and **B2C** (a random consumer; the goal is closing the sale on the call). Afterward, a debrief shows how the other side's hidden patience moved line by line and why. Past calls and the Record (stats) are kept separate per tab.
 
 It's a static website: plain HTML, CSS, and JavaScript. No build step, no server, no accounts, no analytics.
 
@@ -70,13 +70,17 @@ Every setting is one commented line; edit, save, and reload the page.
 
 ### Editing execs, offers, and objections
 
-The content is in `data/` (field-by-field notes in `data/SCHEMA.md`):
+The content is in `data/` (field-by-field notes in `data/SCHEMA.md`). There are two
+sets: `personas.json` / `offers.json` / `objections.json` for the **B2B** tab, and
+`personas-b2c.json` / `offers-b2c.json` / `objections-b2c.json` for the **B2C** tab
+(calling a random consumer instead of a business exec) — same shape, edited the
+same way:
 
-- `personas.json`: the execs. Each has 3 pain points; `earnedBy` says what kind of question reveals one, and `addressedBy` lists which offers could help with it. `appearance` and `voice` must use the values listed in `js/constants.js` (`APPEARANCE_OPTIONS`, male/female).
-- `offers.json`: what the student sells. `fitsPersonaIds` may only list execs with **at least two** pain points the offer addresses; other pairs are never drawn.
-- `objections.json`: the lines execs use to end or deflect a call, and what handles each.
+- `personas*.json`: the people called. Each has 2–4 pain points; `earnedBy` says what kind of question reveals one, and `addressedBy` lists which offers could help with it. `appearance` and `voice` must use the values listed in `js/constants.js` (`APPEARANCE_OPTIONS`, male/female). B2C personas draw their `moods` from `MOODS_B2C`, not `MOODS`.
+- `offers*.json`: what the student sells. `fitsPersonaIds` may only list people with **at least two** pain points the offer addresses; other pairs are never drawn.
+- `objections*.json`: the lines people use to end or deflect a call, and what handles each.
 
-Keep everything fictional: no real companies, products, or people. After editing, run the tests (below); they check that ids match, every pairing is a real fit, and no banned words slipped into student-facing text.
+Keep everything fictional: no real companies, products, or people. After editing, run the tests (below); they check that ids match, every pairing is a real fit, and no banned words slipped into student-facing text — for both B2B and B2C content.
 
 To see how the execs look in every state: `http://localhost:8000/?gallery=1` (still by default; **Play animations** makes them move; add `&only=kettle-creek-dental`, or any exec's id, to see one large). To see a sample debrief: `http://localhost:8000/dev/debrief-preview.html`.
 
@@ -122,14 +126,17 @@ index.html          the page: briefing, call, debrief, past calls, settings
 styles.css          all styling; every color is a variable at the top
 js/constants.js     every number, threshold, and model name
 js/copy.js          every word a student sees
-js/execPrompt.js    the exec's instructions to the AI
+js/execPrompt.js    the exec's instructions to the AI (B2B)
+js/execPromptB2C.js the same, for the B2C tab (a consumer, not an office)
 js/callState.js     the patience engine (patience lives here, not in the AI)
+js/meetingCheck.js  keeps the exec's words and the meeting state in agreement (B2B)
+js/closeCheck.js    the same, for a sale instead of a meeting (B2C)
 js/provider.js      talking to OpenAI or Anthropic
 js/voice.js         speech in and out
 js/exec-drawing.js  the drawn exec (SVG, no images)
 js/debrief*.js      the debrief analysis and screen
 js/app.js           ties the screens together
-data/               execs, offers, objections
+data/               execs/personas, offers, objections — B2B and B2C (*-b2c.json)
 dev/                developer pages (debrief preview, provider check)
 tests/              Node tests
 ```

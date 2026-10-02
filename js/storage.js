@@ -67,22 +67,23 @@ export function currentCallSettings() {
 
 // ---------------------------------------------------------------------------
 // Past calls: the last PAST_CALLS_KEPT calls, newest first, in localStorage.
-// Each is { id, savedAt, state, ctx }: the call's text and patience history plus
-// the exec, offer, mood, and objections as they were, so a debrief can be reopened
-// even if the data files change later. No audio and no API key are ever in here.
+// Each is { id, savedAt, mode, state, ctx }: the call's text and patience history
+// plus the exec, offer, mood, and objections as they were, so a debrief can be
+// reopened even if the data files change later. No audio and no API key are ever
+// in here. mode defaults to "b2b" when reading calls saved before B2C existed.
 // ---------------------------------------------------------------------------
 
 export function loadPastCalls() {
   try {
     const list = JSON.parse(read("local", STORAGE_KEYS.pastCalls));
-    return Array.isArray(list) ? list.filter((r) => r && r.state && r.ctx) : [];
+    return Array.isArray(list) ? list.filter((r) => r && r.state && r.ctx).map((r) => ({ mode: "b2b", ...r })) : [];
   } catch {
     return [];
   }
 }
 
-export function savePastCall(state, ctx) {
-  const record = { id: `${state.startedAt}-${state.seed}`, savedAt: Date.now(), state, ctx };
+export function savePastCall(state, ctx, mode = "b2b") {
+  const record = { id: `${state.startedAt}-${state.seed}`, savedAt: Date.now(), mode, state, ctx };
   const list = [record, ...loadPastCalls().filter((r) => r.id !== record.id)].slice(0, PAST_CALLS_KEPT);
   write("local", STORAGE_KEYS.pastCalls, JSON.stringify(list));
   return record;

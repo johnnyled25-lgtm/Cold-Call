@@ -1,6 +1,60 @@
 # Status
 
-## Mic tutorial (2026-10-01; done, not yet pushed)
+## B2C: a second, separate selling tab (2026-10-01; done, not yet pushed)
+
+The mic tutorial was pushed as `6f05796`.
+
+A second mode, next to the existing B2B cold-calling simulator: the student calls a
+random consumer instead of a business exec, selling a home-services product, with
+the goal of **closing the sale on the call** (not booking a future meeting).
+
+- **New nav tab, `B2C`**, beside the existing tab (relabeled `B2B`, same screens and
+  route under the hood). Both tabs land on the same briefing/call/debrief screens —
+  nothing is duplicated; only the data drawn, the engine rules, and the copy differ
+  by mode. Each tab remembers its own last-drawn pick when you switch back and forth.
+- **5 consumer personas, 3 products, 8 objections** (`data/*-b2c.json`): a home
+  security system, a quarterly pest-control plan, and a home warranty — same schema
+  as the B2B data, fields reinterpreted for a home context (documented in
+  `data/SCHEMA.md`). Every persona/offer pairing passes the same "real fit" rule as
+  B2B (≥ 2 addressable pain points).
+- **New outcomes:** *Sale closed* / *Asked, no sale*, alongside the shared *Hung up*
+  / *No ask made* / *Time's up*. A new purchase-agreement detector (`js/closeCheck.js`,
+  sibling to `js/meetingCheck.js`) replaces the date/time agreement check — a sale
+  can close immediately, with no day or time needed.
+- **The engine is one codebase, not duplicated.** Every pure module that used to
+  hardcode a B2B constant (the acceptance threshold, the ask-phrase list, the
+  outcome words) now takes an optional `rules` argument defaulting to exactly
+  today's B2B behavior, so B2B is provably unchanged: **all 131 pre-existing tests
+  pass unmodified.** The exec's system prompt has its own B2C sibling
+  (`js/execPromptB2C.js`) reusing the shared, mode-neutral pieces (fillers, patience
+  wording, message history) rather than copying them.
+- **Past calls and the Record split by mode**: a small B2B/B2C toggle at the top of
+  Past calls filters both the call list and the Record tables (outcome counts, pain
+  points) to one mode at a time, so "Meeting booked" and "Sale closed" are never
+  mixed in one table. Saved call records now carry a `mode` field (older saved
+  calls default to "b2b").
+- **Fixed while building:** the Record's outcome-count table was hardcoded to the
+  five B2B outcome words (`recordSummary` in `js/debrief.js`), so a closed B2C sale
+  silently showed up as zero everywhere until `outcomeKeys` became a parameter; a
+  booked-ask badge in the debrief was hardcoded to the B2B CSS class
+  (`outcome-meetingBooked`) regardless of the call's actual outcome; the patience
+  chart's dashed threshold line and Past-calls' sparkline reference line were both
+  hardcoded to the B2B acceptance threshold.
+- **Out of scope for this pass** (per the plan, confirmed with Johnny): Home's hero
+  stays B2B-flavored — B2C is reached via its own nav tab, not surfaced on Home yet.
+  The exec gallery (`?gallery=1`) stays B2B-only.
+- **Checked:** a Chrome click-through (B2C briefing → a live call that hit a real
+  provider auth error with a fake key, confirming the full ringing → silence →
+  error → dropped-call → debrief path works end-to-end for B2C); a synthetic
+  "Sale closed" call built with the real engine, opened from Past calls, to check
+  every debrief section's B2C wording (outcome banner, chart threshold line, "the
+  ask" section, transcript) and the Record's B2C outcome rows; switching back to
+  B2B to confirm it's unchanged. Accessibility check: 0 issues on the B2C briefing,
+  the debrief, and Past calls with the toggle. **Tests: 149, all passing** (18 new:
+  `tests/close.test.js`, plus B2C cases added to `content.test.js`, `draw.test.js`,
+  `callState.test.js`, `routes.test.js`).
+
+## Mic tutorial (2026-10-01; pushed as `6f05796`)
 
 The settings/dialogs round was pushed as `58cec9e`.
 

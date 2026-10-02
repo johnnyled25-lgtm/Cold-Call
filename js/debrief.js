@@ -19,8 +19,10 @@ export function formatDelta(d) {
 
 export const wordCount = (text) => String(text || "").trim().split(/\s+/).filter(Boolean).length;
 
-// ctx: { persona, offer, mood, objections }. Returns everything the debrief shows.
-export function analyzeCall(state, ctx) {
+// ctx: { persona, offer, mood, objections }. copy: the resolved copy for the call's
+// mode (copyFor(mode) from copy.js), defaulting to COPY (B2B) so existing callers
+// and tests are unaffected. Returns everything the debrief shows.
+export function analyzeCall(state, ctx, copy = COPY) {
   const { persona, offer, mood } = ctx;
   const firstName = persona.name.split(" ")[0];
   const start = state.startedAt;
@@ -109,8 +111,8 @@ export function analyzeCall(state, ctx) {
 
   const transcript = state.turns.map((t) => ({
     speaker: t.speaker,
-    who: t.speaker === "student" ? COPY.call.you : firstName,
-    text: t.events.includes("silence") && t.speaker === "student" ? COPY.debrief.silence : t.text,
+    who: t.speaker === "student" ? copy.call.you : firstName,
+    text: t.events.includes("silence") && t.speaker === "student" ? copy.debrief.silence : t.text,
     silence: t.events.includes("silence") && t.speaker === "student",
     atMs: at(t),
     inputMode: t.inputMode,
@@ -119,8 +121,8 @@ export function analyzeCall(state, ctx) {
 
   return {
     outcome: state.outcome,
-    outcomeWord: COPY.outcomes[state.outcome] || "",
-    outcomeLine: fill(COPY.debrief.outcomeLines[state.outcome] || "{time}", { time: formatClock(durationMs) }),
+    outcomeWord: copy.outcomes[state.outcome] || "",
+    outcomeLine: fill(copy.debrief.outcomeLines[state.outcome] || "{time}", { time: formatClock(durationMs) }),
     countsInRecord: state.outcome !== OUTCOMES.DROPPED,
     startedAt: start,
     firstName,
@@ -142,8 +144,8 @@ export function analyzeCall(state, ctx) {
 }
 
 // "You asked for a meeting 3 times. Ask 3 booked the meeting."
-export function askSummary(a) {
-  const d = COPY.debrief;
+export function askSummary(a, copy = COPY) {
+  const d = copy.debrief;
   const count = a.ask.asks.length === 1 ? d.askCountOne : fill(d.askCountMany, { n: a.ask.asks.length });
   const booked = a.ask.bookedAsk ? fill(d.askBookedBy, { n: a.ask.bookedAsk }) : d.askNoneBooked;
   return `${count} ${booked}`;
@@ -151,8 +153,8 @@ export function askSummary(a) {
 
 // The plain-text version for "Copy transcript". dateText is passed in so the
 // output doesn't depend on the computer's clock or time zone.
-export function formatTranscriptText(a, { dateText = "" } = {}) {
-  const d = COPY.debrief;
+export function formatTranscriptText(a, { dateText = "", copy = COPY } = {}) {
+  const d = copy.debrief;
   const lines = [];
   lines.push(d.textTitle);
   if (dateText) lines.push(`${d.textDate}: ${dateText}`);
@@ -165,7 +167,7 @@ export function formatTranscriptText(a, { dateText = "" } = {}) {
   lines.push(`${d.turnedHeading}:`);
   if (a.turningPoint) {
     const t = a.turningPoint;
-    lines.push(`  ${COPY.call.you}: ${t.silence ? d.silence : `"${t.studentText ?? ""}"`}`);
+    lines.push(`  ${copy.call.you}: ${t.silence ? d.silence : `"${t.studentText ?? ""}"`}`);
     lines.push(`  ${d.textPatience} ${t.before} → ${t.after} (${formatDelta(t.delta)})`);
     lines.push(`  ${d.textReason}: ${t.reason}`);
   } else {
@@ -186,7 +188,7 @@ export function formatTranscriptText(a, { dateText = "" } = {}) {
   lines.push(`${d.askHeading}:`);
   if (!a.ask.made) lines.push(`  ${d.askNone}`);
   else {
-    lines.push(`  ${askSummary(a)}`);
+    lines.push(`  ${askSummary(a, copy)}`);
     for (const x of a.ask.asks) {
       lines.push(`  ${fill(d.askItem, { n: x.number, time: formatClock(x.atMs), line: x.lineNumber, total: a.ask.totalLines })}: “${x.text}”`);
       if (x.responseText != null) lines.push(`    ${fill(d.askReply, { first: a.firstName, text: x.responseText })}`);
@@ -228,10 +230,13 @@ export function sparkline(values, { width = 160, height = 40, pad = 3, reference
 // The Record: calls per outcome (connection drops left out) and pain points
 // uncovered, call by call, oldest first. A table, not a score.
 // records: saved past calls ({ savedAt, state, ctx }), newest first.
-export function recordSummary(records) {
+// outcomeKeys: which outcomes to show as rows, and in what order. Defaults to the
+// B2B set; pass B2C's (SALE_CLOSED/ASKED_NO_SALE in place of MEETING_BOOKED/
+// ASKED_NO_MEETING) for a B2C Record.
+export function recordSummary(records, outcomeKeys = [OUTCOMES.MEETING_BOOKED, OUTCOMES.HUNG_UP, OUTCOMES.ASKED_NO_MEETING, OUTCOMES.NO_ASK, OUTCOMES.TIMES_UP]) {
   const counted = records.filter((r) => r.state.outcome !== OUTCOMES.DROPPED);
   const byOutcome = {};
-  for (const key of [OUTCOMES.MEETING_BOOKED, OUTCOMES.HUNG_UP, OUTCOMES.ASKED_NO_MEETING, OUTCOMES.NO_ASK, OUTCOMES.TIMES_UP]) {
+  for (const key of outcomeKeys) {
     byOutcome[key] = counted.filter((r) => r.state.outcome === key).length;
   }
   const painRows = [...counted]
