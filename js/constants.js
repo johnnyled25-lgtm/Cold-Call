@@ -230,7 +230,10 @@ export const CLOSE_PHRASES = [
 // The exec/consumer can agree to the meeting or the sale only when patience is at or
 // above this number AND the student has clearly asked. B2C has its own threshold so
 // it can be tuned without touching the B2B number above.
-export const B2C_ACCEPTANCE_THRESHOLD = 55;
+// Raised from 55 to match B2B's 60 (2026-10-01, Johnny's testing): closing a sale
+// was landing noticeably easier than booking a meeting, with no real reason for
+// the two to differ.
+export const B2C_ACCEPTANCE_THRESHOLD = 60;
 
 // ---------------------------------------------------------------------------
 // The exec's appearance — the only allowed values (the drawing supports each one)

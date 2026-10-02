@@ -1,6 +1,26 @@
 # Status
 
-## B2C: a second, separate selling tab (2026-10-01; done, not yet pushed)
+## B2C tuning from Johnny's first test call (2026-10-01; done, not yet pushed)
+
+The B2C tab was pushed as `52f5e33`.
+
+Johnny tested Walt (home warranty): tough to open, as intended, but overall closed
+a little too easily once the call got going.
+
+- **`B2C_ACCEPTANCE_THRESHOLD` raised from 55 to 60**, matching B2B's threshold
+  (`js/constants.js`). The 55 was an arbitrary pick from when the tab was built;
+  there was no real reason closing a sale should take less patience than booking a
+  meeting, and Walt's own data (skeptical personality, tough objections) suggests
+  the gap was the shared engine being a little generous, not his specific content.
+- Scope check with Johnny before changing this: confirmed it should apply to all of
+  B2C, not just Walt.
+- **Not yet re-tested with a real key** (needs Johnny). If it's still too easy after
+  a few more calls, the next knob is the patience-delta ranges in the "PATIENCE"
+  section of `js/execPromptB2C.js`, which are currently a straight copy of B2B's.
+- **Tests: 149, all passing**, unmodified — every test that depends on the
+  threshold references the constant symbolically, not the literal number.
+
+## B2C: a second, separate selling tab (2026-10-01; pushed as `52f5e33`)
 
 The mic tutorial was pushed as `6f05796`.
 
